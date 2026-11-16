@@ -202,6 +202,13 @@
     },
     npc: {
       x: 10 * TILE, y: 4 * TILE, sprites: function () { return People.neighbor(); },
+      talk: {
+        name: 'Nachbarin',
+        texts: [
+          'Früher hat man die Schulglocke bis hierher gehört.',
+          'Ich habe da so ein Gefühl, dass gerade du die Schule wieder aufbauen kannst.'
+        ]
+      },
       // Schaukeln im Schaukelstuhl
       frame: function (t) {
         return { i: blinkFrame(t, 3400, 500), dx: 0, dy: Math.sin(t * 0.003) > 0.3 ? 1 : 0 };
@@ -352,6 +359,13 @@
     },
     npc: {
       x: 7 * TILE, y: 6 * TILE, sprites: function () { return People.friend(); },
+      talk: {
+        name: 'Freund',
+        texts: [
+          'Keine Schule – klingt erst mal super, oder?',
+          'Na ja … ehrlich gesagt vermisse ich sogar Mathe. Schau mal, mein Parabel-Poster!'
+        ]
+      },
       // leichtes Wippen auf den Fußspitzen
       frame: function (t) {
         return { i: blinkFrame(t, 2900, 900), dx: 0, dy: Math.floor(t / 600) % 2 };
@@ -514,6 +528,14 @@
     },
     npc: {
       x: 8 * TILE, y: 4 * TILE, sprites: function () { return People.shopkeeper(); },
+      talkTiles: [[7, 5], [8, 5], [9, 5]],   // über die Theke hinweg
+      talk: {
+        name: 'Verkäufer',
+        texts: [
+          'Willkommen! Hefte, Stifte, Bücher – alles da.',
+          'Ohne Schule kauft leider kaum jemand etwas. Kaufen geht noch nicht.'
+        ]
+      },
       frame: function (t) {
         return { i: blinkFrame(t, 3100, 0), dx: Math.sin(t * 0.0012) > 0.6 ? 1 : 0, dy: 0 };
       }

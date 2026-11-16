@@ -36,6 +36,20 @@ var Interior = (function () {
     return cell(room, tx, ty) === 'M';
   }
 
+  // Bewohner, mit dem man an Kachel (tx, ty) reden kann (oder null).
+  // npc.talkTiles erlaubt zusätzliche Kacheln, z. B. die Ladentheke.
+  function talkTarget(room, tx, ty) {
+    var npc = rooms[room].npc;
+    if (!npc || !npc.talk) return null;
+    var tiles = [[npc.x / TILE, npc.y / TILE]].concat(npc.talkTiles || []);
+    for (var i = 0; i < tiles.length; i++) {
+      if (tiles[i][0] === tx && tiles[i][1] === ty) {
+        return { name: npc.talk.name, texts: npc.talk.texts, hintX: npc.x + 8, hintY: npc.y };
+      }
+    }
+    return null;
+  }
+
   // --- Raum-Rahmen -----------------------------------------------------
   // floor: { type: 'planks'|'tiles', a, b, hi, seam, grain }
   function drawFloor(r, f) {
@@ -373,6 +387,14 @@ var Interior = (function () {
     },
     npc: {
       x: 4 * TILE, y: 4 * TILE, sprites: function () { return People.mother(); },
+      talk: {
+        name: 'Mama',
+        texts: [
+          'Ach, du bist wach! Seit die Schule zerstört wurde, ist es im Dorf so still …',
+          'Man sagt, die Lehrerinnen und Lehrer werden im Schloss gefangen gehalten.',
+          'Nur wer alle Dungeons löst, kann das Schloss befreien. Pass auf dich auf!'
+        ]
+      },
       // Mutter wiegt sich beim Rühren leicht hin und her
       frame: function (t) { var f = Math.floor(t / 350) % 2; return { i: f, dx: f, dy: 0 }; }
     },
@@ -441,6 +463,7 @@ var Interior = (function () {
     register: register,
     isBlocked: isBlocked,
     isExit: isExit,
+    talkTarget: talkTarget,
     drawGround: drawGround,
     drawOverlay: drawOverlay,
     SPAWN: SPAWN,

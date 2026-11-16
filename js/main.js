@@ -8,6 +8,10 @@
   Render.init(canvas);
   Input.init();
 
+  // Spielstart im Elternhaus bei der Mutter
+  World.setScreen(World.START.screen);
+  Player.setPosition(World.START.x, World.START.y, World.START.facing);
+
   // --- Abläufe: Folge von Schritten mit Dauer (Sekunden) -------------------
   // Während ein Ablauf läuft, ist die Steuerung gesperrt.
   var seq = null;
@@ -140,10 +144,19 @@
     var dt = Math.min((now - lastTime) / 1000, 0.1);
     lastTime = now;
 
-    if (seq) {
+    var target = null;
+    if (Dialog.isActive()) {
+      Dialog.update(dt, Input);
+    } else if (seq) {
       updateSeq(dt);
     } else {
       Player.update(World, Input, dt);
+      target = World.talkTarget(Player.getX(), Player.getY(), Player.getFacing());
+      if (target && Input.pressed('a')) {
+        Player.setPosition(Player.getX(), Player.getY());   // Laufanimation anhalten
+        Dialog.open(target.name, target.texts);
+        target = null;
+      }
       var w = World.checkWarp(Player.getX(), Player.getY(), Player.getFacing());
       if (w && w.type === 'enter') enterHouse(w);
       else if (w && w.type === 'exit') leaveHouse(w);
@@ -155,8 +168,11 @@
 
     drawScene(now);
     Fx.draw(Render, now, World.isOutdoor());
+    if (target) Dialog.drawHint(Render, target.hintX, target.hintY, now);
     Hud.draw(Render);
+    Dialog.draw(Render);
     if (fade > 0) Render.px(0, 0, W, H, 'rgba(0,0,0,' + fade + ')');
+    Input.clearPressed();
 
     requestAnimationFrame(loop);
   }

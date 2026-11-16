@@ -36,6 +36,13 @@ var World = (function () {
         { x: 8, y: 2, w: 4, h: 2, door: 9, room: 'eltern', style: 'red', windows: [3], barrel: 0, lantern: true }
       ],
       school: { x: 9, y: 6, w: 6, h: 5 },
+      signs: [
+        {
+          tiles: [[11, 11], [12, 11]], x: 12 * 16, y: 11 * 16,
+          name: 'Schild',
+          texts: ['GESPERRT. Die Schule bleibt geschlossen, bis die Lehrkräfte zurück sind.']
+        }
+      ],
       exits: { east: 'ost' }
     },
     ost: {
@@ -64,7 +71,8 @@ var World = (function () {
     }
   };
 
-  var START = { screen: 'start', x: 9 * TILE, y: 5 * TILE, facing: 'down' };
+  // Spielstart: im Elternhaus, direkt vor der Mutter
+  var START = { screen: 'eltern', x: 4 * TILE, y: 5 * TILE, facing: 'up' };
 
   var rgb = Render.rgb, lerp = Render.lerp;
   var hash = Render.hash, noise = Render.noise;
@@ -153,6 +161,27 @@ var World = (function () {
     var ex = states[current].def.exits || {};
     if (px + 8 >= W && ex.east) return { dir: 'east', to: ex.east };
     if (px + 8 < 0 && ex.west) return { dir: 'west', to: ex.west };
+    return null;
+  }
+
+  // Gegenüber der Spielfigur: Bewohner oder Schild, mit dem man reden kann
+  function talkTarget(px, py, facing) {
+    var cx = px + 8, cy = py + 8, fx = cx, fy = cy;
+    if (facing === 'up') fy = py - 1;
+    else if (facing === 'down') fy = py + 16;
+    else if (facing === 'left') fx = px - 1;
+    else fx = px + 16;
+    var tx = Math.floor(fx / TILE), ty = Math.floor(fy / TILE);
+    if (!isOutdoor()) return Interior.talkTarget(current, tx, ty);
+    var signs = states[current].def.signs || [];
+    for (var i = 0; i < signs.length; i++) {
+      for (var j = 0; j < signs[i].tiles.length; j++) {
+        var t = signs[i].tiles[j];
+        if (t[0] === tx && t[1] === ty) {
+          return { name: signs[i].name, texts: signs[i].texts, hintX: signs[i].x, hintY: signs[i].y };
+        }
+      }
+    }
     return null;
   }
 
@@ -585,6 +614,7 @@ var World = (function () {
     isBlocked: isBlocked,
     checkWarp: checkWarp,
     checkEdge: checkEdge,
+    talkTarget: talkTarget,
     setScreen: setScreen,
     getScreen: getScreen,
     isOutdoor: isOutdoor,

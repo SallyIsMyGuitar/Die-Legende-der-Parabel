@@ -4,6 +4,7 @@ var Input = (function () {
 
   var held = { up: false, down: false, left: false, right: false };
   var litButtons = {}; // visuelles Aufleuchten der Aktionstasten
+  var pressedOnce = {}; // einmalige Tastendrücke, werden von pressed() verbraucht
 
   var keyMap = {
     ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right',
@@ -20,10 +21,10 @@ var Input = (function () {
     // A = Enter, B = Rücktaste
     if (e.code === 'Enter' || e.code === 'NumpadEnter') {
       e.preventDefault();
-      lightButton('a');
+      if (!e.repeat) lightButton('a');
     } else if (e.code === 'Backspace') {
       e.preventDefault();
-      lightButton('b');
+      if (!e.repeat) lightButton('b');
     }
   }
 
@@ -134,6 +135,7 @@ var Input = (function () {
   // Aktionstaste kurz aufleuchten lassen (in diesem Meilenstein nur Rückmeldung)
   function lightButton(name) {
     litButtons[name] = true;
+    pressedOnce[name] = true;
     var el = document.querySelector('.action-btn[data-btn="' + name + '"]');
     if (el) {
       el.classList.add('lit');
@@ -160,6 +162,14 @@ var Input = (function () {
 
   return {
     init: init,
-    isDown: function (dir) { return !!held[dir]; }
+    isDown: function (dir) { return !!held[dir]; },
+    // true genau einmal pro Tastendruck (A/B)
+    pressed: function (name) {
+      var p = !!pressedOnce[name];
+      pressedOnce[name] = false;
+      return p;
+    },
+    // alle offenen Tastendrücke verwerfen
+    clearPressed: function () { pressedOnce = {}; }
   };
 })();
