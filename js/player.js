@@ -9,7 +9,7 @@ var Player = (function () {
   var x = 8 * TILE;
   var y = 9 * TILE;
   var facing = 'down';
-  var animTime = 0; // für leichte Laufanimation
+  var animTime = 0; // für Laufanimation
 
   function getX() { return x; }
   function getY() { return y; }
@@ -50,51 +50,73 @@ var Player = (function () {
     }
   }
 
-  // Pixelfigur mit Umriss, Schattierung und 4 Blickrichtungen.
-  // step = 0/1 schaltet beim Laufen zwischen zwei Beinstellungen um.
+  // Sanfter Übergang zwischen zwei Farben
+  function mix(c1, c2, t) {
+    t = Math.max(0, Math.min(1, t));
+    var r1 = parseInt(c1.slice(1, 3), 16), g1 = parseInt(c1.slice(3, 5), 16), b1 = parseInt(c1.slice(5, 7), 16);
+    var r2 = parseInt(c2.slice(1, 3), 16), g2 = parseInt(c2.slice(3, 5), 16), b2 = parseInt(c2.slice(5, 7), 16);
+    var r = Math.round(r1 + (r2 - r1) * t);
+    var g = Math.round(g1 + (g2 - g1) * t);
+    var b = Math.round(b1 + (b2 - b1) * t);
+    return 'rgb(' + r + ',' + g + ',' + b + ')';
+  }
+
+  // Figur im modernen Zelda-Stil: runde Formen, weiche Schattierung,
+  // Auf-und-ab beim Laufen. step = 0/1 wechselt die Beinstellung.
   function draw(r) {
     var px = Math.round(x);
     var py = Math.round(y);
-    var step = (animTime > 0 && Math.floor(animTime * 6) % 2 === 1) ? 1 : 0;
+    var step = (animTime > 0 && Math.floor(animTime * 7) % 2 === 1) ? 1 : 0;
+    var bob = (animTime > 0 && step === 1) ? 1 : 0; // leichtes Wippen
+    py += bob;
 
-    // Schatten unter der Figur
-    r.px(px + 3, py + 14, 10, 2, 'rgba(0,0,0,0.25)');
+    // weicher Schatten am Boden
+    r.px(px + 3, py + 13 + bob, 10, 2, 'rgba(20,40,16,0.35)');
+    r.px(px + 5, py + 15 + bob, 6, 1, 'rgba(20,40,16,0.25)');
 
-    // Umriss
-    r.px(px + 3, py + 1, 10, 13, '#1c1c28');
-    // Kopf
-    r.px(px + 4, py + 1, 8, 4, '#f2c894');
-    r.px(px + 4, py + 1, 8, 2, '#8c4c1c');              // Haare
-    // Körper: grüner Waffenrock mit hellem Kragen
-    r.px(px + 4, py + 5, 8, 6, '#2f7a3a');
-    r.px(px + 5, py + 5, 6, 1, '#6cc06e');               // Kragen
-    r.px(px + 7, py + 6, 2, 4, '#3f9448');               // Mittelstreifen
-    // Gürtel
-    r.px(px + 4, py + 10, 8, 1, '#5c3820');
+    // Umriss (dunkel, aber nicht schwarz)
+    r.px(px + 3, py + 1, 10, 12, '#2c3444');
+
+    // Kopf: runde Form mit Verlauf, Haare mit Glanz
+    r.px(px + 4, py + 1, 8, 4, '#f4cc96');
+    r.px(px + 4, py + 4, 8, 1, mix('#f4cc96', '#c89868', 0.6)); // Schattenkinn
+    r.px(px + 4, py + 1, 8, 2, '#96501e');
+    r.px(px + 5, py + 1, 4, 1, '#c06828');                    // Haar-Glanz
+
+    // Körper: grüner Waffenrock mit Verlauf und Kragen
+    r.px(px + 4, py + 5, 8, 6, '#3e9448');
+    r.px(px + 4, py + 9, 8, 2, mix('#3e9448', '#1e6428', 0.7)); // dunkler Saum
+    r.px(px + 5, py + 5, 6, 1, '#8cd07c');                     // heller Kragen
+    r.px(px + 7, py + 6, 2, 4, '#58b458');                     // Mittelstreifen
+    r.px(px + 4, py + 10, 8, 1, '#5c3820');                    // Gürtel
+
     // Beine mit Laufschritt
     if (step === 0) {
-      r.px(px + 4, py + 11, 3, 3, '#28486e');
-      r.px(px + 9, py + 11, 3, 3, '#28486e');
+      r.px(px + 4, py + 11, 3, 3, '#34507a');
+      r.px(px + 9, py + 11, 3, 3, '#34507a');
+      r.px(px + 4, py + 13, 3, 1, '#5c3a20');
+      r.px(px + 9, py + 13, 3, 1, '#5c3a20');
     } else {
-      r.px(px + 3, py + 11, 3, 3, '#28486e');
-      r.px(px + 10, py + 11, 3, 3, '#28486e');
+      r.px(px + 3, py + 11, 3, 3, '#34507a');
+      r.px(px + 10, py + 11, 3, 3, '#34507a');
+      r.px(px + 3, py + 13, 3, 1, '#5c3a20');
+      r.px(px + 10, py + 13, 3, 1, '#5c3a20');
     }
-    // Schuhe
-    r.px(px + 4, py + 13, 3, 1, '#4a2e18');
-    r.px(px + 9, py + 13, 3, 1, '#4a2e18');
 
     if (facing === 'down') {
-      r.px(px + 5, py + 3, 2, 1, '#1c1c28');            // beide Augen
-      r.px(px + 9, py + 3, 2, 1, '#1c1c28');
+      r.px(px + 5, py + 3, 2, 1, '#2c3444');                   // beide Augen
+      r.px(px + 9, py + 3, 2, 1, '#2c3444');
     } else if (facing === 'up') {
-      r.px(px + 4, py + 1, 8, 4, '#8c4c1c');            // Hinterkopf
-      r.px(px + 4, py + 4, 8, 1, '#f2c894');            // Nacken
+      r.px(px + 4, py + 1, 8, 4, '#96501e');                  // Hinterkopf
+      r.px(px + 5, py + 4, 6, 1, mix('#f4cc96', '#c89868', 0.6));
     } else if (facing === 'left') {
-      r.px(px + 4, py + 3, 2, 1, '#1c1c28');            // Auge links
-      r.px(px + 3, py + 6, 1, 5, '#2f7a3a');            // Arm angedeutet
+      r.px(px + 4, py + 3, 2, 1, '#2c3444');                   // Auge links
+      r.px(px + 3, py + 6, 1, 4, '#3e9448');                   // Arm
+      r.px(px + 3, py + 10, 1, 2, '#f4cc96');                  // Hand
     } else {
-      r.px(px + 10, py + 3, 2, 1, '#1c1c28');           // Auge rechts
-      r.px(px + 12, py + 6, 1, 5, '#2f7a3a');           // Arm angedeutet
+      r.px(px + 10, py + 3, 2, 1, '#2c3444');                  // Auge rechts
+      r.px(px + 12, py + 6, 1, 4, '#3e9448');                   // Arm
+      r.px(px + 12, py + 10, 1, 2, '#f4cc96');                 // Hand
     }
   }
 

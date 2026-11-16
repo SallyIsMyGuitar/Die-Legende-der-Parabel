@@ -19,7 +19,7 @@
 
     Player.update(World, Input, dt);
 
-    World.draw(Render);
+    World.draw(Render, now);
     Player.draw(Render);
 
     requestAnimationFrame(loop);
