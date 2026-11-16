@@ -48,10 +48,10 @@ html, body {
   z-index: 100;
 }
 
-/* Hinweis nur auf Touch-Geräten im Hochformat (auf dem Desktop gilt
-   ein schmales Fenster nicht als Hochformat) */
-@media (orientation: portrait) and (pointer: coarse) {
-  #rotate-hint {
+/* Hinweis nur auf Touch-Geräten im Hochformat; die Klasse 'touch'
+   setzt JavaScript nur auf Touch-Geräten (siehe js/input.js) */
+@media (orientation: portrait) {
+  body.touch #rotate-hint {
     display: flex;
   }
 }

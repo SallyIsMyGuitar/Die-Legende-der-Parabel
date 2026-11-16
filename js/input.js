@@ -147,6 +147,7 @@ var Input = (function () {
     // Touch-Steuerung nur auf Touch-Geräten anzeigen
     var isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     if (isTouch) {
+      document.body.classList.add('touch');
       var controls = document.getElementById('touch-controls');
       controls.hidden = false;
       controls.addEventListener('touchstart', onTouchStart, { passive: false });
