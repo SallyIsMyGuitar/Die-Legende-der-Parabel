@@ -9,6 +9,7 @@ var Player = (function () {
   var x = 8 * TILE;
   var y = 9 * TILE;
   var facing = 'down';
+  var animTime = 0; // für leichte Laufanimation
 
   function getX() { return x; }
   function getY() { return y; }
@@ -41,33 +42,59 @@ var Player = (function () {
     if (input.isDown('right')) { dx += SPEED * dt; facing = 'right'; }
     if (input.isDown('up')) { dy -= SPEED * dt; facing = 'up'; }
     if (input.isDown('down')) { dy += SPEED * dt; facing = 'down'; }
-    if (dx !== 0 || dy !== 0) move(world, dx, dy);
+    if (dx !== 0 || dy !== 0) {
+      move(world, dx, dy);
+      animTime += dt;
+    } else {
+      animTime = 0;
+    }
   }
 
-  // Einfache Pixelfigur, je nach Blickrichtung anders gezeichnet
+  // Pixelfigur mit Umriss, Schattierung und 4 Blickrichtungen.
+  // step = 0/1 schaltet beim Laufen zwischen zwei Beinstellungen um.
   function draw(r) {
     var px = Math.round(x);
     var py = Math.round(y);
+    var step = (animTime > 0 && Math.floor(animTime * 6) % 2 === 1) ? 1 : 0;
 
-    r.px(px + 4, py, 8, 3, '#f0c090');        // Kopf
-    r.px(px + 4, py, 8, 1, '#7c4c1c');        // Haar
-    r.px(px + 3, py + 3, 10, 6, '#2c5aa0');   // Körper
-    r.px(px + 2, py + 4, 1, 4, '#f0c090');    // Arme
-    r.px(px + 13, py + 4, 1, 4, '#f0c090');
-    r.px(px + 4, py + 9, 3, 5, '#1c3a70');    // Beine
-    r.px(px + 9, py + 9, 3, 5, '#1c3a70');
-    r.px(px + 4, py + 14, 3, 1, '#5c3820');   // Schuhe
-    r.px(px + 9, py + 14, 3, 1, '#5c3820');
+    // Schatten unter der Figur
+    r.px(px + 3, py + 14, 10, 2, 'rgba(0,0,0,0.25)');
+
+    // Umriss
+    r.px(px + 3, py + 1, 10, 13, '#1c1c28');
+    // Kopf
+    r.px(px + 4, py + 1, 8, 4, '#f2c894');
+    r.px(px + 4, py + 1, 8, 2, '#8c4c1c');              // Haare
+    // Körper: grüner Waffenrock mit hellem Kragen
+    r.px(px + 4, py + 5, 8, 6, '#2f7a3a');
+    r.px(px + 5, py + 5, 6, 1, '#6cc06e');               // Kragen
+    r.px(px + 7, py + 6, 2, 4, '#3f9448');               // Mittelstreifen
+    // Gürtel
+    r.px(px + 4, py + 10, 8, 1, '#5c3820');
+    // Beine mit Laufschritt
+    if (step === 0) {
+      r.px(px + 4, py + 11, 3, 3, '#28486e');
+      r.px(px + 9, py + 11, 3, 3, '#28486e');
+    } else {
+      r.px(px + 3, py + 11, 3, 3, '#28486e');
+      r.px(px + 10, py + 11, 3, 3, '#28486e');
+    }
+    // Schuhe
+    r.px(px + 4, py + 13, 3, 1, '#4a2e18');
+    r.px(px + 9, py + 13, 3, 1, '#4a2e18');
 
     if (facing === 'down') {
-      r.px(px + 5, py + 2, 2, 1, '#000');     // Augen
-      r.px(px + 9, py + 2, 2, 1, '#000');
+      r.px(px + 5, py + 3, 2, 1, '#1c1c28');            // beide Augen
+      r.px(px + 9, py + 3, 2, 1, '#1c1c28');
     } else if (facing === 'up') {
-      r.px(px + 4, py, 8, 2, '#7c4c1c');      // Hinterkopf
+      r.px(px + 4, py + 1, 8, 4, '#8c4c1c');            // Hinterkopf
+      r.px(px + 4, py + 4, 8, 1, '#f2c894');            // Nacken
     } else if (facing === 'left') {
-      r.px(px + 4, py + 2, 2, 1, '#000');     // ein Auge links
+      r.px(px + 4, py + 3, 2, 1, '#1c1c28');            // Auge links
+      r.px(px + 3, py + 6, 1, 5, '#2f7a3a');            // Arm angedeutet
     } else {
-      r.px(px + 10, py + 2, 2, 1, '#000');    // ein Auge rechts
+      r.px(px + 10, py + 3, 2, 1, '#1c1c28');           // Auge rechts
+      r.px(px + 12, py + 6, 1, 5, '#2f7a3a');           // Arm angedeutet
     }
   }
 
