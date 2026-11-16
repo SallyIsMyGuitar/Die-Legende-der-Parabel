@@ -72,11 +72,14 @@ var Fx = (function () {
     }
   }
 
-  function draw(r, time) {
+  // Schmetterlinge und Wolken nur draußen, Vignette überall
+  function draw(r, time, outdoor) {
     var t = time || 0;
     if (!vignette) buildVignette();
-    drawButterflies(r, t);
-    drawClouds(r, t);
+    if (outdoor) {
+      drawButterflies(r, t);
+      drawClouds(r, t);
+    }
     r.image(vignette.canvas, 0, 0);
   }
 

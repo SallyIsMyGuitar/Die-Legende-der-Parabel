@@ -40,7 +40,7 @@ var Hud = (function () {
     r.px(x + 1, y + s - 2, 1, 1, '#efe4c4');
     r.px(x + s - 2, y + s - 2, 1, 1, '#efe4c4');
     // Tastenbeschriftung in kleinem Kreis unten rechts
-    r.ellipse(x + s - 2, y + s - 2, 4, 4, letter === 'A' ? '#e0a030' : '#3a86cc');
+    r.ellipse(x + s - 2, y + s - 2, 4, 4, letter === 'A' ? '#d83a3a' : '#3a86cc');
     sprite(r, LETTERS[letter], x + s - 3, y + s - 4, { '#': '#ffffff' });
   }
 
@@ -50,8 +50,8 @@ var Hud = (function () {
       sprite(r, HEART, 7 + i * 9, 7, shadow);
       sprite(r, HEART, 6 + i * 9, 6, COLORS);
     }
-    slot(r, Render.WIDTH - 44, 5, 'B');
-    slot(r, Render.WIDTH - 24, 5, 'A');
+    slot(r, Render.WIDTH - 44, 5, 'A');
+    slot(r, Render.WIDTH - 24, 5, 'B');
   }
 
   return { draw: draw };

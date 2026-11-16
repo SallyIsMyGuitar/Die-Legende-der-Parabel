@@ -17,10 +17,11 @@ var Input = (function () {
       e.preventDefault();
       return;
     }
-    if (e.code === 'Space' || e.code === 'Enter') {
+    // A = Enter, B = Rücktaste
+    if (e.code === 'Enter' || e.code === 'NumpadEnter') {
       e.preventDefault();
       lightButton('a');
-    } else if (e.code === 'Escape' || e.code === 'Backspace') {
+    } else if (e.code === 'Backspace') {
       e.preventDefault();
       lightButton('b');
     }

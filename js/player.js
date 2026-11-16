@@ -51,24 +51,26 @@ var Player = (function () {
   }
 
   // --- Sprites als Pixelraster (16x16) ----------------------------------
-  // Jedes Zeichen steht für eine Farbe, '.' ist durchsichtig.
+  // Schüler: braune Haare, grauer Hoodie, blaue Jeans, schwarzer Rucksack,
+  // weiße Sneaker. Jedes Zeichen steht für eine Farbe, '.' ist durchsichtig.
   var PALETTE = {
-    o: '#22202e', // Umriss
-    h: '#3f9e4a', H: '#7fd36a', d: '#25683a',  // Mütze
-    y: '#f2c14e', Y: '#c8862a',                // Haare
+    o: '#22202e',                              // Umriss
+    y: '#8a5a32', Y: '#5e3a1e', L: '#b8824e',  // Haare
     s: '#f8d0a4', S: '#d9a074',                // Haut
     w: '#ffffff', e: '#22202e',                // Augen
-    t: '#3f9e4a', T: '#7fd36a', D: '#25683a',  // Waffenrock
-    b: '#6e4226', k: '#f5cf4a',                // Gürtel, Schnalle
-    p: '#efe6cc', B: '#7a4a26'                 // Hose, Stiefel
+    t: '#a9adb5', T: '#d2d5da', D: '#73777f',  // Hoodie
+    k: '#f4f4f4',                              // Kordeln
+    r: '#2a2a32', R: '#4c4c58',                // Rucksack
+    p: '#3e64a8', P: '#2c4a80',                // Jeans
+    n: '#f6f6f6', N: '#c4c8cc'                 // Sneaker
   };
 
   var HEAD_DOWN = [
     '....oooooooo....',
-    '...ohHHhhhhdo...',
-    '..ohHhhhhhhhdo..',
-    '..odhhhhhhhhdo..',
-    '..oYyyyyyyyyYo..',
+    '...oyLLyyyyyo...',
+    '..oyLyyyyyyyyo..',
+    '..oyyyyyyyyyYo..',
+    '..oYyysyysyyYo..',
     '..oyssssssssyo..',
     '..oswessssewso..',
     '..oSsessssesSo..',
@@ -76,73 +78,65 @@ var Player = (function () {
   ];
   var HEAD_UP = [
     '....oooooooo....',
-    '...ohhhhhhHdo...',
-    '..ohhhhhhhHhdo..',
-    '..odhhhhhhhhdo..',
+    '...oyyyyyLLyo...',
+    '..oyyyyyyyLyyo..',
+    '..oyyyyyyyyyyo..',
     '..oYyyyyyyyyYo..',
-    '..oyyyyYyyyyyo..',
+    '..oyYyyyyyyYyo..',
     '..oYyyyyyyyyYo..',
     '..oSYyyyyyyYSo..',
-    '...oSSSSSSSSo...'
+    '...oDttttttDo...'
   ];
   var HEAD_RIGHT = [
     '....oooooooo....',
-    '...ohHHhhhhdo...',
-    '..ohHhhhhhhhdo..',
-    '..odhhhhhhhhhdo.',
-    '..oYyyyyysssso..',
+    '...oyyyyLLyyo...',
+    '..oyyyyyyLyyyo..',
+    '..oyyyyyyyyyyyo.',
+    '..oYyyyyssssso..',
     '..oyyyyssssweo..',
     '..oYyysssssseo..',
     '..oSYsssssssssso',
     '...oSSssssSSo...'
   ];
-  var BODY = [
-    '..odtTTttTTtdo..',
-    '.osdttttttttdso.',
-    '.osdbbbkkbbbdso.',
+  var BODY_DOWN = [
+    '..oDrtkttktrDo..',
+    '.osDrttttttrDso.',
+    '.osDtDttttDtDso.',
     '..oDDDDDDDDDDo..'
   ];
-  var BODY_BACK = [
-    '..odttttttttdo..',
-    '.osdttttttttdso.',
-    '.osdbbbbbbbbdso.',
-    '..oDDDDDDDDDDo..'
+  var BODY_UP = [
+    '..oDoRRRRRRoDo..',
+    '.osDorrrrrroDso.',
+    '.osDorRRRRroDso.',
+    '..oDDorrrroDDo..'
+  ];
+  var BODY_SIDE = [
+    '..orrDttttttDo..',
+    '.orrDtttttttDso.',
+    '.orRDtttttttDso.',
+    '..orrDDDDDDDDo..'
   ];
   var LEGS = [
-    ['...oppo..oppo...', '...oBBo..oBBo...', '...oooo..oooo...'],  // Stand
-    ['...oppo..oppo...', '...oBBo..oooo...', '...oooo.........'],  // Schritt links
-    ['...oppo..oppo...', '...oooo..oBBo...', '.........oooo...']   // Schritt rechts
+    ['...oppo..oppo...', '...onno..onno...', '...oNNo..oNNo...'],  // Stand
+    ['...oppo..oppo...', '...onno..oNNo...', '...oNNo..oooo...'],  // Schritt links
+    ['...oppo..oppo...', '...oNNo..onno...', '...oooo..oNNo...']   // Schritt rechts
   ];
 
   var sprites = null;
 
-  function makeSprite(rows, flip) {
-    var layer = Render.createLayer(16, 16);
-    var ctx = layer.ctx;
-    for (var j = 0; j < rows.length; j++) {
-      for (var i = 0; i < 16; i++) {
-        var ch = rows[j].charAt(flip ? 15 - i : i);
-        if (ch === '.' || !PALETTE[ch]) continue;
-        ctx.fillStyle = PALETTE[ch];
-        ctx.fillRect(i, j, 1, 1);
-      }
-    }
-    return layer.canvas;
-  }
-
   function buildSprites() {
     sprites = {};
     var dirs = {
-      down: [HEAD_DOWN, BODY, false],
-      up: [HEAD_UP, BODY_BACK, false],
-      right: [HEAD_RIGHT, BODY_BACK, false],
-      left: [HEAD_RIGHT, BODY_BACK, true]
+      down: [HEAD_DOWN, BODY_DOWN, false],
+      up: [HEAD_UP, BODY_UP, false],
+      right: [HEAD_RIGHT, BODY_SIDE, false],
+      left: [HEAD_RIGHT, BODY_SIDE, true]
     };
     for (var d in dirs) {
       sprites[d] = [];
       for (var f = 0; f < LEGS.length; f++) {
-        var rows = dirs[d][0].concat(dirs[d][1]).slice(0, 13).concat(LEGS[f]);
-        sprites[d].push(makeSprite(rows, dirs[d][2]));
+        var rows = dirs[d][0].concat(dirs[d][1], LEGS[f]);
+        sprites[d].push(Render.sprite(rows, PALETTE, dirs[d][2]));
       }
     }
   }
@@ -166,8 +160,17 @@ var Player = (function () {
     r.image(sprites[facing][phase], px, py - bob);
   }
 
+  // Figur an neue Position setzen (z. B. beim Betreten eines Raums)
+  function setPosition(nx, ny, dir) {
+    x = nx;
+    y = ny;
+    facing = dir || facing;
+    animTime = 0;
+  }
+
   return {
     update: update,
+    setPosition: setPosition,
     draw: draw,
     getX: getX,
     getY: getY,

@@ -74,6 +74,24 @@ var Render = (function () {
     if (alpha !== undefined) ctx.globalAlpha = 1;
   }
 
+  // Pixel-Sprite aus Textzeilen erzeugen: jedes Zeichen ist eine Farbe aus
+  // der Palette, '.' ist durchsichtig. flip spiegelt waagrecht.
+  function sprite(rows, palette, flip) {
+    var w = rows[0].length;
+    var layer = createLayer(w, rows.length);
+    var c = layer.ctx;
+    for (var j = 0; j < rows.length; j++) {
+      if (rows[j].length !== w) console.warn('Sprite-Zeile ' + j + ' hat falsche Länge: ' + rows[j]);
+      for (var i = 0; i < w; i++) {
+        var col = palette[rows[j].charAt(flip ? w - 1 - i : i)];
+        if (!col) continue;
+        c.fillStyle = col;
+        c.fillRect(i, j, 1, 1);
+      }
+    }
+    return layer.canvas;
+  }
+
   // Farbhilfen ---------------------------------------------------------
   function rgb(hex) {
     return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
@@ -122,6 +140,7 @@ var Render = (function () {
     tile: tile,
     ellipse: ellipse,
     image: image,
+    sprite: sprite,
     rgb: rgb,
     lerp: lerp,
     mix: mix,

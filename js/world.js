@@ -1,6 +1,8 @@
 // world.js: Bildschirm-Daten, Kollision und Zeichnen der Welt
 // Ein Bildschirm ist ein Array aus 14 Zeilen (y) zu 16 Kacheln (x).
-// Kachel-IDs: 0 = Wiese, 1 = Weg, 2 = Baum (blockiert), 3 = Wasser (blockiert), 4 = Haus (blockiert)
+// Kachel-IDs: 0 = Wiese, 1 = Weg, 2 = Baum (blockiert), 3 = Wasser (blockiert), 4 = Haus (blockiert),
+// 5 = Haustür (blockiert, Berühren führt ins Haus)
+// Das Hausinnere steckt in js/interior.js; World schaltet zwischen den Bildschirmen um.
 //
 // Gezeichnet wird in drei Ebenen:
 //  - Boden (einmal vorberechnet): Wiese, Weg, Ufer, Schatten, Baumstämme, Grasbüschel
@@ -14,7 +16,7 @@ var World = (function () {
   var ROWS = 14;
   var W = COLS * TILE;
   var H = ROWS * TILE;
-  var PATH = 1, TREE = 2, WATER = 3, HOUSE = 4;
+  var PATH = 1, TREE = 2, WATER = 3, HOUSE = 4, DOOR = 5;
 
   // Startdorf-Ausschnitt (Meilenstein 1). Weitere Bildschirme werden später
   // als weitere Datenarrays ergänzt.
@@ -22,7 +24,7 @@ var World = (function () {
     [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
     [2, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 2],
     [2, 0, 0, 2, 2, 0, 2, 0, 4, 4, 4, 4, 0, 0, 0, 2],
-    [2, 0, 0, 2, 0, 0, 0, 0, 4, 4, 4, 4, 0, 0, 0, 2],
+    [2, 0, 0, 2, 0, 0, 0, 0, 4, 5, 4, 4, 0, 0, 0, 2],
     [2, 0, 0, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 2],
     [2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 2],
     [2, 0, 0, 0, 0, 1, 0, 3, 3, 3, 0, 0, 1, 0, 0, 2],
@@ -36,6 +38,7 @@ var World = (function () {
   ];
 
   var currentScreen = startScreen;
+  var current = 'dorf';   // 'dorf' oder 'haus'
 
   var rgb = Render.rgb, lerp = Render.lerp, mix = Render.mix;
   var hash = Render.hash, noise = Render.noise;
@@ -48,7 +51,7 @@ var World = (function () {
   var flowers = [];
   var chimney = null;   // Austrittspunkt für Rauch
 
-  // Kachel-ID an Kachelposition abfragen
+  // Kachel-ID an Kachelposition abfragen (Dorf-Bildschirm)
   function tileAt(tx, ty) {
     if (tx < 0 || ty < 0 || tx >= COLS || ty >= ROWS) {
       return -1; // außerhalb des Bildschirms: blockiert
@@ -58,9 +61,37 @@ var World = (function () {
 
   // Ist die Kachel blockiert?
   function isBlocked(tx, ty) {
+    if (current === 'haus') return Interior.isBlocked(tx, ty);
     var t = tileAt(tx, ty);
-    return t === -1 || t === TREE || t === WATER || t === HOUSE;
+    return t === -1 || t === TREE || t === WATER || t === HOUSE || t === DOOR;
   }
+
+  // Übergänge: Tür berühren (nach oben gegen die Tür laufen) bzw. auf die
+  // Fußmatte im Haus treten. Liefert Ziel und Startposition oder null.
+  function checkWarp(px, py, facing) {
+    var cx = Math.floor((px + 8) / TILE);
+    if (current === 'dorf') {
+      if (facing === 'up' && tileAt(cx, Math.floor((py - 1) / TILE)) === DOOR) {
+        return { to: 'haus', x: Interior.SPAWN.x, y: Interior.SPAWN.y, facing: 'up' };
+      }
+    } else if (Interior.isExit(cx, Math.floor((py + 8) / TILE))) {
+      var door = doorTile();
+      return { to: 'dorf', x: door.x * TILE, y: (door.y + 1) * TILE, facing: 'down' };
+    }
+    return null;
+  }
+
+  function doorTile() {
+    for (var ty = 0; ty < ROWS; ty++) {
+      for (var tx = 0; tx < COLS; tx++) {
+        if (tileAt(tx, ty) === DOOR) return { x: tx, y: ty };
+      }
+    }
+    return { x: 8, y: 8 };
+  }
+
+  function setScreen(name) { current = name; }
+  function isOutdoor() { return current === 'dorf'; }
 
   // --- Masken: welche Pixel gehören zu Weg bzw. Wasser? -----------------
   // Kanten zu fremden Kacheln werden eingerückt und Außenecken abgerundet,
@@ -266,7 +297,8 @@ var World = (function () {
     var minX = COLS, minY = ROWS, maxX = -1, maxY = -1;
     for (var ty = 0; ty < ROWS; ty++) {
       for (var tx = 0; tx < COLS; tx++) {
-        if (tileAt(tx, ty) !== HOUSE) continue;
+        var id = tileAt(tx, ty);
+        if (id !== HOUSE && id !== DOOR) continue;
         minX = Math.min(minX, tx); maxX = Math.max(maxX, tx);
         minY = Math.min(minY, ty); maxY = Math.max(maxY, ty);
       }
@@ -538,8 +570,9 @@ var World = (function () {
 
   // Boden inkl. Animationen (unter der Spielfigur)
   function drawGround(r, time) {
-    if (!groundLayer) bake();
     var t = time || 0;
+    if (current === 'haus') { Interior.drawGround(r, t); return; }
+    if (!groundLayer) bake();
     r.image(groundLayer.canvas, 0, 0);
     drawWater(r.getCtx(), t);
     drawFlowers(r, t);
@@ -547,8 +580,9 @@ var World = (function () {
 
   // Baumkronen, Haus und Rauch (über der Spielfigur)
   function drawOverlay(r, time) {
-    if (!overlayLayer) bake();
     var t = time || 0;
+    if (current === 'haus') { Interior.drawOverlay(r, t); return; }
+    if (!overlayLayer) bake();
     r.image(overlayLayer.canvas, 0, 0);
     if (chimney) {
       var ctx = r.getCtx();
@@ -567,6 +601,9 @@ var World = (function () {
     drawOverlay: drawOverlay,
     tileAt: tileAt,
     isBlocked: isBlocked,
+    checkWarp: checkWarp,
+    setScreen: setScreen,
+    isOutdoor: isOutdoor,
     COLS: COLS,
     ROWS: ROWS,
     TILE: TILE
