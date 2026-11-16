@@ -116,10 +116,34 @@ var People = (function () {
     return [Render.sprite(rows, p), Render.sprite(blink(rows), p)];
   }
 
+  // Wanderin: dunkle Haare, orangefarbenes Oberteil, feste Schuhe
+  function wanderer() {
+    var p = pal({
+      h: '#4a3020', H: '#6a4a30',
+      t: '#e08a2a', T: '#f4b45a', D: '#a85e14',
+      p: '#5a6a4a', B: '#6a4a2e'
+    });
+    var rows = FRONT.slice();
+    return [Render.sprite(rows, p), Render.sprite(blink(rows), p)];
+  }
+
+  // Förster: graue Haare, grüne Uniform, braune Stiefel
+  function forester() {
+    var p = pal({
+      h: '#8a8a8a', H: '#b0b0b0',
+      t: '#3f6a3a', T: '#548a4c', D: '#2a4a26',
+      p: '#5a4a38', B: '#3a2a20'
+    });
+    var rows = FRONT.slice();
+    return [Render.sprite(rows, p), Render.sprite(blink(rows), p)];
+  }
+
   return {
     mother: mother,
     neighbor: neighbor,
     friend: friend,
-    shopkeeper: shopkeeper
+    shopkeeper: shopkeeper,
+    wanderer: wanderer,
+    forester: forester
   };
 })();
