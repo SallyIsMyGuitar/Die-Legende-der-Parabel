@@ -1,7 +1,8 @@
 // world.js: Dorf-Bildschirme, Kollision, Übergänge und Zeichnen der Außenwelt
 // Jeder Bildschirm ist 16 x 14 Kacheln groß. Kachelzeichen:
 //   'T' Baum   '.' Wiese   'P' Weg   '~' Wasser   'F' Zaun   'G' Tor (gesperrt)
-//   'S' Schulgelände   'W' Brunnen
+//   'S' Schulgelände   'W' Brunnen   'R' Ruinenmauer   'E' Dungeon-Eingang
+//   'i' Hinweisschild (an der Ruine)
 // Gebäude stehen in der Liste buildings und werden beim Start eingestempelt
 // ('H' Gebäude, 'D' Tür). Innenräume liegen in js/interior.js und js/rooms.js.
 var World = (function () {
@@ -12,7 +13,7 @@ var World = (function () {
   var ROWS = 14;
   var W = COLS * TILE;
   var H = ROWS * TILE;
-  var BLOCKING = 'THDFGSW~';
+  var BLOCKING = 'THDFGSW~REi';
 
   var SCREENS = {
     start: {
@@ -51,7 +52,7 @@ var World = (function () {
         'T.......T......T',
         'T.......T......T',
         'T..............T',
-        'PPPPPPPPPPPPPP.T',
+        'PPPPPPPPPPPPPPPP',
         '........PP.....T',
         'T.....PPPP.....T',
         'T.....PWPP..TT.T',
@@ -67,7 +68,106 @@ var World = (function () {
         { x: 10, y: 2, w: 4, h: 2, door: 12, room: 'freund', style: 'green', windows: [0, 1], lantern: true },
         { x: 2, y: 10, w: 5, h: 2, door: 4, room: 'laden', style: 'shop', windows: [0, 1, 3, 4], shop: true }
       ],
-      exits: { west: 'start' }
+      // Der Brunnen ist die Rastquelle im Startdorf
+      signs: [
+        {
+          tiles: [[7, 7]], x: 7 * 16, y: 7 * 16,
+          name: 'Brunnen',
+          texts: ['Die Rastquelle am Brunnen füllt später alle Herzen wieder auf.']
+        }
+      ],
+      exits: { west: 'start', east: 'wiese' }
+    },
+
+    // Wiese mit kleinem Teich auf dem Weg zum ersten Dungeon
+    wiese: {
+      map: [
+        'TTTTTTTTTTTTTTTT',
+        'T....T.....T...T',
+        'T..............T',
+        'T..............T',
+        'PPPPPPPPPPPPPPPP',
+        'T....~~........T',
+        'T...~~~~~......T',
+        'T...~~~~~..TT..T',
+        'T....~~....T...T',
+        'T..........T...T',
+        'T.....T........T',
+        'T..............T',
+        'T..............T',
+        'TTTTTTTTTTTTTTTT'
+      ],
+      buildings: [],
+      npcs: [
+        {
+          x: 8 * TILE, y: 5 * TILE, sprites: function () { return People.wanderer(); },
+          talk: {
+            name: 'Wanderin',
+            texts: ['Die Normalparabel hat die Gleichung y = x². Ihr Scheitel liegt im Ursprung.']
+          }
+        }
+      ],
+      exits: { west: 'ost', east: 'wald' }
+    },
+
+    // Waldweg als dunklerer Durchgang
+    wald: {
+      map: [
+        'TTTTTTTTTTTTTTTT',
+        'TTTTT.....TTTTTT',
+        'TTT..........TTT',
+        'TT....TT.....TTT',
+        'PPPPPPPPPPPPPPPP',
+        'TT....TT....TTTT',
+        'T......T......TT',
+        'T.............TT',
+        'TT....T......TTT',
+        'TTT.........TTTT',
+        'TTTT.......TTTTT',
+        'TTTTT....TTTTTTT',
+        'TTTTTTTTTTTTTTTT',
+        'TTTTTTTTTTTTTTTT'
+      ],
+      buildings: [],
+      npcs: [
+        {
+          x: 10 * TILE, y: 5 * TILE, sprites: function () { return People.forester(); },
+          talk: {
+            name: 'Förster',
+            texts: ['Je größer a, desto schmaler die Parabel. a streckt oder staucht sie.']
+          }
+        }
+      ],
+      exits: { west: 'wiese', east: 'ruine' }
+    },
+
+    // Ruine mit dem Eingang zum ersten Dungeon (Höhle der Parabeln)
+    ruine: {
+      map: [
+        'TTTTTTTTTTTTTTTT',
+        'T....TTTTTTTT..T',
+        'T..RRRRRRRRRR..T',
+        'T..RRRRRRRRRR..T',
+        'PPPRRREERRRR...T',
+        'T.....i........T',
+        'T..............T',
+        'T...T..........T',
+        'T...........T..T',
+        'T...T.....T....T',
+        'T........T.....T',
+        'T..............T',
+        'T....T.........T',
+        'TTTTTTTTTTTTTTTT'
+      ],
+      buildings: [],
+      signs: [
+        {
+          tiles: [[6, 5]], x: 6 * 16, y: 5 * 16,
+          name: 'Schild',
+          texts: ['Höhle der Parabeln. Der erste Dungeon wartet hinter dieser Mauer.']
+        }
+      ],
+      exits: { west: 'wald' }
     }
   };
 
@@ -132,7 +232,13 @@ var World = (function () {
   function isBlocked(tx, ty) {
     if (!isOutdoor()) return Interior.isBlocked(current, tx, ty);
     var t = tileOf(states[current], tx, ty);
-    return t === '#' || BLOCKING.indexOf(t) >= 0;
+    if (t === '#' || BLOCKING.indexOf(t) >= 0) return true;
+    // Außen-NPCs blockieren ihre Kachel
+    var npcs = states[current].def.npcs || [];
+    for (var i = 0; i < npcs.length; i++) {
+      if (Math.floor(npcs[i].x / TILE) === tx && Math.floor(npcs[i].y / TILE) === ty) return true;
+    }
+    return false;
   }
 
   // --- Übergänge -----------------------------------------------------------
@@ -180,6 +286,14 @@ var World = (function () {
         if (t[0] === tx && t[1] === ty) {
           return { name: signs[i].name, texts: signs[i].texts, hintX: signs[i].x, hintY: signs[i].y };
         }
+      }
+    }
+    // Außen-NPCs auf dem Weg zu den Dungeons
+    var npcs = states[current].def.npcs || [];
+    for (var k = 0; k < npcs.length; k++) {
+      var n = npcs[k];
+      if (Math.floor(n.x / TILE) === tx && Math.floor(n.y / TILE) === ty) {
+        return { name: n.talk.name, texts: n.talk.texts, hintX: n.x + 8, hintY: n.y };
       }
     }
     return null;
@@ -367,6 +481,59 @@ var World = (function () {
     r.px(x, y + 1, 1, 1, '#94d470');
   }
 
+  // Ruinenmauer: grobe Steinquader mit Moos
+  function drawRuinWall(r, tx, ty) {
+    var x = tx * TILE, y = ty * TILE;
+    r.px(x, y, TILE, TILE, '#8a8f8a');
+    r.px(x, y, TILE, 1, '#b8bcb4');
+    r.px(x, y + 15, TILE, 1, '#565c56');
+    r.px(x, y, 1, TILE, '#a8ada6');
+    r.px(x + 15, y, 1, TILE, '#565c56');
+    r.px(x, y + 7, TILE, 1, '#6a706a');
+    // versetzte Fugen je Zeile
+    var j1 = (ty % 2) ? 3 : 7, j2 = (ty % 2) ? 11 : 15;
+    r.px(x + j1, y, 1, 7, '#6a706a');
+    r.px(x + j2, y + 8, 1, 7, '#6a706a');
+    // Moosflecken
+    if (hash(tx * 5, ty * 3) > 0.55) {
+      r.px(x + 2 + Math.floor(hash(tx, ty) * 6), y + 2, 3, 2, '#5a7a44');
+      r.px(x + 9 + Math.floor(hash(ty, tx) * 4), y + 9, 2, 2, '#4c6a38');
+    }
+    r.px(x + 3, y + 3, 2, 1, '#b8bcb4');
+    r.px(x + 10, y + 10, 2, 1, '#b8bcb4');
+  }
+
+  // Dunkler Eingang in die Ruine (Dungeon-Eingang, noch verschlossen)
+  function drawRuinDoor(r, tx, ty) {
+    var x = tx * TILE, y = ty * TILE;
+    r.px(x, y, TILE, TILE, '#14121c');
+    r.px(x, y, TILE, 2, '#7a7f7a');
+    r.px(x, y + 2, TILE, 1, '#565c56');
+    if (tileAt(tx - 1, ty) !== 'E') {
+      r.px(x, y, 2, TILE, '#9a9f98');
+      r.px(x + 1, y, 1, TILE, '#b8bcb4');
+    }
+    if (tileAt(tx + 1, ty) !== 'E') {
+      r.px(x + 14, y, 2, TILE, '#9a9f98');
+      r.px(x + 14, y, 1, TILE, '#565c56');
+    }
+    // schwach schimmernde Stufen
+    r.px(x + 4, y + 13, 8, 1, '#2c2a3a');
+    r.px(x + 5, y + 9, 6, 1, '#22202e');
+  }
+
+  // Kleines Holzschild (Hinweisschild an der Ruine)
+  function drawSign(r, tx, ty) {
+    var x = tx * TILE, y = ty * TILE;
+    r.px(x + 7, y + 8, 2, 8, '#5a3a22');
+    r.px(x + 7, y + 9, 1, 7, '#7a5230');
+    r.px(x + 2, y + 2, 12, 7, '#8a5c34');
+    r.px(x + 2, y + 2, 12, 1, '#a87848');
+    r.px(x + 2, y + 8, 12, 1, '#5a3a22');
+    r.px(x + 4, y + 4, 8, 1, '#4a2f1c');
+    r.px(x + 4, y + 6, 6, 1, '#4a2f1c');
+  }
+
   function drawStone(r, x, y) {
     r.px(x, y + 2, 5, 1, 'rgba(20,50,20,0.45)');
     r.px(x, y, 4, 2, '#8f9692');
@@ -395,6 +562,9 @@ var World = (function () {
           r.ellipse(c.cx + 2, c.cy + 6, 11 + c.big, 7, col);
         } else if (t === 'W') {
           r.ellipse(tx * TILE + 10, ty * TILE + 12, 9, 5, col);
+        } else if (t === 'R' && tileAt(tx, ty + 1) !== 'R' && tileAt(tx, ty + 1) !== 'E') {
+          // Schatten unter freier Mauerkante
+          r.px(tx * TILE, ty * TILE + TILE, TILE, 2, col);
         }
       }
     }
@@ -438,7 +608,7 @@ var World = (function () {
         } else {
           c = grassColor(x, y);
           if (id === 'T') c = lerp(c, C.grassDark, 0.25);
-          if (id === 'S' || id === 'F' || id === 'G') c = lerp(c, C.dry, 0.35);
+          if (id === 'S' || id === 'F' || id === 'G' || id === 'R' || id === 'E' || id === 'i') c = lerp(c, C.dry, 0.35);
           if (adjacent(st.pathMask, k) || adjacent(st.waterMask, k) || adjacent(st.bankMask, k)) {
             c = lerp(c, C.grassDark, 0.55);
           }
@@ -505,6 +675,9 @@ var World = (function () {
         tt = tileAt(cx, cy);
         if (tt === 'T') drawCanopy(Render, cx, cy);
         else if (tt === 'W') Buildings.well(Render, cx, cy);
+        else if (tt === 'R') drawRuinWall(Render, cx, cy);
+        else if (tt === 'E') drawRuinDoor(Render, cx, cy);
+        else if (tt === 'i') drawSign(Render, cx, cy);
       }
       if (s && cy === s.y) Buildings.school(Render, s);
       for (cx = 0; cx < COLS; cx++) {
@@ -585,6 +758,20 @@ var World = (function () {
     r.image(st.ground.canvas, 0, 0);
     drawWater(r.getCtx(), st, t);
     drawFlowers(r, st, t);
+    // Außen-NPCs (unter Gebänden und Baumkronen)
+    var npcs = st.def.npcs || [];
+    if (npcs.length && !st.npcSprites) {
+      st.npcSprites = npcs.map(function (n) { return n.sprites(); });
+    }
+    var ctx = r.getCtx();
+    for (var i = 0; i < npcs.length; i++) {
+      var n = npcs[i];
+      ctx.globalAlpha = 0.3;
+      r.ellipse(n.x + 8, n.y + 15, 6, 2, '#2a140a');
+      ctx.globalAlpha = 1;
+      var blink = (t + i * 900) % 3600 < 180 ? 1 : 0;
+      r.image(st.npcSprites[i][blink], n.x, n.y);
+    }
   }
 
   // Kronen, Gebäude, offene Türen, Rauch (über der Spielfigur)
