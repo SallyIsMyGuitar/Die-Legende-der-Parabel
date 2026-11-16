@@ -1,13 +1,9 @@
-// world.js: Bildschirm-Daten, Kollision und Zeichnen der Welt
-// Ein Bildschirm ist ein Array aus 14 Zeilen (y) zu 16 Kacheln (x).
-// Kachel-IDs: 0 = Wiese, 1 = Weg, 2 = Baum (blockiert), 3 = Wasser (blockiert), 4 = Haus (blockiert),
-// 5 = Haustür (blockiert, Berühren führt ins Haus)
-// Das Hausinnere steckt in js/interior.js; World schaltet zwischen den Bildschirmen um.
-//
-// Gezeichnet wird in drei Ebenen:
-//  - Boden (einmal vorberechnet): Wiese, Weg, Ufer, Schatten, Baumstämme, Grasbüschel
-//  - Animation (jedes Bild): Wasser, wippende Blumen
-//  - Überlagerung (vorberechnet, liegt über der Spielfigur): Baumkronen, Haus
+// world.js: Dorf-Bildschirme, Kollision, Übergänge und Zeichnen der Außenwelt
+// Jeder Bildschirm ist 16 x 14 Kacheln groß. Kachelzeichen:
+//   'T' Baum   '.' Wiese   'P' Weg   '~' Wasser   'F' Zaun   'G' Tor (gesperrt)
+//   'S' Schulgelände   'W' Brunnen
+// Gebäude stehen in der Liste buildings und werden beim Start eingestempelt
+// ('H' Gebäude, 'D' Tür). Innenräume liegen in js/interior.js und js/rooms.js.
 var World = (function () {
   'use strict';
 
@@ -16,86 +12,160 @@ var World = (function () {
   var ROWS = 14;
   var W = COLS * TILE;
   var H = ROWS * TILE;
-  var PATH = 1, TREE = 2, WATER = 3, HOUSE = 4, DOOR = 5;
+  var BLOCKING = 'THDFGSW~';
 
-  // Startdorf-Ausschnitt (Meilenstein 1). Weitere Bildschirme werden später
-  // als weitere Datenarrays ergänzt.
-  var startScreen = [
-    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
-    [2, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-    [2, 0, 0, 2, 2, 0, 2, 0, 4, 4, 4, 4, 0, 0, 0, 2],
-    [2, 0, 0, 2, 0, 0, 0, 0, 4, 5, 4, 4, 0, 0, 0, 2],
-    [2, 0, 0, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 2],
-    [2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 2],
-    [2, 0, 0, 0, 0, 1, 0, 3, 3, 3, 0, 0, 1, 0, 0, 2],
-    [2, 0, 0, 0, 0, 1, 0, 3, 3, 3, 0, 0, 1, 0, 0, 2],
-    [2, 0, 0, 0, 0, 1, 0, 3, 3, 3, 0, 0, 1, 0, 0, 2],
-    [2, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 2],
-    [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-    [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-    [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2],
-    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
-  ];
+  var SCREENS = {
+    start: {
+      map: [
+        'TTTTTTTTTTTTTTTT',
+        'T.....T........T',
+        'T..TT.T........T',
+        'T..T...........T',
+        'T..T.PPPPPPPPPPP',
+        'T....P..........',
+        'T....P..FSSSSSST',
+        'T.~~.P..FSSSSSST',
+        'T.~~.P..FSSSSSST',
+        'T....P..FSSSSSST',
+        'T....P..FSSSSSST',
+        'T....P..FFFGGFFT',
+        'T....PPPPPPPP..T',
+        'TTTTTTTTTTTTTTTT'
+      ],
+      buildings: [
+        { x: 8, y: 2, w: 4, h: 2, door: 9, room: 'eltern', style: 'red', windows: [3], barrel: 0, lantern: true }
+      ],
+      school: { x: 9, y: 6, w: 6, h: 5 },
+      exits: { east: 'ost' }
+    },
+    ost: {
+      map: [
+        'TTTTTTTTTTTTTTTT',
+        'T.......T......T',
+        'T.......T......T',
+        'T..............T',
+        'PPPPPPPPPPPPPP.T',
+        '........PP.....T',
+        'T.....PPPP.....T',
+        'T.....PWPP..TT.T',
+        'T.....PPPP..TT.T',
+        'T........P..T..T',
+        'T........P.....T',
+        'T........P.....T',
+        'T...PPPPPP.....T',
+        'TTTTTTTTTTTTTTTT'
+      ],
+      buildings: [
+        { x: 2, y: 2, w: 4, h: 2, door: 3, room: 'nachbarin', style: 'blue', windows: [0, 3], lantern: true },
+        { x: 10, y: 2, w: 4, h: 2, door: 12, room: 'freund', style: 'green', windows: [0, 1], lantern: true },
+        { x: 2, y: 10, w: 5, h: 2, door: 4, room: 'laden', style: 'shop', windows: [0, 1, 3, 4], shop: true }
+      ],
+      exits: { west: 'start' }
+    }
+  };
 
-  var currentScreen = startScreen;
-  var current = 'dorf';   // 'dorf' oder 'haus'
+  var START = { screen: 'start', x: 9 * TILE, y: 5 * TILE, facing: 'down' };
 
-  var rgb = Render.rgb, lerp = Render.lerp, mix = Render.mix;
+  var rgb = Render.rgb, lerp = Render.lerp;
   var hash = Render.hash, noise = Render.noise;
 
-  // Vorberechnete Daten
-  var groundLayer = null, overlayLayer = null;
-  var pathMask, waterMask, bankMask, waterDepth;
-  var wavePixels = [];  // tiefere Wasserpixel für Wellenlicht: [x, y]
-  var foamPixels = [];  // Uferschaum: [x, y]
-  var flowers = [];
-  var chimney = null;   // Austrittspunkt für Rauch
+  var states = {};          // vorberechnete Daten je Bildschirm
+  var current = START.screen;
+  var S = null;             // gerade bearbeiteter Bildschirm
 
-  // Kachel-ID an Kachelposition abfragen (Dorf-Bildschirm)
-  function tileAt(tx, ty) {
-    if (tx < 0 || ty < 0 || tx >= COLS || ty >= ROWS) {
-      return -1; // außerhalb des Bildschirms: blockiert
+  // --- Aufbau der Kachelraster -----------------------------------------
+  function buildTiles(def) {
+    var t = def.map.map(function (row) {
+      if (row.length !== COLS) console.warn('Kartenzeile mit falscher Länge: ' + row);
+      return row.split('');
+    });
+    def.buildings.forEach(function (b) {
+      for (var y = b.y; y < b.y + b.h; y++) {
+        for (var x = b.x; x < b.x + b.w; x++) t[y][x] = 'H';
+      }
+      t[b.y + b.h - 1][b.door] = 'D';
+    });
+    return t;
+  }
+
+  Object.keys(SCREENS).forEach(function (name) {
+    var def = SCREENS[name];
+    states[name] = { name: name, def: def, tiles: buildTiles(def), doors: {} };
+  });
+
+  // Zielraum -> Bildschirm und Gebäude (für den Weg nach draußen)
+  var roomHome = {};
+  Object.keys(SCREENS).forEach(function (name) {
+    SCREENS[name].buildings.forEach(function (b) {
+      if (b.room) roomHome[b.room] = { screen: name, building: b };
+    });
+  });
+
+  // Kachel im Bildschirm st; außerhalb wird beim Nachbarbildschirm nachgesehen
+  function tileOf(st, tx, ty) {
+    if (ty < 0 || ty >= ROWS) return '#';
+    if (tx < 0 || tx >= COLS) {
+      var dir = tx < 0 ? 'west' : 'east';
+      var next = st.def.exits && st.def.exits[dir];
+      if (!next) return '#';
+      return states[next].tiles[ty][tx < 0 ? tx + COLS : tx - COLS];
     }
-    return currentScreen[ty][tx];
+    return st.tiles[ty][tx];
   }
 
-  // Ist die Kachel blockiert?
+  function tileAt(tx, ty) {
+    return tileOf(S, tx, ty);
+  }
+
+  function isOutdoor() {
+    return !!states[current];
+  }
+
   function isBlocked(tx, ty) {
-    if (current === 'haus') return Interior.isBlocked(tx, ty);
-    var t = tileAt(tx, ty);
-    return t === -1 || t === TREE || t === WATER || t === HOUSE || t === DOOR;
+    if (!isOutdoor()) return Interior.isBlocked(current, tx, ty);
+    var t = tileOf(states[current], tx, ty);
+    return t === '#' || BLOCKING.indexOf(t) >= 0;
   }
 
-  // Übergänge: Tür berühren (nach oben gegen die Tür laufen) bzw. auf die
-  // Fußmatte im Haus treten. Liefert Ziel und Startposition oder null.
+  // --- Übergänge -----------------------------------------------------------
+  // Tür berühren (nach oben gegen die Tür laufen) oder Fußmatte im Haus.
   function checkWarp(px, py, facing) {
     var cx = Math.floor((px + 8) / TILE);
-    if (current === 'dorf') {
-      if (facing === 'up' && tileAt(cx, Math.floor((py - 1) / TILE)) === DOOR) {
-        return { to: 'haus', x: Interior.SPAWN.x, y: Interior.SPAWN.y, facing: 'up' };
-      }
-    } else if (Interior.isExit(cx, Math.floor((py + 8) / TILE))) {
-      var door = doorTile();
-      return { to: 'dorf', x: door.x * TILE, y: (door.y + 1) * TILE, facing: 'down' };
+    if (isOutdoor()) {
+      if (facing !== 'up') return null;
+      var ty = Math.floor((py - 1) / TILE);
+      var st = states[current];
+      if (tileOf(st, cx, ty) !== 'D') return null;
+      var b = st.def.buildings.filter(function (bb) { return bb.door === cx && bb.y + bb.h - 1 === ty; })[0];
+      if (!b || !b.room) return null;
+      return { type: 'enter', room: b.room, building: b };
+    }
+    if (Interior.isExit(current, cx, Math.floor((py + 8) / TILE))) {
+      var home = roomHome[current];
+      return { type: 'exit', screen: home.screen, building: home.building };
     }
     return null;
   }
 
-  function doorTile() {
-    for (var ty = 0; ty < ROWS; ty++) {
-      for (var tx = 0; tx < COLS; tx++) {
-        if (tileAt(tx, ty) === DOOR) return { x: tx, y: ty };
-      }
-    }
-    return { x: 8, y: 8 };
+  // Bildschirmrand überschritten? Liefert Richtung und Ziel.
+  function checkEdge(px) {
+    if (!isOutdoor()) return null;
+    var ex = states[current].def.exits || {};
+    if (px + 8 >= W && ex.east) return { dir: 'east', to: ex.east };
+    if (px + 8 < 0 && ex.west) return { dir: 'west', to: ex.west };
+    return null;
   }
 
   function setScreen(name) { current = name; }
-  function isOutdoor() { return current === 'dorf'; }
+  function getScreen() { return current; }
 
-  // --- Masken: welche Pixel gehören zu Weg bzw. Wasser? -----------------
-  // Kanten zu fremden Kacheln werden eingerückt und Außenecken abgerundet,
-  // so entstehen durchgehende Flächen statt einzelner Quadrate (Autotiling).
+  function setDoorOpen(b, p) {
+    states[roomHome[b.room].screen].doors[b.room] = p;
+  }
+
+  function doorRect(b) { return Buildings.doorRect(b); }
+
+  // --- Masken für Weg und Wasser (Autotiling) ----------------------------
   function shapeMask(id, top, side, round, roundTop) {
     var m = new Uint8Array(W * H);
     for (var ty = 0; ty < ROWS; ty++) {
@@ -118,14 +188,13 @@ var World = (function () {
     return m;
   }
 
-  // Erdkante oberhalb des Wassers (Zeilen 1–3 der oberen Wasserkacheln)
   function buildBank() {
     var m = new Uint8Array(W * H);
     var cuts = [0, 2, 1, 0];
     for (var ty = 0; ty < ROWS; ty++) {
       for (var tx = 0; tx < COLS; tx++) {
-        if (tileAt(tx, ty) !== WATER || tileAt(tx, ty - 1) === WATER) continue;
-        var w = tileAt(tx - 1, ty) !== WATER, e = tileAt(tx + 1, ty) !== WATER;
+        if (tileAt(tx, ty) !== '~' || tileAt(tx, ty - 1) === '~') continue;
+        var w = tileAt(tx - 1, ty) !== '~', e = tileAt(tx + 1, ty) !== '~';
         for (var i = 1; i < 4; i++) {
           var l = (w ? 1 + cuts[i] : 0), r = TILE - (e ? 1 + cuts[i] : 0);
           for (var j = l; j < r; j++) m[(ty * TILE + i) * W + tx * TILE + j] = i;
@@ -135,8 +204,7 @@ var World = (function () {
     return m;
   }
 
-  // Abstand jedes Wasserpixels zum Ufer (für Tiefenfarbe und Schaum)
-  function buildDepth() {
+  function buildDepth(waterMask) {
     var d = new Uint8Array(W * H);
     var queue = [];
     for (var k = 0; k < W * H; k++) {
@@ -147,13 +215,11 @@ var World = (function () {
       }
     }
     for (var q = 0; q < queue.length; q++) {
-      var c = queue[q];
-      var nb = [c - 1, c + 1, c - W, c + W];
+      var c = queue[q], nb = [c - 1, c + 1, c - W, c + W];
       for (var i = 0; i < 4; i++) {
-        var nk = nb[i];
-        if (waterMask[nk] && !d[nk]) {
-          d[nk] = d[c] + 1;
-          queue.push(nk);
+        if (waterMask[nb[i]] && !d[nb[i]]) {
+          d[nb[i]] = d[c] + 1;
+          queue.push(nb[i]);
         }
       }
     }
@@ -164,10 +230,10 @@ var World = (function () {
     return mask[k - 1] || mask[k + 1] || mask[k - W] || mask[k + W];
   }
 
-  // --- Farben für den Boden --------------------------------------------
+  // --- Bodenfarben ---------------------------------------------------------
   var C = {
     grassA: rgb('#4a9a3e'), grassB: rgb('#7cc85e'),
-    grassDark: rgb('#2c6a2a'), grassLight: rgb('#b0e888'),
+    grassDark: rgb('#2c6a2a'), grassLight: rgb('#b0e888'), dry: rgb('#9a9a4a'),
     sandA: rgb('#d6b97c'), sandB: rgb('#f0dcaa'), sandShade: rgb('#b08c56'),
     bankLip: rgb('#356e2e'), bankA: rgb('#7c5636'), bankB: rgb('#55391f'),
     foam: rgb('#dcf2fb'), shallow: rgb('#78bdea'), mid: rgb('#3d88d6'),
@@ -184,22 +250,22 @@ var World = (function () {
   }
 
   function sandColor(x, y, k) {
+    var m = S.pathMask;
     var c = lerp(C.sandA, C.sandB, 0.35 + noise(x, y, 6, 7) * 0.55);
-    if (!pathMask[k - W]) c = lerp(c, C.sandShade, 0.65);          // Graskante wirft Schatten
-    else if (!pathMask[k - 2 * W]) c = lerp(c, C.sandShade, 0.3);
-    if (!pathMask[k - 1]) c = lerp(c, C.sandShade, 0.3);
+    if (!m[k - W]) c = lerp(c, C.sandShade, 0.65);
+    else if (!m[k - 2 * W]) c = lerp(c, C.sandShade, 0.3);
+    if (!m[k - 1] && x > 0) c = lerp(c, C.sandShade, 0.3);
     var h = hash(x * 3, y * 5);
-    if (h > 0.985) c = lerp(c, C.sandShade, 0.8);                   // Kiesel
+    if (h > 0.985) c = lerp(c, C.sandShade, 0.8);
     else if (h < 0.02) c = lerp(c, [255, 250, 225], 0.5);
     return c;
   }
 
   function waterColor(x, y, k) {
-    // Schatten der Erdkante auf dem Wasser
     for (var s = 1; s <= 3; s++) {
-      if (bankMask[k - s * W]) return lerp(C.mid, C.bankShadow, 0.75 - 0.18 * (s - 1));
+      if (S.bankMask[k - s * W]) return lerp(C.mid, C.bankShadow, 0.75 - 0.18 * (s - 1));
     }
-    var d = waterDepth[k];
+    var d = S.waterDepth[k];
     if (d <= 1) return C.foam;
     if (d === 2) return lerp(C.foam, C.shallow, 0.65);
     if (d <= 5) return lerp(C.shallow, C.mid, (d - 2) / 3);
@@ -213,7 +279,7 @@ var World = (function () {
     return c;
   }
 
-  // --- Objekte ---------------------------------------------------------
+  // --- Bäume, Büschel, Steine ------------------------------------------------
   var CANOPY = [
     { dark: '#143a20', shade: '#22602c', mid: '#338838', light: '#50a646', hi: '#88d066' },
     { dark: '#103628', shade: '#1c5a3e', mid: '#2b7d4c', light: '#459e5f', hi: '#80cc86' },
@@ -221,15 +287,15 @@ var World = (function () {
   ];
 
   function canopyInfo(tx, ty) {
+    var seed = S.name === 'start' ? 0 : 50;
     return {
-      cx: tx * TILE + 8 + Math.round((hash(tx, ty + 99) - 0.5) * 2),
+      cx: tx * TILE + 8 + Math.round((hash(tx + seed, ty + 99) - 0.5) * 2),
       cy: ty * TILE + 6,
-      big: hash(tx + 1, ty + 5) > 0.5 ? 1 : 0,
-      pal: CANOPY[Math.floor(hash(tx + 7, ty + 3) * 3)]
+      big: hash(tx + 1 + seed, ty + 5) > 0.5 ? 1 : 0,
+      pal: CANOPY[Math.floor(hash(tx + 7 + seed, ty + 3) * 3)]
     };
   }
 
-  // Runde, buschige Baumkrone aus mehreren Blätterballen
   function drawCanopy(r, tx, ty) {
     var c = canopyInfo(tx, ty), P = c.pal;
     var bumps = [[0, 1, 10 + c.big, 8 + c.big], [-5, -3, 6, 5], [5, -3, 6, 5], [0, -6, 6, 5]];
@@ -241,7 +307,6 @@ var World = (function () {
     r.ellipse(c.cx - 3, c.cy - 4, 4, 3, P.light);
     r.ellipse(c.cx - 3, c.cy - 8, 2, 1, P.hi);
     r.ellipse(c.cx + 3, c.cy - 5, 2, 1, P.hi);
-    // Blätterstruktur
     for (i = 0; i < 7; i++) {
       var lx = c.cx - 7 + Math.floor(hash(tx * 11 + i, ty) * 14);
       var ly = c.cy - 6 + Math.floor(hash(tx, ty * 13 + i) * 12);
@@ -251,7 +316,6 @@ var World = (function () {
     r.px(c.cx - 1, c.cy - 2, 1, 1, P.hi);
   }
 
-  // Stamm nur sichtbar, wenn unterhalb kein weiterer Baum steht
   function drawTrunk(r, tx, ty) {
     var x = tx * TILE, y = ty * TILE;
     r.px(x + 5, y + 9, 6, 7, '#2a1a10');
@@ -264,7 +328,6 @@ var World = (function () {
     r.px(x + 10, y + 14, 2, 1, '#5a3820');
   }
 
-  // Grasbüschel
   function drawTuft(r, x, y) {
     r.px(x, y + 1, 1, 3, '#357a30');
     r.px(x + 2, y, 1, 4, '#357a30');
@@ -282,271 +345,187 @@ var World = (function () {
     r.px(x + 3, y + 1, 1, 1, '#646c68');
   }
 
-  // Bereich frei von Weg-, Wasser- und Uferpixeln (inkl. Rand)?
   function areaClear(x, y, w, h) {
     for (var yy = y - 1; yy <= y + h; yy++) {
       for (var xx = x - 1; xx <= x + w; xx++) {
         var k = yy * W + xx;
-        if (pathMask[k] || waterMask[k] || bankMask[k]) return false;
+        if (S.pathMask[k] || S.waterMask[k] || S.bankMask[k]) return false;
+        if (tileAt(xx >> 4, yy >> 4) !== '.') return false;
       }
     }
     return true;
   }
 
-  function houseBounds() {
-    var minX = COLS, minY = ROWS, maxX = -1, maxY = -1;
-    for (var ty = 0; ty < ROWS; ty++) {
-      for (var tx = 0; tx < COLS; tx++) {
-        var id = tileAt(tx, ty);
-        if (id !== HOUSE && id !== DOOR) continue;
-        minX = Math.min(minX, tx); maxX = Math.max(maxX, tx);
-        minY = Math.min(minY, ty); maxY = Math.max(maxY, ty);
-      }
-    }
-    if (maxX < 0) return null;
-    return { x: minX * TILE, y: minY * TILE, w: (maxX - minX + 1) * TILE, h: (maxY - minY + 1) * TILE };
-  }
-
-  // Haus: Ziegeldach mit Schornstein, Fachwerkwand, Tür, Fenster mit Blumenkasten
-  function drawHouse(r, b) {
-    var x0 = b.x, y0 = b.y, w = b.w;
-    var wy0 = y0 + 16, wy1 = y0 + b.h;      // Wand oben/unten
-    var i;
-
-    // Schornstein (hinter dem Dach)
-    r.px(x0 + 43, y0 - 13, 10, 11, '#3a2222');
-    r.px(x0 + 44, y0 - 12, 8, 10, '#9a5a4e');
-    r.px(x0 + 44, y0 - 12, 2, 10, '#bc786a');
-    r.px(x0 + 50, y0 - 12, 2, 10, '#7a4038');
-    r.px(x0 + 44, y0 - 9, 8, 1, '#7a4038');
-    r.px(x0 + 44, y0 - 5, 8, 1, '#7a4038');
-    r.px(x0 + 42, y0 - 15, 12, 3, '#3a2222');
-    r.px(x0 + 43, y0 - 14, 10, 1, '#6a4040');
-    chimney = { x: x0 + 48, y: y0 - 16 };
-
-    // Dach: leicht trapezförmig, Ziegelreihen mit Schuppenmuster
-    var rTop = y0 - 6, rows = 22;
-    for (i = 0; i < rows; i++) {
-      var inset = Math.round((rows - 1 - i) / (rows - 1) * 4);
-      var l = x0 - 3 + inset, rr = x0 + w + 3 - inset;
-      var y = rTop + i;
-      r.px(l - 1, y, rr - l + 2, 1, '#3a1414');
-      r.px(l, y, rr - l, 1, mix('#d8604c', '#9a2e2e', i / (rows - 1)));
-      if (i % 4 === 3) r.px(l, y, rr - l, 1, mix('#8a2828', '#6a1c1c', i / rows));
-      if (i % 4 === 0 && i > 1) {
-        var off = ((i >> 2) % 2) * 3;
-        for (var xx = l + off; xx < rr - 3; xx += 6) r.px(xx + 1, y, 3, 1, mix('#f0907a', '#c05a4a', i / rows));
-      }
-    }
-    // First mit Glanz
-    r.px(x0 + 1, rTop - 1, w - 2, 2, '#3a1414');
-    r.px(x0 + 2, rTop, w - 4, 1, '#f4a088');
-    // Traufe
-    r.px(x0 - 4, rTop + rows, w + 8, 2, '#3a1414');
-    r.px(x0 - 3, rTop + rows, w + 6, 1, '#6a2020');
-
-    // Wand mit Verlauf
-    for (i = wy0; i < wy1; i++) {
-      r.px(x0 + 2, i, w - 4, 1, mix('#f6ead0', '#d6c194', (i - wy0) / (wy1 - wy0)));
-    }
-    r.px(x0 + 1, wy0, 1, wy1 - wy0, '#2e2018');
-    r.px(x0 + w - 2, wy0, 1, wy1 - wy0, '#2e2018');
-    r.px(x0 + 2, wy0, w - 4, 3, 'rgba(80,40,20,0.35)');   // Schatten unter der Traufe
-
-    // Fachwerkbalken
-    var beams = [x0 + 2, x0 + 37, x0 + w - 5];
-    for (i = 0; i < beams.length; i++) {
-      r.px(beams[i], wy0, 3, wy1 - wy0 - 3, '#6e4a2c');
-      r.px(beams[i], wy0, 1, wy1 - wy0 - 3, '#946a42');
-    }
-
-    // Steinsockel
-    r.px(x0 + 2, wy1 - 3, w - 4, 3, '#8c8478');
-    r.px(x0 + 2, wy1 - 3, w - 4, 1, '#b0a898');
-    for (i = x0 + 4; i < x0 + w - 4; i += 5) r.px(i + ((i >> 2) % 2), wy1 - 2, 1, 2, '#625c52');
-
-    // Tür mit Rundbogen
-    var dcx = x0 + 24;
-    r.px(dcx - 6, wy0 + 4, 12, wy1 - wy0 - 4, '#2e2018');
-    r.px(dcx - 4, wy0 + 3, 8, 1, '#2e2018');
-    r.px(dcx - 5, wy0 + 5, 10, wy1 - wy0 - 6, '#8a5a32');
-    r.px(dcx - 3, wy0 + 4, 6, 1, '#8a5a32');
-    r.px(dcx - 2, wy0 + 5, 1, wy1 - wy0 - 6, '#6a4224');
-    r.px(dcx + 1, wy0 + 5, 1, wy1 - wy0 - 6, '#6a4224');
-    r.px(dcx - 5, wy0 + 5, 1, wy1 - wy0 - 6, '#a87444');
-    r.px(dcx + 3, wy0 + 10, 1, 2, '#f2c84a');
-    r.px(dcx - 7, wy1 - 1, 14, 1, '#c4bcac');
-
-    // Laterne neben der Tür
-    r.px(dcx + 8, wy0 + 4, 4, 1, '#2e2018');
-    r.px(dcx + 8, wy0 + 5, 3, 5, '#2e2018');
-    r.px(dcx + 9, wy0 + 6, 1, 3, '#ffe27a');
-
-    // Fenster mit Spiegelung und Blumenkasten
-    var wcx = x0 + 53;
-    r.px(wcx - 6, wy0 + 3, 12, 9, '#4a3020');
-    for (i = 0; i < 7; i++) r.px(wcx - 5, wy0 + 4 + i, 10, 1, mix('#d4f0fa', '#78b4dc', i / 6));
-    r.px(wcx - 4, wy0 + 5, 2, 1, '#ffffff');
-    r.px(wcx - 4, wy0 + 6, 1, 1, '#ffffff');
-    r.px(wcx, wy0 + 4, 1, 7, '#4a3020');
-    r.px(wcx - 5, wy0 + 7, 10, 1, '#4a3020');
-    r.px(wcx - 7, wy0 + 12, 14, 2, '#6e4a2c');
-    r.px(wcx - 7, wy0 + 12, 14, 1, '#946a42');
-    var fc = ['#e8506a', '#f6d64a', '#e8506a', '#f4f0f0', '#e8506a', '#f6d64a'];
-    for (i = 0; i < fc.length; i++) {
-      r.px(wcx - 6 + i * 2, wy0 + 10, 2, 2, '#4a9a3e');
-      r.px(wcx - 6 + i * 2 + (i % 2), wy0 + 10, 1, 1, fc[i]);
-    }
-
-    // Fass links neben dem Haus
-    var bx = x0 + 6, by = wy1 - 10;
-    r.px(bx - 1, by, 9, 10, '#2e2018');
-    r.px(bx, by + 1, 7, 8, '#8a5a32');
-    r.px(bx + 1, by + 1, 1, 8, '#b07a46');
-    r.px(bx, by + 3, 7, 1, '#4a4a52');
-    r.px(bx, by + 7, 7, 1, '#4a4a52');
-    r.px(bx, by, 7, 1, '#5a3a20');
-  }
-
-  // Schatten (einfarbig auf eigener Ebene, später halbtransparent eingeblendet)
-  function drawShadows(r, b) {
+  function drawShadows(r) {
     var col = '#0c2a12';
     for (var ty = 0; ty < ROWS; ty++) {
       for (var tx = 0; tx < COLS; tx++) {
-        if (tileAt(tx, ty) !== TREE) continue;
-        var c = canopyInfo(tx, ty);
-        r.ellipse(c.cx + 2, c.cy + 6, 11 + c.big, 7, col);
+        var t = tileAt(tx, ty);
+        if (t === 'T') {
+          var c = canopyInfo(tx, ty);
+          r.ellipse(c.cx + 2, c.cy + 6, 11 + c.big, 7, col);
+        } else if (t === 'W') {
+          r.ellipse(tx * TILE + 10, ty * TILE + 12, 9, 5, col);
+        }
       }
     }
-    if (b) {
-      r.px(b.x + b.w - 2, b.y - 4, 6, b.h + 4, col);
-      r.px(b.x + 2, b.y + b.h, b.w + 2, 3, col);
-    }
+    S.def.buildings.forEach(function (b) {
+      var x = b.x * TILE, y = b.y * TILE, w = b.w * TILE, h = b.h * TILE;
+      r.px(x + w - 2, y - 4, 6, h + 4, col);
+      r.px(x + 2, y + h, w + 2, 3, col);
+    });
+    var s = S.def.school;
+    if (s) r.px((s.x + s.w) * TILE - 2, s.y * TILE - 2, 4, (s.h - 1) * TILE + 2, col);
   }
 
-  // --- Vorberechnung ---------------------------------------------------
-  function bake() {
-    pathMask = shapeMask(PATH, 2, 2, 2, true);
-    waterMask = shapeMask(WATER, 4, 1, 3, false);
-    bankMask = buildBank();
-    waterDepth = buildDepth();
-    var house = houseBounds();
+  // --- Vorberechnung eines Bildschirms ---------------------------------------
+  function bake(st) {
+    S = st;
+    st.pathMask = shapeMask('P', 2, 2, 2, true);
+    st.waterMask = shapeMask('~', 4, 1, 3, false);
+    st.bankMask = buildBank();
+    st.waterDepth = buildDepth(st.waterMask);
 
-    // 1) Bodenpixel direkt ins Bildpuffer schreiben
-    groundLayer = Render.createLayer(W, H);
-    var img = groundLayer.ctx.createImageData(W, H);
+    // 1) Bodenpixel
+    st.ground = Render.createLayer(W, H);
+    var img = st.ground.ctx.createImageData(W, H);
     var data = img.data;
-    wavePixels = [];
-    foamPixels = [];
+    st.wavePixels = [];
+    st.foamPixels = [];
     for (var y = 0; y < H; y++) {
       for (var x = 0; x < W; x++) {
         var k = y * W + x;
-        var id = currentScreen[y >> 4][x >> 4];
+        var id = st.tiles[y >> 4][x >> 4];
         var c;
-        if (pathMask[k]) {
+        if (st.pathMask[k]) {
           c = sandColor(x, y, k);
-        } else if (waterMask[k]) {
+        } else if (st.waterMask[k]) {
           c = waterColor(x, y, k);
-          var shaded = bankMask[k - W] || bankMask[k - 2 * W] || bankMask[k - 3 * W];
-          if (waterDepth[k] === 1 && !shaded) foamPixels.push([x, y]);
-          else if (waterDepth[k] >= 3) wavePixels.push([x, y]);
-        } else if (bankMask[k]) {
-          c = bankColor(x, y, bankMask[k]);
+          var shaded = st.bankMask[k - W] || st.bankMask[k - 2 * W] || st.bankMask[k - 3 * W];
+          if (st.waterDepth[k] === 1 && !shaded) st.foamPixels.push([x, y]);
+          else if (st.waterDepth[k] >= 3) st.wavePixels.push([x, y]);
+        } else if (st.bankMask[k]) {
+          c = bankColor(x, y, st.bankMask[k]);
         } else {
           c = grassColor(x, y);
-          if (id === TREE) c = lerp(c, C.grassDark, 0.25);
-          if (adjacent(pathMask, k) || adjacent(waterMask, k) || adjacent(bankMask, k)) {
-            c = lerp(c, C.grassDark, 0.55);   // dunkle Kante am Übergang
+          if (id === 'T') c = lerp(c, C.grassDark, 0.25);
+          if (id === 'S' || id === 'F' || id === 'G') c = lerp(c, C.dry, 0.35);
+          if (adjacent(st.pathMask, k) || adjacent(st.waterMask, k) || adjacent(st.bankMask, k)) {
+            c = lerp(c, C.grassDark, 0.55);
           }
         }
         var o = k * 4;
         data[o] = c[0]; data[o + 1] = c[1]; data[o + 2] = c[2]; data[o + 3] = 255;
       }
     }
-    groundLayer.ctx.putImageData(img, 0, 0);
+    st.ground.ctx.putImageData(img, 0, 0);
 
-    // 2) Schatten von Bäumen und Haus
+    // 2) Schatten
     var shadow = Render.createLayer(W, H);
     Render.setTarget(shadow.ctx);
-    drawShadows(Render, house);
-    Render.setTarget(groundLayer.ctx);
+    drawShadows(Render);
+    Render.setTarget(st.ground.ctx);
     Render.image(shadow.canvas, 0, 0, 0.3);
 
-    // 3) Grasbüschel, Steine, Baumstämme; Blumen für die Animation merken
-    flowers = [];
+    // 3) Büschel, Steine, Stämme, Unkraut am Zaun; Blumen merken
+    st.flowers = [];
     var flowerColors = ['#ffffff', '#f6d64a', '#f08cb4', '#9cc8ff'];
+    var salt = st.name === 'start' ? 0 : 31;
     for (var ty = 0; ty < ROWS; ty++) {
       for (var tx = 0; tx < COLS; tx++) {
         var t = tileAt(tx, ty);
-        if (t === TREE && tileAt(tx, ty + 1) !== TREE) drawTrunk(Render, tx, ty);
-        if (t !== 0) continue;
+        if (t === 'T' && tileAt(tx, ty + 1) !== 'T') drawTrunk(Render, tx, ty);
+        if (t !== '.') continue;
+        var hx = tx + salt;
+        var nearFence = 'FG'.indexOf(tileAt(tx, ty - 1)) >= 0 || 'FG'.indexOf(tileAt(tx + 1, ty)) >= 0;
+        if (nearFence && hash(hx, ty * 3) > 0.3) Buildings.fenceWeeds(Render, tx, ty, hx * 7 + ty);
         for (var n = 0; n < 2; n++) {
-          if (hash(tx * 3 + n, ty * 7) < 0.55) {
-            var gx = tx * TILE + 1 + Math.floor(hash(tx + n * 5, ty + 11) * 10);
-            var gy = ty * TILE + 1 + Math.floor(hash(tx + 13, ty + n * 3) * 10);
+          if (hash(hx * 3 + n, ty * 7) < 0.55) {
+            var gx = tx * TILE + 1 + Math.floor(hash(hx + n * 5, ty + 11) * 10);
+            var gy = ty * TILE + 1 + Math.floor(hash(hx + 13, ty + n * 3) * 10);
             if (areaClear(gx, gy, 5, 4)) drawTuft(Render, gx, gy);
           }
         }
-        if (hash(tx * 17, ty * 5) > 0.93) {
-          var sx = tx * TILE + 3 + Math.floor(hash(tx, ty * 2) * 8);
-          var sy = ty * TILE + 4 + Math.floor(hash(tx * 2, ty) * 8);
+        if (hash(hx * 17, ty * 5) > 0.93) {
+          var sx = tx * TILE + 3 + Math.floor(hash(hx, ty * 2) * 8);
+          var sy = ty * TILE + 4 + Math.floor(hash(hx * 2, ty) * 8);
           if (areaClear(sx, sy, 5, 3)) drawStone(Render, sx, sy);
         }
-        if (hash(tx * 5, ty * 9) > 0.62) {
-          var fx = tx * TILE + 3 + Math.floor(hash(tx * 9, ty) * 10);
-          var fy = ty * TILE + 3 + Math.floor(hash(tx, ty * 9) * 9);
+        if (hash(hx * 5, ty * 9) > 0.62) {
+          var fx = tx * TILE + 3 + Math.floor(hash(hx * 9, ty) * 10);
+          var fy = ty * TILE + 3 + Math.floor(hash(hx, ty * 9) * 9);
           if (areaClear(fx - 1, fy - 1, 4, 5)) {
-            flowers.push({
+            st.flowers.push({
               x: fx, y: fy,
-              color: flowerColors[Math.floor(hash(tx + 3, ty + 8) * flowerColors.length)],
-              phase: hash(tx, ty) * 6.28
+              color: flowerColors[Math.floor(hash(hx + 3, ty + 8) * flowerColors.length)],
+              phase: hash(hx, ty) * 6.28
             });
           }
         }
       }
     }
 
-    // 4) Überlagerung: Baumkronen von oben nach unten, dann das Haus
-    overlayLayer = Render.createLayer(W, H);
-    Render.setTarget(overlayLayer.ctx);
+    // 4) Überlagerung, zeilenweise von oben nach unten: Kronen, Brunnen,
+    //    Schule, Zaun, Gebäude
+    st.overlay = Render.createLayer(W, H);
+    Render.setTarget(st.overlay.ctx);
+    var s = st.def.school;
     for (var cy = 0; cy < ROWS; cy++) {
-      for (var cx = 0; cx < COLS; cx++) {
-        if (tileAt(cx, cy) === TREE) drawCanopy(Render, cx, cy);
+      var cx, tt;
+      for (cx = 0; cx < COLS; cx++) {
+        tt = tileAt(cx, cy);
+        if (tt === 'T') drawCanopy(Render, cx, cy);
+        else if (tt === 'W') Buildings.well(Render, cx, cy);
       }
+      if (s && cy === s.y) Buildings.school(Render, s);
+      for (cx = 0; cx < COLS; cx++) {
+        tt = tileAt(cx, cy);
+        if (tt === 'F') {
+          var up = tileAt(cx, cy - 1) === 'F', down = tileAt(cx, cy + 1) === 'F';
+          var side = 'FG'.indexOf(tileAt(cx - 1, cy)) >= 0 || 'FG'.indexOf(tileAt(cx + 1, cy)) >= 0;
+          if (up || down) Buildings.fence(Render, cx, cy, 'v');
+          if (side) Buildings.fence(Render, cx, cy, 'h', hash(cx, cy) > 0.75);
+        } else if (tt === 'G' && tileAt(cx - 1, cy) !== 'G') {
+          Buildings.gate(Render, cx, cy);
+        }
+      }
+      st.def.buildings.forEach(function (b) {
+        if (b.y + b.h - 1 !== cy) return;
+        if (b.shop) Buildings.shop(Render, b);
+        else Buildings.house(Render, b);
+      });
     }
-    if (house) drawHouse(Render, house);
     Render.setTarget(null);
   }
 
-  // --- Zeichnen pro Bild -------------------------------------------------
-  function drawWater(ctx, t) {
+  function stateOf(name) {
+    var st = states[name];
+    if (!st.ground) bake(st);
+    S = st;
+    return st;
+  }
+
+  // --- Zeichnen pro Bild -------------------------------------------------------
+  function drawWater(ctx, st, t) {
     var i, p;
-    // Uferschaum flimmert
     ctx.fillStyle = '#ffffff';
-    for (i = 0; i < foamPixels.length; i++) {
-      p = foamPixels[i];
+    for (i = 0; i < st.foamPixels.length; i++) {
+      p = st.foamPixels[i];
       if (Math.sin(t * 0.003 + p[0] * 0.9 + p[1] * 1.3) > 0.25) ctx.fillRect(p[0], p[1], 1, 1);
     }
-    // wandernde Lichtwellen
-    var light = [], dark = [];
-    for (i = 0; i < wavePixels.length; i++) {
-      p = wavePixels[i];
-      var v = Math.sin(p[0] * 0.38 + p[1] * 0.85 - t * 0.0022) + Math.sin(p[0] * 0.12 - p[1] * 0.5 + t * 0.0013);
-      if (v > 1.6) light.push(p);
-      else if (v < -1.75) dark.push(p);
-    }
     ctx.fillStyle = 'rgba(160,214,250,0.75)';
-    for (i = 0; i < light.length; i++) ctx.fillRect(light[i][0], light[i][1], 1, 1);
-    ctx.fillStyle = 'rgba(20,60,140,0.35)';
-    for (i = 0; i < dark.length; i++) ctx.fillRect(dark[i][0], dark[i][1], 1, 1);
-    // Glitzern
-    for (i = 0; i < 4; i++) {
+    for (i = 0; i < st.wavePixels.length; i++) {
+      p = st.wavePixels[i];
+      var v = Math.sin(p[0] * 0.38 + p[1] * 0.85 - t * 0.0022) + Math.sin(p[0] * 0.12 - p[1] * 0.5 + t * 0.0013);
+      if (v > 1.6) ctx.fillRect(p[0], p[1], 1, 1);
+    }
+    if (!st.wavePixels.length) return;
+    ctx.fillStyle = '#ffffff';
+    for (i = 0; i < 3; i++) {
       var cycle = t / 1100 + i * 0.37;
-      var idx = Math.floor(hash(i, Math.floor(cycle)) * wavePixels.length);
-      p = wavePixels[idx];
+      p = st.wavePixels[Math.floor(hash(i, Math.floor(cycle)) * st.wavePixels.length)];
       var phase = cycle - Math.floor(cycle);
       if (!p || phase > 0.5) continue;
-      ctx.fillStyle = '#ffffff';
       ctx.fillRect(p[0], p[1], 1, 1);
       if (phase > 0.12 && phase < 0.38) {
         ctx.fillRect(p[0] - 1, p[1], 3, 1);
@@ -555,9 +534,9 @@ var World = (function () {
     }
   }
 
-  function drawFlowers(r, t) {
-    for (var i = 0; i < flowers.length; i++) {
-      var f = flowers[i];
+  function drawFlowers(r, st, t) {
+    for (var i = 0; i < st.flowers.length; i++) {
+      var f = st.flowers[i];
       var sway = Math.round(Math.sin(t * 0.0016 + f.phase) * 0.8);
       r.px(f.x + 1, f.y + 2, 1, 2, '#2f7a2c');
       var x = f.x + sway, y = f.y;
@@ -568,44 +547,52 @@ var World = (function () {
     }
   }
 
-  // Boden inkl. Animationen (unter der Spielfigur)
-  function drawGround(r, time) {
+  // Boden inkl. Animationen (unter der Spielfigur); name optional
+  function drawGround(r, time, name) {
     var t = time || 0;
-    if (current === 'haus') { Interior.drawGround(r, t); return; }
-    if (!groundLayer) bake();
-    r.image(groundLayer.canvas, 0, 0);
-    drawWater(r.getCtx(), t);
-    drawFlowers(r, t);
+    name = name || current;
+    if (!states[name]) { Interior.drawGround(r, t, name); return; }
+    var st = stateOf(name);
+    r.image(st.ground.canvas, 0, 0);
+    drawWater(r.getCtx(), st, t);
+    drawFlowers(r, st, t);
   }
 
-  // Baumkronen, Haus und Rauch (über der Spielfigur)
-  function drawOverlay(r, time) {
+  // Kronen, Gebäude, offene Türen, Rauch (über der Spielfigur)
+  function drawOverlay(r, time, name) {
     var t = time || 0;
-    if (current === 'haus') { Interior.drawOverlay(r, t); return; }
-    if (!overlayLayer) bake();
-    r.image(overlayLayer.canvas, 0, 0);
-    if (chimney) {
-      var ctx = r.getCtx();
+    name = name || current;
+    if (!states[name]) { Interior.drawOverlay(r, t, name); return; }
+    var st = stateOf(name);
+    r.image(st.overlay.canvas, 0, 0);
+    var ctx = r.getCtx();
+    st.def.buildings.forEach(function (b) {
+      if (st.doors[b.room] > 0) Buildings.openDoor(r, b, st.doors[b.room]);
+      if (!b.chimney) return;
       for (var i = 0; i < 4; i++) {
-        var p = (t / 1000 * 0.35 + i / 4) % 1;
+        var p = (t / 1000 * 0.35 + i / 4 + b.x * 0.13) % 1;
         ctx.globalAlpha = 0.55 * (1 - p);
         var rad = 2 + Math.round(p * 4);
-        r.ellipse(chimney.x + Math.round(Math.sin(p * 5 + i) * 2 + p * 8), chimney.y - Math.round(p * 28), rad, rad, '#f2f2f2');
+        r.ellipse(b.chimney.x + Math.round(Math.sin(p * 5 + i) * 2 + p * 8), b.chimney.y - Math.round(p * 28), rad, rad, '#f2f2f2');
       }
       ctx.globalAlpha = 1;
-    }
+    });
   }
 
   return {
     drawGround: drawGround,
     drawOverlay: drawOverlay,
-    tileAt: tileAt,
     isBlocked: isBlocked,
     checkWarp: checkWarp,
+    checkEdge: checkEdge,
     setScreen: setScreen,
+    getScreen: getScreen,
     isOutdoor: isOutdoor,
-    COLS: COLS,
-    ROWS: ROWS,
+    setDoorOpen: setDoorOpen,
+    doorRect: doorRect,
+    START: START,
+    WIDTH: W,
+    HEIGHT: H,
     TILE: TILE
   };
 })();

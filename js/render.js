@@ -47,9 +47,10 @@ var Render = (function () {
   }
 
   // Ein "Pixel"-Rechteck im logischen Raster zeichnen
+  // Koordinaten werden gerundet, damit keine unscharfen Halbpixel entstehen
   function px(x, y, w, h, color) {
     ctx.fillStyle = color;
-    ctx.fillRect(x, y, w, h);
+    ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
   }
 
   // Eine 16x16-Kachel an Kachelposition (tx, ty) füllen
@@ -90,6 +91,38 @@ var Render = (function () {
       }
     }
     return layer.canvas;
+  }
+
+  // Kleine 3x5-Pixelschrift für Schilder (nur Großbuchstaben)
+  var FONT = {
+    A: ['.#.', '#.#', '###', '#.#', '#.#'], B: ['##.', '#.#', '##.', '#.#', '##.'],
+    C: ['.##', '#..', '#..', '#..', '.##'], D: ['##.', '#.#', '#.#', '#.#', '##.'],
+    E: ['###', '#..', '##.', '#..', '###'], F: ['###', '#..', '##.', '#..', '#..'],
+    G: ['.##', '#..', '#.#', '#.#', '.##'], H: ['#.#', '#.#', '###', '#.#', '#.#'],
+    I: ['###', '.#.', '.#.', '.#.', '###'], L: ['#..', '#..', '#..', '#..', '###'],
+    N: ['##.', '#.#', '#.#', '#.#', '#.#'], O: ['.#.', '#.#', '#.#', '#.#', '.#.'],
+    P: ['##.', '#.#', '##.', '#..', '#..'], R: ['##.', '#.#', '##.', '#.#', '#.#'],
+    S: ['.##', '#..', '.#.', '..#', '##.'], T: ['###', '.#.', '.#.', '.#.', '.#.'],
+    U: ['#.#', '#.#', '#.#', '#.#', '###'], 'Ü': ['#.#', '...', '#.#', '#.#', '###'],
+    ' ': ['...', '...', '...', '...', '...']
+  };
+
+  function text(str, x, y, color) {
+    x = Math.round(x);
+    y = Math.round(y);
+    ctx.fillStyle = color;
+    for (var n = 0; n < str.length; n++) {
+      var g = FONT[str.charAt(n)] || FONT[' '];
+      for (var j = 0; j < 5; j++) {
+        for (var i = 0; i < 3; i++) {
+          if (g[j].charAt(i) === '#') ctx.fillRect(x + n * 4 + i, y + j, 1, 1);
+        }
+      }
+    }
+  }
+
+  function textWidth(str) {
+    return str.length * 4 - 1;
   }
 
   // Farbhilfen ---------------------------------------------------------
@@ -141,6 +174,8 @@ var Render = (function () {
     ellipse: ellipse,
     image: image,
     sprite: sprite,
+    text: text,
+    textWidth: textWidth,
     rgb: rgb,
     lerp: lerp,
     mix: mix,

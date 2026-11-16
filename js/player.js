@@ -6,8 +6,8 @@ var Player = (function () {
   var SPEED = 60; // Pixel pro Sekunde
 
   // Position in Pixeln (logische Auflösung), Figur ist 16x16
-  var x = 8 * TILE;
-  var y = 9 * TILE;
+  var x = 9 * TILE;
+  var y = 5 * TILE;
   var facing = 'down';
   var animTime = 0; // für Laufanimation
 
@@ -144,10 +144,19 @@ var Player = (function () {
   // Laufzyklus: Stand – links – Stand – rechts
   var CYCLE = [0, 1, 0, 2];
 
-  function draw(r) {
+  // Gescriptete Bewegung ohne Kollision (z. B. durch die Tür gehen)
+  function scriptMove(dx, dy, dt, dir) {
+    x += dx;
+    y += dy;
+    if (dir) facing = dir;
+    animTime += dt;
+  }
+
+  // ox/oy: optionale Verschiebung beim Zeichnen (Bildschirmwechsel)
+  function draw(r, ox, oy) {
     if (!sprites) buildSprites();
-    var px = Math.round(x);
-    var py = Math.round(y);
+    var px = Math.round(x + (ox || 0));
+    var py = Math.round(y + (oy || 0));
     var phase = animTime > 0 ? CYCLE[Math.floor(animTime * 9) % 4] : 0;
     var bob = phase === 0 && animTime > 0 ? 1 : 0;
 
@@ -171,6 +180,7 @@ var Player = (function () {
   return {
     update: update,
     setPosition: setPosition,
+    scriptMove: scriptMove,
     draw: draw,
     getX: getX,
     getY: getY,
