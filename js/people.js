@@ -127,18 +127,44 @@ var People = (function () {
     return [Render.sprite(rows, p), Render.sprite(blink(rows), p)];
   }
 
-  // Herr Späth: entflohener Lehrer, graues Haar, Brille, dunkler Anzug mit Krawatte
+  // Herr Späth: entflohener Lehrer, dunkelgraue Haare, blaues T-Shirt,
+  // beige Chino, weiße Sneaker
   function spaeth() {
     var p = pal({
-      h: '#7a7a82', H: '#a0a0a8', g: '#3a3a48',
-      t: '#3a4a66', T: '#54627e', D: '#26324a',
-      k: '#a03030', p: '#4a4a52', B: '#2a2a30'
+      h: '#4a4a52', H: '#6a6a74',
+      t: '#3e64a8', T: '#5a80d0', D: '#2c4a80',
+      p: '#c8b48a', B: '#f4f4f4'
     });
     var rows = FRONT.slice();
-    rows[6] = '..osgegssgegso..';   // Brille
-    rows[7] = '..oSsgssssgsSo..';
-    rows[9] = '..oTttkkktttTo..';   // Kragen mit roter Krawatte
     return [Render.sprite(rows, p), Render.sprite(blink(rows), p)];
+  }
+
+  // Herr Späth seitlich (Ansturm und Standbild); mirror = true heißt Blick nach links
+  function spaethSide(mirror) {
+    var p = pal({
+      h: '#4a4a52', H: '#6a6a74',
+      t: '#3e64a8', T: '#5a80d0', D: '#2c4a80',
+      p: '#c8b48a', w: '#f4f4f4'
+    });
+    var rows = [
+      '....oooooooo....',
+      '...ohhhHHhho...',
+      '..ohhhhhHHhho..',
+      '..ohhhhhhhhhho.',
+      '..oHhhhsssssso..',
+      '..ohhhhssssweo..',
+      '..oHhhsssssseo..',
+      '..oSHsssssssssso',
+      '...oSSssssSSo...',
+      '..ottDttttttDo..',
+      '.ottDtttttttDso.',
+      '.otTDtttttttDso.',
+      '..ottDDDDDDDDo..',
+      '...oppo..oppo...',
+      '...owwo..owwo...',
+      '...owwo..owwo...'
+    ];
+    return Render.sprite(rows, p, mirror === true);
   }
 
   // Förster: graue Haare, grüne Uniform, braune Stiefel
@@ -159,6 +185,7 @@ var People = (function () {
     shopkeeper: shopkeeper,
     wanderer: wanderer,
     forester: forester,
-    spaeth: spaeth
+    spaeth: spaeth,
+    spaethSide: spaethSide
   };
 })();

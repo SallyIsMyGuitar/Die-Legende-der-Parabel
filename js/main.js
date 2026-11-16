@@ -51,20 +51,26 @@
   var spaethSprites = null;  // Sprites einmal vorberechnen
 
   function drawSpaeth(r, t) {
-    if (!spaethSprites) spaethSprites = People.spaeth();
+    if (!spaethSprites) {
+      // Ansturm von links: Blick nach rechts; danach stehend: Blick nach links
+      spaethSprites = { right: People.spaethSide(false), left: People.spaethSide(true) };
+    }
     var bob = spaethPhase === 'approach' ? Math.floor(t / 90) % 2 : 0;
+    var img = spaethPhase === 'aside' ? spaethSprites.left : spaethSprites.right;
     var ctx = r.getCtx();
     ctx.globalAlpha = 0.3;
     r.ellipse(spaeth.x + 8, spaeth.y + 15, 6, 2, '#2a140a');
     ctx.globalAlpha = 1;
-    r.image(spaethSprites[0], Math.round(spaeth.x), Math.round(spaeth.y - bob));
+    r.image(img, Math.round(spaeth.x), Math.round(spaeth.y - bob));
   }
 
   function startSpaeth() {
-    spaeth = { x: W + 16, y: 64 };
+    // Halt neben der Spielfigur (links von ihr), Blick zu ihr nach rechts
+    var stopX = Player.getX() - 16;
+    spaeth = { x: -32, y: 64 };
     spaethPhase = 'approach';
     run([
-      { dur: 0.7, tick: function (p) { spaeth.x = W + 16 + (248 - (W + 16)) * p; } },
+      { dur: 0.7, tick: function (p) { spaeth.x = -32 + (stopX + 32) * p; } },
       { dur: 0, end: function () {
         spaethPhase = 'talk';
         Dialog.open('Herr Späth', SPAETH_TEXTS);
@@ -77,12 +83,14 @@
     spaethPhase = 'aside';
     run([
       { dur: 0.6, tick: function (p) {
-        spaeth.x = 248 + (192 - 248) * p;
+        spaeth.x = spaeth.x0 + (192 - spaeth.x0) * p;
         spaeth.y = 64 + (96 - 64) * p;
-      } },
+      }, start: function () { spaeth.x0 = spaeth.x; } },
       { dur: 0, end: function () {
         World.addNpc('ost', {
-          x: 192, y: 96, sprites: function () { return People.spaeth(); },
+          x: 192, y: 96,
+          // steht seitlich zum Weg, Blick nach links
+          sprites: function () { var s = People.spaethSide(true); return [s, s]; },
           talk: { name: 'Herr Späth', texts: SPAETH_TEXTS }
         });
         spaeth = null;
