@@ -1,4 +1,4 @@
-// player.js: Spielfigur mit 4 Blickrichtungen und Kollision
+// player.js: Spielfigur mit 4 Blickrichtungen, Laufanimation und Kollision
 var Player = (function () {
   'use strict';
 
@@ -50,74 +50,120 @@ var Player = (function () {
     }
   }
 
-  // Sanfter Übergang zwischen zwei Farben
-  function mix(c1, c2, t) {
-    t = Math.max(0, Math.min(1, t));
-    var r1 = parseInt(c1.slice(1, 3), 16), g1 = parseInt(c1.slice(3, 5), 16), b1 = parseInt(c1.slice(5, 7), 16);
-    var r2 = parseInt(c2.slice(1, 3), 16), g2 = parseInt(c2.slice(3, 5), 16), b2 = parseInt(c2.slice(5, 7), 16);
-    var r = Math.round(r1 + (r2 - r1) * t);
-    var g = Math.round(g1 + (g2 - g1) * t);
-    var b = Math.round(b1 + (b2 - b1) * t);
-    return 'rgb(' + r + ',' + g + ',' + b + ')';
+  // --- Sprites als Pixelraster (16x16) ----------------------------------
+  // Jedes Zeichen steht für eine Farbe, '.' ist durchsichtig.
+  var PALETTE = {
+    o: '#22202e', // Umriss
+    h: '#3f9e4a', H: '#7fd36a', d: '#25683a',  // Mütze
+    y: '#f2c14e', Y: '#c8862a',                // Haare
+    s: '#f8d0a4', S: '#d9a074',                // Haut
+    w: '#ffffff', e: '#22202e',                // Augen
+    t: '#3f9e4a', T: '#7fd36a', D: '#25683a',  // Waffenrock
+    b: '#6e4226', k: '#f5cf4a',                // Gürtel, Schnalle
+    p: '#efe6cc', B: '#7a4a26'                 // Hose, Stiefel
+  };
+
+  var HEAD_DOWN = [
+    '....oooooooo....',
+    '...ohHHhhhhdo...',
+    '..ohHhhhhhhhdo..',
+    '..odhhhhhhhhdo..',
+    '..oYyyyyyyyyYo..',
+    '..oyssssssssyo..',
+    '..oswessssewso..',
+    '..oSsessssesSo..',
+    '...oSSssssSSo...'
+  ];
+  var HEAD_UP = [
+    '....oooooooo....',
+    '...ohhhhhhHdo...',
+    '..ohhhhhhhHhdo..',
+    '..odhhhhhhhhdo..',
+    '..oYyyyyyyyyYo..',
+    '..oyyyyYyyyyyo..',
+    '..oYyyyyyyyyYo..',
+    '..oSYyyyyyyYSo..',
+    '...oSSSSSSSSo...'
+  ];
+  var HEAD_RIGHT = [
+    '....oooooooo....',
+    '...ohHHhhhhdo...',
+    '..ohHhhhhhhhdo..',
+    '..odhhhhhhhhhdo.',
+    '..oYyyyyysssso..',
+    '..oyyyyssssweo..',
+    '..oYyysssssseo..',
+    '..oSYsssssssssso',
+    '...oSSssssSSo...'
+  ];
+  var BODY = [
+    '..odtTTttTTtdo..',
+    '.osdttttttttdso.',
+    '.osdbbbkkbbbdso.',
+    '..oDDDDDDDDDDo..'
+  ];
+  var BODY_BACK = [
+    '..odttttttttdo..',
+    '.osdttttttttdso.',
+    '.osdbbbbbbbbdso.',
+    '..oDDDDDDDDDDo..'
+  ];
+  var LEGS = [
+    ['...oppo..oppo...', '...oBBo..oBBo...', '...oooo..oooo...'],  // Stand
+    ['...oppo..oppo...', '...oBBo..oooo...', '...oooo.........'],  // Schritt links
+    ['...oppo..oppo...', '...oooo..oBBo...', '.........oooo...']   // Schritt rechts
+  ];
+
+  var sprites = null;
+
+  function makeSprite(rows, flip) {
+    var layer = Render.createLayer(16, 16);
+    var ctx = layer.ctx;
+    for (var j = 0; j < rows.length; j++) {
+      for (var i = 0; i < 16; i++) {
+        var ch = rows[j].charAt(flip ? 15 - i : i);
+        if (ch === '.' || !PALETTE[ch]) continue;
+        ctx.fillStyle = PALETTE[ch];
+        ctx.fillRect(i, j, 1, 1);
+      }
+    }
+    return layer.canvas;
   }
 
-  // Figur im modernen Zelda-Stil: runde Formen, weiche Schattierung,
-  // Auf-und-ab beim Laufen. step = 0/1 wechselt die Beinstellung.
+  function buildSprites() {
+    sprites = {};
+    var dirs = {
+      down: [HEAD_DOWN, BODY, false],
+      up: [HEAD_UP, BODY_BACK, false],
+      right: [HEAD_RIGHT, BODY_BACK, false],
+      left: [HEAD_RIGHT, BODY_BACK, true]
+    };
+    for (var d in dirs) {
+      sprites[d] = [];
+      for (var f = 0; f < LEGS.length; f++) {
+        var rows = dirs[d][0].concat(dirs[d][1]).slice(0, 13).concat(LEGS[f]);
+        sprites[d].push(makeSprite(rows, dirs[d][2]));
+      }
+    }
+  }
+
+  // Laufzyklus: Stand – links – Stand – rechts
+  var CYCLE = [0, 1, 0, 2];
+
   function draw(r) {
+    if (!sprites) buildSprites();
     var px = Math.round(x);
     var py = Math.round(y);
-    var step = (animTime > 0 && Math.floor(animTime * 7) % 2 === 1) ? 1 : 0;
-    var bob = (animTime > 0 && step === 1) ? 1 : 0; // leichtes Wippen
-    py += bob;
+    var phase = animTime > 0 ? CYCLE[Math.floor(animTime * 9) % 4] : 0;
+    var bob = phase === 0 && animTime > 0 ? 1 : 0;
 
     // weicher Schatten am Boden
-    r.px(px + 3, py + 13 + bob, 10, 2, 'rgba(20,40,16,0.35)');
-    r.px(px + 5, py + 15 + bob, 6, 1, 'rgba(20,40,16,0.25)');
+    var ctx = r.getCtx();
+    ctx.globalAlpha = 0.3;
+    r.ellipse(px + 8, py + 15, 6, 2, '#0c2a12');
+    ctx.globalAlpha = 1;
 
-    // Umriss (dunkel, aber nicht schwarz)
-    r.px(px + 3, py + 1, 10, 12, '#2c3444');
-
-    // Kopf: runde Form mit Verlauf, Haare mit Glanz
-    r.px(px + 4, py + 1, 8, 4, '#f4cc96');
-    r.px(px + 4, py + 4, 8, 1, mix('#f4cc96', '#c89868', 0.6)); // Schattenkinn
-    r.px(px + 4, py + 1, 8, 2, '#96501e');
-    r.px(px + 5, py + 1, 4, 1, '#c06828');                    // Haar-Glanz
-
-    // Körper: grüner Waffenrock mit Verlauf und Kragen
-    r.px(px + 4, py + 5, 8, 6, '#3e9448');
-    r.px(px + 4, py + 9, 8, 2, mix('#3e9448', '#1e6428', 0.7)); // dunkler Saum
-    r.px(px + 5, py + 5, 6, 1, '#8cd07c');                     // heller Kragen
-    r.px(px + 7, py + 6, 2, 4, '#58b458');                     // Mittelstreifen
-    r.px(px + 4, py + 10, 8, 1, '#5c3820');                    // Gürtel
-
-    // Beine mit Laufschritt
-    if (step === 0) {
-      r.px(px + 4, py + 11, 3, 3, '#34507a');
-      r.px(px + 9, py + 11, 3, 3, '#34507a');
-      r.px(px + 4, py + 13, 3, 1, '#5c3a20');
-      r.px(px + 9, py + 13, 3, 1, '#5c3a20');
-    } else {
-      r.px(px + 3, py + 11, 3, 3, '#34507a');
-      r.px(px + 10, py + 11, 3, 3, '#34507a');
-      r.px(px + 3, py + 13, 3, 1, '#5c3a20');
-      r.px(px + 10, py + 13, 3, 1, '#5c3a20');
-    }
-
-    if (facing === 'down') {
-      r.px(px + 5, py + 3, 2, 1, '#2c3444');                   // beide Augen
-      r.px(px + 9, py + 3, 2, 1, '#2c3444');
-    } else if (facing === 'up') {
-      r.px(px + 4, py + 1, 8, 4, '#96501e');                  // Hinterkopf
-      r.px(px + 5, py + 4, 6, 1, mix('#f4cc96', '#c89868', 0.6));
-    } else if (facing === 'left') {
-      r.px(px + 4, py + 3, 2, 1, '#2c3444');                   // Auge links
-      r.px(px + 3, py + 6, 1, 4, '#3e9448');                   // Arm
-      r.px(px + 3, py + 10, 1, 2, '#f4cc96');                  // Hand
-    } else {
-      r.px(px + 10, py + 3, 2, 1, '#2c3444');                  // Auge rechts
-      r.px(px + 12, py + 6, 1, 4, '#3e9448');                   // Arm
-      r.px(px + 12, py + 10, 1, 2, '#f4cc96');                 // Hand
-    }
+    r.image(sprites[facing][phase], px, py - bob);
   }
 
   return {

@@ -1,8 +1,8 @@
-// render.js: Skalierung des Canvas und Pixel-Zeichenhilfen
+// render.js: Skalierung des Canvas, Zeichenebenen und Pixel-Zeichenhilfen
 var Render = (function () {
   'use strict';
 
-  var canvas, ctx;
+  var canvas, screenCtx, ctx;
   var LOGICAL_W = 256;
   var LOGICAL_H = 224;
   var TILE = 16;
@@ -20,32 +20,113 @@ var Render = (function () {
 
   function init(canvasEl) {
     canvas = canvasEl;
-    ctx = canvas.getContext('2d');
-    ctx.imageSmoothingEnabled = false;
+    screenCtx = canvas.getContext('2d');
+    screenCtx.imageSmoothingEnabled = false;
+    ctx = screenCtx;
     window.addEventListener('resize', resize);
     resize();
   }
 
-  // Ein einzelnes "Pixel"-Rechteck im logischen Raster zeichnen
-  function px(x, y, w, h, color) {
-    ctx.fillStyle = color;
-    ctx.fillRect(x, y, w, h);
+  // Unsichtbare Zeichenebene (z. B. für vorberechnete Hintergründe)
+  function createLayer(w, h) {
+    var c = document.createElement('canvas');
+    c.width = w || LOGICAL_W;
+    c.height = h || LOGICAL_H;
+    var cx = c.getContext('2d');
+    cx.imageSmoothingEnabled = false;
+    return { canvas: c, ctx: cx };
   }
 
-  // Eine 16x16-Kachel an Bildschirmposition (tx, ty in Kacheln) zeichnen
-  function tile(tx, ty, color) {
-    px(tx * TILE, ty * TILE, TILE, TILE, color);
+  // Zeichenziel umschalten; ohne Argument wieder auf den Bildschirm
+  function setTarget(targetCtx) {
+    ctx = targetCtx || screenCtx;
   }
 
   function getCtx() {
     return ctx;
   }
 
+  // Ein "Pixel"-Rechteck im logischen Raster zeichnen
+  function px(x, y, w, h, color) {
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, w, h);
+  }
+
+  // Eine 16x16-Kachel an Kachelposition (tx, ty) füllen
+  function tile(tx, ty, color) {
+    px(tx * TILE, ty * TILE, TILE, TILE, color);
+  }
+
+  // Gefüllte Pixel-Ellipse ohne Kantenglättung (Mittelpunkt cx/cy, Radien rx/ry)
+  function ellipse(cx, cy, rx, ry, color) {
+    ctx.fillStyle = color;
+    for (var j = -ry; j < ry; j++) {
+      var yy = (j + 0.5) / ry;
+      var half = Math.round(rx * Math.sqrt(1 - yy * yy));
+      if (half > 0) ctx.fillRect(Math.round(cx - half), cy + j, half * 2, 1);
+    }
+  }
+
+  // Bild/Ebene an Position zeichnen, optional mit Deckkraft
+  function image(src, x, y, alpha) {
+    if (alpha !== undefined) ctx.globalAlpha = alpha;
+    ctx.drawImage(src, Math.round(x), Math.round(y));
+    if (alpha !== undefined) ctx.globalAlpha = 1;
+  }
+
+  // Farbhilfen ---------------------------------------------------------
+  function rgb(hex) {
+    return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
+  }
+
+  // Lineare Mischung zweier RGB-Arrays
+  function lerp(a, b, t) {
+    t = Math.max(0, Math.min(1, t));
+    return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+  }
+
+  // Sanfter Übergang zwischen zwei Hex-Farben, Ergebnis als CSS-Farbe
+  function mix(c1, c2, t) {
+    var c = lerp(rgb(c1), rgb(c2), t);
+    return 'rgb(' + Math.round(c[0]) + ',' + Math.round(c[1]) + ',' + Math.round(c[2]) + ')';
+  }
+
+  // Deterministischer "Zufall" (0..1) pro Koordinatenpaar
+  function hash(x, y) {
+    var h = (Math.imul(x | 0, 374761393) + Math.imul(y | 0, 668265263)) | 0;
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    h ^= h >>> 16;
+    return (h >>> 0) / 4294967296;
+  }
+
+  // Weiches Wertrauschen (0..1) für organische Farbverläufe
+  function noise(x, y, scale, seed) {
+    var gx = x / scale, gy = y / scale;
+    var x0 = Math.floor(gx), y0 = Math.floor(gy);
+    var fx = gx - x0, fy = gy - y0;
+    fx = fx * fx * (3 - 2 * fx);
+    fy = fy * fy * (3 - 2 * fy);
+    var s = seed * 1013;
+    var a = hash(x0 + s, y0), b = hash(x0 + 1 + s, y0);
+    var c = hash(x0 + s, y0 + 1), d = hash(x0 + 1 + s, y0 + 1);
+    return (a + (b - a) * fx) * (1 - fy) + (c + (d - c) * fx) * fy;
+  }
+
   return {
     init: init,
     resize: resize,
+    createLayer: createLayer,
+    setTarget: setTarget,
+    getCtx: getCtx,
     px: px,
     tile: tile,
+    ellipse: ellipse,
+    image: image,
+    rgb: rgb,
+    lerp: lerp,
+    mix: mix,
+    hash: hash,
+    noise: noise,
     TILE: TILE,
     WIDTH: LOGICAL_W,
     HEIGHT: LOGICAL_H

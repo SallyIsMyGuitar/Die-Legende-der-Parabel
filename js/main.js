@@ -6,7 +6,6 @@
 
   // Initialisierung
   Render.init(canvas);
-  World.draw(Render);
   Input.init();
 
   // Spielschleife mit zeitunabhängiger Bewegung
@@ -19,8 +18,12 @@
 
     Player.update(World, Input, dt);
 
-    World.draw(Render, now);
+    // Zeichenreihenfolge: Boden – Figur – Kronen/Haus – Atmosphäre – Anzeige
+    World.drawGround(Render, now);
     Player.draw(Render);
+    World.drawOverlay(Render, now);
+    Fx.draw(Render, now);
+    Hud.draw(Render);
 
     requestAnimationFrame(loop);
   }
