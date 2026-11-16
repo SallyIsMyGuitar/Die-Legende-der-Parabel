@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Die Legende der Parabel">
+  <title>Die Legende der Parabel</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="rotate-hint">Bitte Gerät drehen</div>
+  <div id="game-wrap">
+    <canvas id="game-canvas" width="256" height="224"></canvas>
+  </div>
+  <div id="touch-controls" hidden>
+    <div id="dpad">
+      <button class="dpad-btn up" data-dir="up" aria-label="Oben"></button>
+      <button class="dpad-btn left" data-dir="left" aria-label="Links"></button>
+      <button class="dpad-btn right" data-dir="right" aria-label="Rechts"></button>
+      <button class="dpad-btn down" data-dir="down" aria-label="Unten"></button>
+    </div>
+    <div id="action-buttons">
+      <button class="action-btn" data-btn="a" aria-label="Aktion A">A</button>
+      <button class="action-btn" data-btn="b" aria-label="Aktion B">B</button>
+    </div>
+  </div>
+  <script src="js/render.js"></script>
+  <script src="js/world.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/player.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
