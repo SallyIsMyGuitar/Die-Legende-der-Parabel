@@ -7,6 +7,7 @@
 
   Render.init(canvas);
   Input.init();
+  TaskUi.init();
 
   // Spielstart im Elternhaus bei der Mutter
   World.setScreen(World.START.screen);
@@ -216,7 +217,9 @@
     lastTime = now;
 
     var target = null;
-    if (TestPage.isActive()) {
+    if (TaskUi.isActive()) {
+      TaskUi.update(dt, Input);
+    } else if (TestPage.isActive()) {
       TestPage.update(Input);
     } else if (Dialog.isActive()) {
       Dialog.update(dt, Input);
@@ -264,6 +267,7 @@
     Hud.draw(Render);
     Dialog.draw(Render);
     TestPage.draw(Render);
+    TaskUi.draw(Render);
     if (fade > 0) Render.px(0, 0, W, H, 'rgba(0,0,0,' + fade + ')');
     Input.clearPressed();
 

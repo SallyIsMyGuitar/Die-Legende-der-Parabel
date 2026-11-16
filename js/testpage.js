@@ -6,11 +6,18 @@ var TestPage = (function () {
 
   var active = false;
   var view = 'list';        // 'list' = Typauswahl, 'examples' = Beispielaufgaben
-  var sel = 0;              // gewählter Aufgabentyp
+  var sel = 0;              // gewählter Aufgabentyp (0 bis Anzahl Typen - 1)
   var scroll = 0;           // erste sichtbare Zeile in der Beispielliste
   var lines = [];           // Zeilen der Beispielliste (Frage + Lösung)
   var seed = 1;             // Samen für wiederholbare Beispielaufgaben
   var prevDirs = {};        // vorheriger Zustand der Richtungstasten
+
+  // Eintraege der Liste: Aufgabentypen und ganz unten die Probeaufgabe
+  function entries() {
+    var e = Tasks.TYPES.map(function (t) { return t.name; });
+    e.push('Probeaufgabe spielen');
+    return e;
+  }
 
   // Hoch/Runter wie A/B genau einmal pro Tastendruck auswerten
   function pressedDir(input, dir) {
@@ -48,10 +55,18 @@ var TestPage = (function () {
   function update(input) {
     if (!active) return;
     if (view === 'list') {
-      if (pressedDir(input, 'up')) sel = (sel + Tasks.TYPES.length - 1) % Tasks.TYPES.length;
-      if (pressedDir(input, 'down')) sel = (sel + 1) % Tasks.TYPES.length;
+      var n = entries().length;
+      if (pressedDir(input, 'up')) sel = (sel + n - 1) % n;
+      if (pressedDir(input, 'down')) sel = (sel + 1) % n;
       if (input.pressed('b')) { close(); return; }
       if (input.pressed('a')) {
+        if (sel >= Tasks.TYPES.length) {
+          // Probeaufgabe: zufaelliger Typ, neue Zahlen; Herzverlust uebt die Stufen
+          var type = Tasks.TYPES[Math.floor(Math.random() * Tasks.TYPES.length)];
+          close();
+          TaskUi.open(type.id, Math.floor(Math.random() * 99999) + 1);
+          return;
+        }
         view = 'examples';
         buildExamples();
       }
@@ -68,16 +83,18 @@ var TestPage = (function () {
     var ctx = r.getCtx();
     r.px(0, 0, Render.WIDTH, Render.HEIGHT, '#1c1828');
 
-    // Kopfzeile
+    // Kopfzeile (in der Liste steht hier der Seitentitel)
+    var kopf = view === 'list' ? 'Testseite' : Tasks.TYPES[sel].name;
     Font.draw(ctx, 'Testseite', 8, 7, '#f0c040');
-    Font.draw(ctx, Tasks.TYPES[sel].name, Render.WIDTH - Font.width(Tasks.TYPES[sel].name) - 8, 7, '#f6f0e2');
+    Font.draw(ctx, kopf, Render.WIDTH - Font.width(kopf) - 8, 7, '#f6f0e2');
     r.px(8, 17, Render.WIDTH - 16, 1, '#efe4c4');
 
     if (view === 'list') {
-      for (var i = 0; i < Tasks.TYPES.length; i++) {
+      var list = entries();
+      for (var i = 0; i < list.length; i++) {
         var y = 30 + i * 14;
         if (i === sel) Font.draw(ctx, '>', 12, y, '#f0c040');
-        Font.draw(ctx, Tasks.TYPES[i].name, 24, y, i === sel ? '#f0c040' : '#f6f0e2');
+        Font.draw(ctx, list[i], 24, y, i === sel ? '#f0c040' : '#f6f0e2');
       }
       Font.draw(ctx, 'A: zeigen  B: schließen', 8, Render.HEIGHT - 22, '#8a8496');
       Font.draw(ctx, 'Für die Lehrkraft', 8, Render.HEIGHT - 12, '#8a8496');

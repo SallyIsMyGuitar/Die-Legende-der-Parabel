@@ -11,6 +11,9 @@ var Hud = (function () {
     '...o...'
   ];
   var COLORS = { o: '#2a1020', r: '#e8344a', H: '#ffb0b8' };
+  var EMPTY = { o: '#2a1020', r: '#3a3444', H: '#55506a' };   // leeres Herz
+
+  var hearts = 3;   // aktuelle Herzen (voll = 3)
 
   var LETTERS = {
     A: ['.#.', '#.#', '###', '#.#', '#.#'],
@@ -48,11 +51,16 @@ var Hud = (function () {
     var shadow = { o: 'rgba(0,0,0,0.35)', r: 'rgba(0,0,0,0.35)', H: 'rgba(0,0,0,0.35)' };
     for (var i = 0; i < 3; i++) {
       sprite(r, HEART, 7 + i * 9, 7, shadow);
-      sprite(r, HEART, 6 + i * 9, 6, COLORS);
+      sprite(r, HEART, 6 + i * 9, 6, i < hearts ? COLORS : EMPTY);
     }
     slot(r, Render.WIDTH - 44, 5, 'A');
     slot(r, Render.WIDTH - 24, 5, 'B');
   }
 
-  return { draw: draw };
+  return {
+    draw: draw,
+    getHearts: function () { return hearts; },
+    setHearts: function (n) { hearts = Math.max(0, Math.min(3, n)); },
+    loseHeart: function () { hearts = Math.max(0, hearts - 1); }
+  };
 })();

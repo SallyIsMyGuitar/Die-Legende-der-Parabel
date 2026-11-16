@@ -166,6 +166,7 @@ var Render = (function () {
   return {
     init: init,
     resize: resize,
+    getCanvas: function () { return canvas; },
     createLayer: createLayer,
     setTarget: setTarget,
     getCtx: getCtx,
