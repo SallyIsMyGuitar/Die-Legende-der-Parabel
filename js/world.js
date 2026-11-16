@@ -293,7 +293,7 @@ var World = (function () {
     for (var k = 0; k < npcs.length; k++) {
       var n = npcs[k];
       if (Math.floor(n.x / TILE) === tx && Math.floor(n.y / TILE) === ty) {
-        return { name: n.talk.name, texts: n.talk.texts, hintX: n.x + 8, hintY: n.y };
+        return { name: n.talk.name, texts: n.talk.texts, hintX: n.x + 8, hintY: n.y, npc: n };
       }
     }
     return null;
@@ -777,8 +777,12 @@ var World = (function () {
       ctx.globalAlpha = 0.3;
       r.ellipse(n.x + 8, n.y + 15, 6, 2, '#2a140a');
       ctx.globalAlpha = 1;
-      var blink = (t + i * 900) % 3600 < 180 ? 1 : 0;
-      r.image(st.npcSprites[i][blink], n.x, n.y);
+      // Blickrichtung (Standard: zur Kamera); Blinzeln nur in der Vorderansicht
+      var set = st.npcSprites[i];
+      var dir = n.facing || 'down';
+      var arr = set[dir] || set.down;
+      var blink = dir === 'down' && (t + i * 900) % 3600 < 180 ? 1 : 0;
+      r.image(arr[blink], n.x, n.y);
     }
   }
 

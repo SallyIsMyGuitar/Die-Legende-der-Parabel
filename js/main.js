@@ -48,15 +48,25 @@
   var spaeth = null;         // Position der Figur, solange die Szene läuft
   var spaethPhase = null;    // 'approach' | 'talk' | 'aside'
   var spaethDone = false;    // Szene nur einmal pro Spielsitzung
+  var SPAETH_STAND_TEXTS = ['Auf geht\'s ... Rette das Volk niederer Bildung!'];
+
+  // Figur dreht sich zur Spielfigur, solange das Gespräch läuft
+  var turnedNpc = null;
+
+  function faceToward(npc, px, py) {
+    var dx = px - npc.x, dy = py - npc.y;
+    if (Math.abs(dx) > Math.abs(dy)) return dx > 0 ? 'right' : 'left';
+    return dy > 0 ? 'down' : 'up';
+  }
   var spaethSprites = null;  // Sprites einmal vorberechnen
 
   function drawSpaeth(r, t) {
     if (!spaethSprites) {
       // Ansturm von links: Blick nach rechts; danach stehend: Blick nach links
-      spaethSprites = { right: People.spaethSide(false), left: People.spaethSide(true) };
+      spaethSprites = People.spaeth();
     }
     var bob = spaethPhase === 'approach' ? Math.floor(t / 90) % 2 : 0;
-    var img = spaethPhase === 'aside' ? spaethSprites.left : spaethSprites.right;
+    var img = spaethPhase === 'aside' ? spaethSprites.left[0] : spaethSprites.right[0];
     var ctx = r.getCtx();
     ctx.globalAlpha = 0.3;
     r.ellipse(spaeth.x + 8, spaeth.y + 15, 6, 2, '#2a140a');
@@ -88,10 +98,9 @@
       }, start: function () { spaeth.x0 = spaeth.x; } },
       { dur: 0, end: function () {
         World.addNpc('ost', {
-          x: 192, y: 96,
-          // steht seitlich zum Weg, Blick nach links
-          sprites: function () { var s = People.spaethSide(true); return [s, s]; },
-          talk: { name: 'Herr Späth', texts: SPAETH_TEXTS }
+          x: 192, y: 96, baseFacing: 'left',
+          sprites: function () { return People.spaeth(); },
+          talk: { name: 'Herr Späth', texts: SPAETH_STAND_TEXTS }
         });
         spaeth = null;
         spaethPhase = null;
@@ -213,6 +222,10 @@
       updateSeq(dt);
     } else if (spaethPhase === 'talk') {
       spaethAside();   // Gespräch ist beendet
+    } else if (turnedNpc && !Dialog.isActive()) {
+      // Gespräch beendet: Figur dreht sich zurück
+      turnedNpc.facing = turnedNpc.baseFacing || 'down';
+      turnedNpc = null;
     } else {
       Player.update(World, Input, dt);
       // Szene auslösen, bevor die Spielfigur das Dorf Richtung Osten verlässt
@@ -222,6 +235,10 @@
         target = World.talkTarget(Player.getX(), Player.getY(), Player.getFacing());
         if (target && Input.pressed('a')) {
           Player.setPosition(Player.getX(), Player.getY());   // Laufanimation anhalten
+          if (target.npc) {
+            target.npc.facing = faceToward(target.npc, Player.getX(), Player.getY());
+            turnedNpc = target.npc;
+          }
           Dialog.open(target.name, target.texts);
           target = null;
         }

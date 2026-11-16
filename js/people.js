@@ -116,36 +116,29 @@ var People = (function () {
     return [Render.sprite(rows, p), Render.sprite(blink(rows), p)];
   }
 
-  // Wanderin: dunkle Haare, orangefarbenes Oberteil, feste Schuhe
-  function wanderer() {
-    var p = pal({
-      h: '#4a3020', H: '#6a4a30',
-      t: '#e08a2a', T: '#f4b45a', D: '#a85e14',
-      p: '#5a6a4a', B: '#6a4a2e'
-    });
-    var rows = FRONT.slice();
-    return [Render.sprite(rows, p), Render.sprite(blink(rows), p)];
+  // Blickrichtungen je Figur: down, up, left, right (down mit Blinzeln)
+  function dirs(p) {
+    var front = FRONT.slice();
+    return {
+      down: [Render.sprite(front, p), Render.sprite(blink(front), p)],
+      up: [backSprite(p)],
+      left: [sideSprite(p, true)],
+      right: [sideSprite(p, false)]
+    };
   }
 
-  // Herr Späth: entflohener Lehrer, dunkelgraue Haare, blaues T-Shirt,
-  // beige Chino, weiße Sneaker
-  function spaeth() {
-    var p = pal({
-      h: '#4a4a52', H: '#6a6a74',
-      t: '#3e64a8', T: '#5a80d0', D: '#2c4a80',
-      p: '#c8b48a', B: '#f4f4f4'
-    });
+  // Rückenansicht: Haare statt Gesicht
+  function backSprite(p) {
     var rows = FRONT.slice();
-    return [Render.sprite(rows, p), Render.sprite(blink(rows), p)];
+    rows[4] = '..ohhhhhhhhhho..';
+    rows[5] = '..ohhhhhhhhhho..';
+    rows[6] = '..oHhhhhhhhhHo..';
+    rows[7] = '..oShhhhhhhhSo..';
+    return Render.sprite(rows, p);
   }
 
-  // Herr Späth seitlich (Ansturm und Standbild); mirror = true heißt Blick nach links
-  function spaethSide(mirror) {
-    var p = pal({
-      h: '#4a4a52', H: '#6a6a74',
-      t: '#3e64a8', T: '#5a80d0', D: '#2c4a80',
-      p: '#c8b48a', w: '#f4f4f4'
-    });
+  // Seitenansicht nach rechts; mirror = true heißt Blick nach links
+  function sideSprite(p, mirror) {
     var rows = [
       '....oooooooo....',
       '...ohhhHHhho...',
@@ -161,21 +154,38 @@ var People = (function () {
       '.otTDtttttttDso.',
       '..ottDDDDDDDDo..',
       '...oppo..oppo...',
-      '...owwo..owwo...',
-      '...owwo..owwo...'
+      '...oBBo..oBBo...',
+      '...oBBo..oBBo...'
     ];
     return Render.sprite(rows, p, mirror === true);
   }
 
+  // Wanderin: dunkle Haare, orangefarbenes Oberteil, feste Schuhe
+  function wanderer() {
+    return dirs(pal({
+      h: '#4a3020', H: '#6a4a30',
+      t: '#e08a2a', T: '#f4b45a', D: '#a85e14',
+      p: '#5a6a4a', B: '#6a4a2e'
+    }));
+  }
+
+  // Herr Späth: entflohener Lehrer, dunkelgraue Haare, blaues T-Shirt,
+  // beige Chino, weiße Sneaker
+  function spaeth() {
+    return dirs(pal({
+      h: '#4a4a52', H: '#6a6a74',
+      t: '#3e64a8', T: '#5a80d0', D: '#2c4a80',
+      p: '#c8b48a', B: '#f4f4f4'
+    }));
+  }
+
   // Förster: graue Haare, grüne Uniform, braune Stiefel
   function forester() {
-    var p = pal({
+    return dirs(pal({
       h: '#8a8a8a', H: '#b0b0b0',
       t: '#3f6a3a', T: '#548a4c', D: '#2a4a26',
       p: '#5a4a38', B: '#3a2a20'
-    });
-    var rows = FRONT.slice();
-    return [Render.sprite(rows, p), Render.sprite(blink(rows), p)];
+    }));
   }
 
   return {
