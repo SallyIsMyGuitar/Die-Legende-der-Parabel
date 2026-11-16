@@ -195,7 +195,6 @@ var People = (function () {
     shopkeeper: shopkeeper,
     wanderer: wanderer,
     forester: forester,
-    spaeth: spaeth,
-    spaethSide: spaethSide
+    spaeth: spaeth
   };
 })();
