@@ -216,7 +216,9 @@
     lastTime = now;
 
     var target = null;
-    if (Dialog.isActive()) {
+    if (TestPage.isActive()) {
+      TestPage.update(Input);
+    } else if (Dialog.isActive()) {
       Dialog.update(dt, Input);
     } else if (seq) {
       updateSeq(dt);
@@ -235,11 +237,15 @@
         target = World.talkTarget(Player.getX(), Player.getY(), Player.getFacing());
         if (target && Input.pressed('a')) {
           Player.setPosition(Player.getX(), Player.getY());   // Laufanimation anhalten
-          if (target.npc) {
-            target.npc.facing = faceToward(target.npc, Player.getX(), Player.getY());
-            turnedNpc = target.npc;
+          if (target.action === 'testpage') {
+            TestPage.open();   // Schild der Testseite für die Lehrkraft
+          } else {
+            if (target.npc) {
+              target.npc.facing = faceToward(target.npc, Player.getX(), Player.getY());
+              turnedNpc = target.npc;
+            }
+            Dialog.open(target.name, target.texts);
           }
-          Dialog.open(target.name, target.texts);
           target = null;
         }
         var w = World.checkWarp(Player.getX(), Player.getY(), Player.getFacing());
@@ -257,6 +263,7 @@
     if (target) Dialog.drawHint(Render, target.hintX, target.hintY, now);
     Hud.draw(Render);
     Dialog.draw(Render);
+    TestPage.draw(Render);
     if (fade > 0) Render.px(0, 0, W, H, 'rgba(0,0,0,' + fade + ')');
     Input.clearPressed();
 

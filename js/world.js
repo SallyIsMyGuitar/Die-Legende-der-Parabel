@@ -57,7 +57,7 @@ var World = (function () {
         'T.....PPPP.....T',
         'T.....PWPP..TT.T',
         'T.....PPPP..TT.T',
-        'T........P..T..T',
+        'T.......iP..T..T',
         'T........P.....T',
         'T........P.....T',
         'T...PPPPPP.....T',
@@ -68,12 +68,18 @@ var World = (function () {
         { x: 10, y: 2, w: 4, h: 2, door: 12, room: 'freund', style: 'green', windows: [0, 1], lantern: true },
         { x: 2, y: 10, w: 5, h: 2, door: 4, room: 'laden', style: 'shop', windows: [0, 1, 3, 4], shop: true }
       ],
-      // Der Brunnen ist die Rastquelle im Startdorf
+      // Der Brunnen ist die Rastquelle im Startdorf; das zweite Schild öffnet die Testseite
       signs: [
         {
           tiles: [[7, 7]], x: 7 * 16, y: 7 * 16,
           name: 'Brunnen',
           texts: ['Die Rastquelle am Brunnen füllt später alle Herzen wieder auf.']
+        },
+        {
+          tiles: [[8, 9]], x: 8 * 16, y: 9 * 16,
+          name: 'Schild',
+          texts: ['Testseite für die Lehrkraft: Beispielaufgaben mit Lösungen.'],
+          action: 'testpage'
         }
       ],
       exits: { west: 'start', east: 'wiese' }
@@ -284,7 +290,7 @@ var World = (function () {
       for (var j = 0; j < signs[i].tiles.length; j++) {
         var t = signs[i].tiles[j];
         if (t[0] === tx && t[1] === ty) {
-          return { name: signs[i].name, texts: signs[i].texts, hintX: signs[i].x, hintY: signs[i].y };
+          return { name: signs[i].name, texts: signs[i].texts, action: signs[i].action, hintX: signs[i].x, hintY: signs[i].y };
         }
       }
     }
