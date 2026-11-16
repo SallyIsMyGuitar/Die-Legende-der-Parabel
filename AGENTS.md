@@ -62,9 +62,9 @@ Ein Mathe-Übungsspiel als Top-Down-Abenteuer im Stil eines modernen 2D-Zelda (O
 - **Startdorf** (bisher zwei Bildschirme):
   - *Start:* Elternhaus (rotes Dach), kleiner Teich, verwilderte und gesperrte Schule mit Zaun, verschlossenem Tor (Kette, Schloss, Schild „GESPERRT“). Die Schule ist nicht betretbar und bleibt optisch so, bis sie im Finale wieder aufgebaut wird.
   - *Ost:* Dorfplatz mit Brunnen, Haus der Nachbarin (blaues Dach), Haus des Freundes (grünes Dach), Schreibwarenladen (Hefte, Stifte, Bücher).
-  - Die Rastquelle im Startdorf fehlt noch.
+  - Die Rastquelle im Startdorf ist der Brunnen auf dem Dorfplatz (Ost-Bildschirm), speichert automatisch.
 - **Häuser sind betretbar:** Tür berühren (nach oben gegen die Tür laufen) → Tür schwingt auf, Figur geht hinein, Abblende. Hinaus über die Fußmatte; die Figur tritt aus der Tür, die Tür schließt sich. Alle Innenräume haben denselben Grundriss.
-- **Innenräume:** Elternhaus (Küche, Essplatz, Mutter), Nachbarin (Wohnzimmer mit Kamin, sitzt im Schaukelstuhl), Freund (Kinderzimmer mit Parabel-Poster), Laden (Verkäufer hinter der Theke). Kaufen hat noch keine Funktion.
+- **Innenräume:** Elternhaus (Küche, Essplatz, Mutter), Nachbarin (Wohnzimmer mit Kamin, sitzt im Schaukelstuhl), Freund (Kinderzimmer mit Parabel-Poster), Laden (Verkäufer hinter der Theke). Der Laden bleibt rein dekorativ, es gibt kein Kaufsystem.
 - Zusammenhängende Oberwelt mit Bildschirmwechsel wie im NES-Zelda: Am Rand schiebt sich der Bildschirm seitlich weiter, kein freies Scrollen. Etwa 12 bis 15 Bildschirme insgesamt. Wiesen, Wüsten, Höhlen, kleine Häuser zum Betreten.
 - **Gespräche:** Steht man vor einer Figur (oder einem Schild) und schaut sie an, erscheint eine Sprechblase. A startet das Gespräch. Textbox unten mit Namensschild, Text läuft Buchstabe für Buchstabe ein, mehrere Seiten mit blinkendem Pfeil. A = weiter bzw. Text sofort ganz zeigen, B = abbrechen. Während des Gesprächs ist die Figur gesperrt.
 - **Freigegebene Dialogtexte** (nur nach Go ändern):
@@ -118,7 +118,7 @@ Ein Mathe-Übungsspiel als Top-Down-Abenteuer im Stil eines modernen 2D-Zelda (O
 Gebaut wird immer nur der Meilenstein, den der Nutzer freigibt, mit Test nach jedem Schritt.
 
 1. Grundgerüst mit Spielfigur, Touch-Steuerung und einem Bildschirm. – **erledigt**
-2. Startdorf und Oberwelt mit Bildschirmwechsel. – **teilweise erledigt:** Startdorf (2 Bildschirme), Bildschirmwechsel, 4 betretbare Häuser mit Tür-Animation, Dialogsystem mit NPC-Texten, Spielstart im Elternhaus. Offen: Rastquelle im Startdorf, restliche Oberwelt-Bildschirme bis zum ersten Dungeon.
+2. Startdorf und Oberwelt mit Bildschirmwechsel. – **erledigt:** Startdorf (2 Bildschirme), Bildschirmwechsel, 4 betretbare Häuser mit Tür-Animation, Dialogsystem mit NPC-Texten, Spielstart im Elternhaus, Rastquelle am Brunnen (speichert automatisch), drei weitere Bildschirme mit Weg zum ersten Dungeon (Ruine), Szene am Ost-Ausgang mit Herrn Späth (hält die Spielfigur an, gibt einen Tipp, dreht sich beim Gespräch zur Spielfigur).
 3. Kampf- und Aufgabensystem mit Aufgabenvorlagen und Testseite.
 4. Erster kompletter Dungeon mit Erklär-NPCs, Merkbuch und Boss.
 5. Die weiteren vier Dungeons einzeln.
@@ -126,8 +126,11 @@ Gebaut wird immer nur der Meilenstein, den der Nutzer freigibt, mit Test nach je
 
 ## Offene Fragen (vor der Umsetzung mit dem Nutzer klären)
 
-- Laden: Soll man dort später etwas kaufen können? Das widerspricht aktuell der Regel „Schwert ist das einzige Item“.
 - Schriftgröße der Dialoge: Die Pixelschrift ist auf 256 × 224 ausgelegt; auf dem iPad prüfen, ob sie groß genug ist.
-- Rastquelle im Startdorf: Aussehen und Ort.
-- Wiederaufbau der Schule: nur im Abspann oder danach auch begehbar mit den befreiten Lehrkräften?
-- HUD: Die Plätze für A und B sind Platzhalter; klären, wo das Schwert angezeigt wird.
+
+## Getroffene Entscheidungen
+
+- **Laden:** bleibt rein dekorativ mit Dialog, es gibt kein Kaufsystem. Das Schwert ist das einzige Item.
+- **Rastquelle im Startdorf:** Brunnen im Dorfplatz (Ost-Bildschirm), speichert automatisch.
+- **Wiederaufbau der Schule:** wird im Abspann gezeigt; danach ist die Schule begehbar, mit den befreiten Lehrkräften (passt zum frei begehbaren Endspiel-Zustand).
+- **HUD:** Das Schwert bekommt einen eigenen Slot links neben den A/B-Plätzen (A rot, B blau bleiben in der bisherigen Anordnung oben rechts).
