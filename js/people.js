@@ -127,6 +127,20 @@ var People = (function () {
     return [Render.sprite(rows, p), Render.sprite(blink(rows), p)];
   }
 
+  // Herr Späth: entflohener Lehrer, graues Haar, Brille, dunkler Anzug mit Krawatte
+  function spaeth() {
+    var p = pal({
+      h: '#7a7a82', H: '#a0a0a8', g: '#3a3a48',
+      t: '#3a4a66', T: '#54627e', D: '#26324a',
+      k: '#a03030', p: '#4a4a52', B: '#2a2a30'
+    });
+    var rows = FRONT.slice();
+    rows[6] = '..osgegssgegso..';   // Brille
+    rows[7] = '..oSsgssssgsSo..';
+    rows[9] = '..oTttkkktttTo..';   // Kragen mit roter Krawatte
+    return [Render.sprite(rows, p), Render.sprite(blink(rows), p)];
+  }
+
   // Förster: graue Haare, grüne Uniform, braune Stiefel
   function forester() {
     var p = pal({
@@ -144,6 +158,7 @@ var People = (function () {
     friend: friend,
     shopkeeper: shopkeeper,
     wanderer: wanderer,
-    forester: forester
+    forester: forester,
+    spaeth: spaeth
   };
 })();

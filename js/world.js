@@ -302,6 +302,14 @@ var World = (function () {
   function setScreen(name) { current = name; }
   function getScreen() { return current; }
 
+  // NPC zur Laufzeit in einen Bildschirm einfügen (z. B. nach einer Szene)
+  function addNpc(name, npc) {
+    var def = states[name].def;
+    if (!def.npcs) def.npcs = [];
+    def.npcs.push(npc);
+    states[name].npcSprites = null;   // Sprites neu einlesen
+  }
+
   function setDoorOpen(b, p) {
     states[roomHome[b.room].screen].doors[b.room] = p;
   }
@@ -804,6 +812,7 @@ var World = (function () {
     talkTarget: talkTarget,
     setScreen: setScreen,
     getScreen: getScreen,
+    addNpc: addNpc,
     isOutdoor: isOutdoor,
     setDoorOpen: setDoorOpen,
     doorRect: doorRect,

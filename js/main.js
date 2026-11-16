@@ -39,6 +39,59 @@
 
   var WALK = 14;           // Pixel, die die Figur durch die Tür geht
 
+  // --- Szene: Herr Späth hält die Spielfigur am Ost-Rand des Dorfes auf ---
+  var SPAETH_TEXTS = [
+    'Aus der Bahn!!! Ich bin schöner als du ...',
+    'Halt, stopp ... Du willst die Schule retten. Ich bin Herr Späth, der letzte Universalgelehrte unserer Zeit ...',
+    'Wenn du die Schule retten willst, habe ich als Tipp für dich: Nimm einen Stift und einen Zettel, damit du deine Nebenrechnungen notieren kannst.'
+  ];
+  var spaeth = null;         // Position der Figur, solange die Szene läuft
+  var spaethPhase = null;    // 'approach' | 'talk' | 'aside'
+  var spaethDone = false;    // Szene nur einmal pro Spielsitzung
+  var spaethSprites = null;  // Sprites einmal vorberechnen
+
+  function drawSpaeth(r, t) {
+    if (!spaethSprites) spaethSprites = People.spaeth();
+    var bob = spaethPhase === 'approach' ? Math.floor(t / 90) % 2 : 0;
+    var ctx = r.getCtx();
+    ctx.globalAlpha = 0.3;
+    r.ellipse(spaeth.x + 8, spaeth.y + 15, 6, 2, '#2a140a');
+    ctx.globalAlpha = 1;
+    r.image(spaethSprites[0], Math.round(spaeth.x), Math.round(spaeth.y - bob));
+  }
+
+  function startSpaeth() {
+    spaeth = { x: W + 16, y: 64 };
+    spaethPhase = 'approach';
+    run([
+      { dur: 0.7, tick: function (p) { spaeth.x = W + 16 + (248 - (W + 16)) * p; } },
+      { dur: 0, end: function () {
+        spaethPhase = 'talk';
+        Dialog.open('Herr Späth', SPAETH_TEXTS);
+      } }
+    ]);
+  }
+
+  // Nach dem Gespräch: tritt vom Weg herunter und bleibt als NPC stehen
+  function spaethAside() {
+    spaethPhase = 'aside';
+    run([
+      { dur: 0.6, tick: function (p) {
+        spaeth.x = 248 + (192 - 248) * p;
+        spaeth.y = 64 + (96 - 64) * p;
+      } },
+      { dur: 0, end: function () {
+        World.addNpc('ost', {
+          x: 192, y: 96, sprites: function () { return People.spaeth(); },
+          talk: { name: 'Herr Späth', texts: SPAETH_TEXTS }
+        });
+        spaeth = null;
+        spaethPhase = null;
+        spaethDone = true;
+      } }
+    ]);
+  }
+
   // Haus betreten: Tür geht auf, Figur geht hinein, Abblende, Raum
   function enterHouse(w) {
     var b = w.building;
@@ -124,6 +177,7 @@
     }
     World.drawGround(Render, now);
     Player.draw(Render);
+    if (spaeth) drawSpaeth(Render, now);
     World.drawOverlay(Render, now);
     if (doorClip) {
       // Figur in der Türöffnung sichtbar halten (vor dem dunklen Flur)
@@ -149,20 +203,27 @@
       Dialog.update(dt, Input);
     } else if (seq) {
       updateSeq(dt);
+    } else if (spaethPhase === 'talk') {
+      spaethAside();   // Gespräch ist beendet
     } else {
       Player.update(World, Input, dt);
-      target = World.talkTarget(Player.getX(), Player.getY(), Player.getFacing());
-      if (target && Input.pressed('a')) {
-        Player.setPosition(Player.getX(), Player.getY());   // Laufanimation anhalten
-        Dialog.open(target.name, target.texts);
-        target = null;
-      }
-      var w = World.checkWarp(Player.getX(), Player.getY(), Player.getFacing());
-      if (w && w.type === 'enter') enterHouse(w);
-      else if (w && w.type === 'exit') leaveHouse(w);
-      else {
-        var edge = World.checkEdge(Player.getX(), Player.getY());
-        if (edge) startSlide(edge);
+      // Szene auslösen, bevor die Spielfigur das Dorf Richtung Osten verlässt
+      if (!spaethDone && !spaeth && World.getScreen() === 'ost' && Player.getX() >= 232) {
+        startSpaeth();
+      } else {
+        target = World.talkTarget(Player.getX(), Player.getY(), Player.getFacing());
+        if (target && Input.pressed('a')) {
+          Player.setPosition(Player.getX(), Player.getY());   // Laufanimation anhalten
+          Dialog.open(target.name, target.texts);
+          target = null;
+        }
+        var w = World.checkWarp(Player.getX(), Player.getY(), Player.getFacing());
+        if (w && w.type === 'enter') enterHouse(w);
+        else if (w && w.type === 'exit') leaveHouse(w);
+        else {
+          var edge = World.checkEdge(Player.getX(), Player.getY());
+          if (edge) startSlide(edge);
+        }
       }
     }
 
