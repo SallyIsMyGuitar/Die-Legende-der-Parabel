@@ -40,7 +40,7 @@ var Tasks = (function () {
     return n > 0 ? ' + ' + fmt(n) : ' - ' + fmt(-n);
   }
 
-  // --- y = a(x - d)² + e sauber formatiert ---
+  // --- y = a(x - xs)² + ys sauber formatiert ---
   function spfText(a, d, e) {
     var head;
     if (a === 1) head = '';
@@ -69,60 +69,61 @@ var Tasks = (function () {
     return 'y = ' + t;
   }
 
-  // --- Typ 1: Scheitelpunkt aus der Scheitelpunktsform ablesen ---
+  // --- Typ 1: Scheitel aus der Scheitelform ablesen ---
+  // Schreibweise wie im Lehrbuch: y = a(x - xs)² + ys, Scheitel S(xs|ys)
   function scheitelAblesen(rng) {
     var a = pick(rng, [0.5, 1, 2, -0.5, -1, -2]);
-    var d = randInt(rng, -5, 5);
-    var e = randInt(rng, -5, 5);
+    var xs = randInt(rng, -5, 5);
+    var ys = randInt(rng, -5, 5);
     return {
-      frage: 'Gib den Scheitelpunkt an: ' + spfText(a, d, e),
-      felder: [{ key: 'd', label: 'd' }, { key: 'e', label: 'e' }],
-      loesung: [d, e],
-      loesungstext: 'S(' + fmt(d) + '|' + fmt(e) + ')',
-      hinweis: 'Bei y = a(x - d)² + e liegt der Scheitel bei S(d|e).'
+      frage: 'Gib den Scheitelpunkt an: ' + spfText(a, xs, ys),
+      felder: [{ key: 'xs', label: 'xs' }, { key: 'ys', label: 'ys' }],
+      loesung: [xs, ys],
+      loesungstext: 'S(' + fmt(xs) + '|' + fmt(ys) + ')',
+      hinweis: 'Bei y = a(x - xs)² + ys liegt der Scheitel bei S(xs|ys).'
     };
   }
 
-  // --- Typ 2: Scheitelpunkt aus der allgemeinen Form ---
-  // Nur ganze Koeffizienten: b = -2ad und c = ad² + e
+  // --- Typ 2: Scheitel aus der allgemeinen Form ---
+  // Nur ganze Koeffizienten: b = -2axs und c = axs² + ys
   function scheitelAllgemein(rng) {
     var a = pick(rng, [1, 2, -1, -2]);
-    var d = randInt(rng, -4, 4);
-    var e = randInt(rng, -6, 6);
-    var b = -2 * a * d;
-    var c = a * d * d + e;
+    var xs = randInt(rng, -4, 4);
+    var ys = randInt(rng, -6, 6);
+    var b = -2 * a * xs;
+    var c = a * xs * xs + ys;
     return {
       frage: 'Gib den Scheitelpunkt an: ' + allgText(a, b, c),
-      felder: [{ key: 'd', label: 'd' }, { key: 'e', label: 'e' }],
-      loesung: [d, e],
-      loesungstext: 'S(' + fmt(d) + '|' + fmt(e) + ')',
-      hinweis: 'Forme in die Scheitelpunktsform um: y = a(x - d)² + e.'
+      felder: [{ key: 'xs', label: 'xs' }, { key: 'ys', label: 'ys' }],
+      loesung: [xs, ys],
+      loesungstext: 'S(' + fmt(xs) + '|' + fmt(ys) + ')',
+      hinweis: 'Forme in die Scheitelform um: y = a(x - xs)² + ys.'
     };
   }
 
-  // --- Typ 3: Scheitelpunktsform aus Scheitelpunkt und einem Punkt ---
+  // --- Typ 3: Scheitelform aus Scheitelpunkt und einem Punkt ---
   // Der zweite Punkt liegt auf der Parabel, alle Werte sind "schön"
   function spfAufstellen(rng) {
     var a = pick(rng, [0.5, 1, 2, -0.5, -1, -2]);
-    var d = randInt(rng, -4, 4);
-    var e = randInt(rng, -5, 5);
+    var xs = randInt(rng, -4, 4);
+    var ys = randInt(rng, -5, 5);
     var abstand = pick(rng, [-3, -2, 2, 3]);
-    var xp = d + abstand;
-    var yp = a * abstand * abstand + e;
+    var xp = xs + abstand;
+    var yp = a * abstand * abstand + ys;
     return {
-      frage: 'Die Parabel geht durch S(' + fmt(d) + '|' + fmt(e) + ') und P(' + fmt(xp) + '|' + fmt(yp) + '). Gib a, d und e an.',
-      felder: [{ key: 'a', label: 'a' }, { key: 'd', label: 'd' }, { key: 'e', label: 'e' }],
-      loesung: [a, d, e],
-      loesungstext: spfText(a, d, e),
-      hinweis: 'Bei y = a(x - d)² + e ist d die x-Koordinate des Scheitels.'
+      frage: 'Die Parabel geht durch S(' + fmt(xs) + '|' + fmt(ys) + ') und P(' + fmt(xp) + '|' + fmt(yp) + '). Gib a, xs und ys an.',
+      felder: [{ key: 'a', label: 'a' }, { key: 'xs', label: 'xs' }, { key: 'ys', label: 'ys' }],
+      loesung: [a, xs, ys],
+      loesungstext: spfText(a, xs, ys),
+      hinweis: 'Bei y = a(x - xs)² + ys ist xs die x-Koordinate des Scheitels.'
     };
   }
 
   // --- Liste aller Aufgabentypen (später kommen weitere Abschnitte dazu) ---
   var TYPES = [
-    { id: 'scheitelAblesen', name: 'Scheitel ablesen (SPF)', make: scheitelAblesen },
+    { id: 'scheitelAblesen', name: 'Scheitel ablesen (Scheitelform)', make: scheitelAblesen },
     { id: 'scheitelAllgemein', name: 'Scheitel (allg. Form)', make: scheitelAllgemein },
-    { id: 'spfAufstellen', name: 'SPF aufstellen', make: spfAufstellen }
+    { id: 'spfAufstellen', name: 'Scheitelform aufstellen', make: spfAufstellen }
   ];
 
   // Eine Aufgabe erzeugen; gleicher Typ + gleicher Samen = gleiche Aufgabe
