@@ -89,6 +89,8 @@ Ein Mathe-Übungsspiel als Top-Down-Abenteuer im Stil eines modernen 2D-Zelda (O
   - *Freund:* „Keine Schule – klingt erst mal super, oder?“ / „Na ja … ehrlich gesagt vermisse ich sogar Mathe. Schau mal, mein Parabel-Poster!“
   - *Verkäufer:* „Willkommen! Hefte, Stifte, Bücher – alles da.“ / „Ohne Schule kauft leider kaum jemand etwas. Kaufen geht noch nicht.“
   - *Schild am Schultor:* „GESPERRT. Die Schule bleibt geschlossen, bis die Lehrkräfte zurück sind.“
+  - *Nachbarin, 3. und 4. Seite (freigegeben):* „Übrigens: Ein Schluck aus dem Brunnen auf dem Dorfplatz füllt deine Herzen wieder auf.“ / „Und solltest du einmal alle Herzen verlieren, kommst du an der Quelle wieder zu dir, an der du zuletzt getrunken hast.“
+  - *Weitere freigegebene Texte:* Brunnen/Quellen, Rücksprung bei null Herzen, Rätsel-Truhe, Schwert-Zerbrechen und Schwert-Verlust beim Rücksprung (`main.js`, `world.js`, `dungeon.js`).
   - *Überarbeitung Story (freigegeben):* Texte von Wanderin, Förster und Einsiedler (`world.js`), Schild an der Ruine, Forscherin, Alte Inschrift und Steintafel nach dem Sieg (`dungeon.js`), Bann-Texte sowie Vorstellung und Sieg des Wächters (`main.js`), Zusatzseiten nach dem ersten Wappen für Mama, Nachbarin, Freund und Verkäufer (`interior.js`, `rooms.js`). Der Wortlaut steht im Code und wird nur nach Go geändert.
 - Auf dem Weg zu jedem Dungeon stehen Erklär-NPCs mit kurzen Dialogen, je ein Gedanke pro Dialog. Dort gibt es Pflicht-Rätsel, leicht und direkt an die Erklärung gekoppelt, als Verständnis-Check.
 - Alles Gehörte (Merksätze der Erklär-NPCs) landet automatisch in einem Merkbuch, das jederzeit geöffnet werden kann, auch mitten in einer Aufgabe.
@@ -144,7 +146,6 @@ Gebaut wird immer nur der Meilenstein, den der Nutzer freigibt, mit Test nach je
 
 ## Offene Fragen (vor der Umsetzung mit dem Nutzer klären)
 
-- Neue Texte noch freigeben: Nachbarin (3. und 4. Seite: „Übrigens: Ein Schluck aus dem Brunnen auf dem Dorfplatz füllt deine Herzen wieder auf.“ / „Und solltest du einmal alle Herzen verlieren, kommst du an der Quelle wieder zu dir, an der du zuletzt getrunken hast.“). Die Texte von Brunnen und Rücksprung sind im Spiel, die neuen Texte seit dem Schwert (Truhe, Schwert-Zerbrechen, Schwert-Verlust beim Rücksprung) sind Vorschläge und noch nicht ausdrücklich freigegeben.
 
 - Schriftgröße der Dialoge: Die Pixelschrift ist auf 256 × 224 ausgelegt; auf dem iPad prüfen, ob sie groß genug ist.
 
