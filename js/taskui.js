@@ -166,7 +166,9 @@ var TaskUi = (function () {
   function update(dt, input) {
     if (!active) return;
     if (phase === 'input') {
-      if (input.pressed('b')) { finish(false); return; }   // abbrechen
+      // Ein Kampf laesst sich nicht abbrechen; nur die Probeaufgabe
+      // auf der Testseite kann mit B abgebrochen werden
+      if (!onResult && input.pressed('b')) { finish(false); return; }
       if (input.pressed('a')) checkAnswer();
       if (pressedDir(input, 'left')) fieldIndex = (fieldIndex + task.felder.length - 1) % task.felder.length;
       if (pressedDir(input, 'right')) fieldIndex = (fieldIndex + 1) % task.felder.length;

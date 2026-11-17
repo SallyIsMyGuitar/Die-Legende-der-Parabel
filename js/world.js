@@ -109,7 +109,10 @@ var World = (function () {
           x: 8 * TILE, y: 5 * TILE, sprites: function () { return People.wanderer(); },
           talk: {
             name: 'Wanderin',
-            texts: ['Die Normalparabel hat die Gleichung y = x². Ihr Scheitel liegt im Ursprung.']
+            texts: [
+              'Die Normalparabel hat die Gleichung y = x². Ihr Scheitel liegt im Ursprung.',
+              'Die Pilzwesen hier fragen dich genau danach. Seit die Schule zerstört wurde, traut sich kaum jemand mehr auf diese Wiese.'
+            ]
           }
         }
       ],
@@ -140,7 +143,10 @@ var World = (function () {
           x: 10 * TILE, y: 5 * TILE, sprites: function () { return People.forester(); },
           talk: {
             name: 'Förster',
-            texts: ['Je größer a, desto schmaler die Parabel. a streckt oder staucht sie.']
+            texts: [
+              'Je größer a, desto schmaler die Parabel. a streckt oder staucht sie.',
+              'Die Moosgeister prüfen genau das. Bestehst du, erreichst du die Ruine und kommst der Höhle der Parabeln einen Schritt näher.'
+            ]
           }
         }
       ],
@@ -170,7 +176,7 @@ var World = (function () {
         {
           tiles: [[6, 5]], x: 6 * 16, y: 5 * 16,
           name: 'Schild',
-          texts: ['Höhle der Parabeln. Der erste Dungeon wartet hinter dieser Mauer.']
+          texts: ['Höhle der Parabeln. Der erste Dungeon wartet hinter dieser Mauer. Aus Scheitel und einem Punkt stellst du die Scheitelform auf.']
         }
       ],
       exits: { west: 'wald' }
