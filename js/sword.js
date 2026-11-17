@@ -39,20 +39,25 @@ var Sword = (function () {
     r.px(x + s - 2, y + s - 2, 1, 1, '#efe4c4');
   }
 
-  function draw(r) {
-    var x = Render.WIDTH - 64, y = 5;
-    drawSlotFrame(r, x, y);
-    if (!carried) return;
+  // Schwert-Symbol an beliebiger Stelle (HUD-Slot, Truhe)
+  function drawIcon(r, x, y) {
     for (var j = 0; j < SPRITE.length; j++) {
       for (var i = 0; i < SPRITE[j].length; i++) {
         var c = COLORS[SPRITE[j].charAt(i)];
-        if (c) r.px(x + 2 + i, y + 2 + j, 1, 1, c);
+        if (c) r.px(x + i, y + j, 1, 1, c);
       }
     }
   }
 
+  function draw(r) {
+    var x = Render.WIDTH - 64, y = 5;
+    drawSlotFrame(r, x, y);
+    if (carried) drawIcon(r, x + 2, y + 2);
+  }
+
   return {
     draw: draw,
+    drawIcon: drawIcon,
     has: function () { return carried; },
     give: function () { carried = true; },
     breakSword: function () { carried = false; },

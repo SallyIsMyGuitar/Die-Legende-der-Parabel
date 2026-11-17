@@ -21,41 +21,91 @@
   }
 
   // --- Kampf: Beruehrung mit einem Gegner startet genau eine Aufgabe -------
+  // Die Aufgabenbox blendet erst aus, dann folgt die Animation:
+  //   richtig = Gegner blitzt auf und zerfaellt in eine Rauchwolke
+  //   falsch  = Herz verschwindet oben, Figur blinkt und weicht zurueck
   function startBattle(enemy) {
+    var attempt = Enemies.attemptOf(enemy);
     TaskUi.open(Enemies.typeIdOf(enemy), Enemies.seedOf(enemy), function (solved, errors, joker) {
       if (solved) {
+        // Herz-Drop nur bei richtiger Antwort im ersten Versuch, nie mit Schwert
+        Enemies.defeat(enemy, !joker && attempt === 1);
         if (joker) {
-          // Schwert: Aufgabe uebersprungen, kein Herz-Drop, Schwert zerbricht
-          Enemies.defeat(enemy, false);
-          Dialog.open('', ['Dein Schwert zerbricht. Der Gegner weicht zurück \u2013 diesmal ohne Rechnung.']);
-        } else {
-          Enemies.defeat(enemy, errors === 0);   // richtig = Monster besiegt
+          // Schwert: erst die Besiegt-Animation, dann der Hinweis
+          run([
+            { dur: Enemies.DEFEAT_TIME },
+            { dur: 0, end: function () {
+              Dialog.open('', ['Dein Schwert zerbricht. Der Gegner weicht zurück \u2013 diesmal ohne Rechnung.']);
+            } }
+          ]);
         }
-      } else if (Hud.getHearts() === 0) respawn();          // alle Herzen weg
-      else knockback(enemy);                               // Figur weicht zurück
-    }, Enemies.contextOf(enemy));   // Kontext aus dem Tipp des NPCs
+      } else {
+        hurt(enemy);
+      }
+    }, Enemies.contextOf(enemy), { attempt: attempt });   // Kontext aus dem Tipp des NPCs
+  }
+
+  // Falsche Antwort: ein Herz weg (blinkt und zerplatzt im HUD), Figur
+  // blinkt und weicht von der Quelle des Schadens zurueck. Bei null Herzen
+  // geht es danach zur letzten Rastquelle.
+  function hurt(source) {
+    Hud.loseHeart();
+    Player.blink(Config.PLAYER_BLINK);
+    var steps = knockbackSteps(source);
+    if (Hud.getHearts() === 0) {
+      steps = steps.concat([{ dur: 0.8 }], respawnSteps());
+    }
+    run(steps);
   }
 
   // --- R\u00e4tsel-Truhe an der Ruine: Belohnung ist das Schwert --------------
   var chestDone = false;   // Truhe ist nach dem Raetsel leer
+  var chestAttempts = 0;   // Versuche am Raetsel (Hinweis ab dem 2., Loesung im 3.)
+  var chestSword = null;   // aufsteigendes Schwert ueber der Truhe: { x, y, p }
   function openChest() {
     if (chestDone) {
       Dialog.open('Truhe', ['Die Truhe ist leer.']);
       return;
     }
-    TaskUi.open('scheitelAllgemein', Math.floor(Date.now() / 1000) % 100000, function (solved) {
+    chestAttempts++;
+    TaskUi.open('scheitelAllgemein', Math.floor(Date.now() / 1000) % 100000, function (solved, errors) {
+      var pos = World.chestPos();
       if (!solved) {
-        if (Hud.getHearts() === 0) respawn();   // alle Herzen im Raetsel verloren
+        if (errors === 0) chestAttempts--;      // mit B abgebrochen: zaehlt nicht
+        else hurt(pos);                          // falsch: Herz weg wie im Kampf
         return;                                  // Truhe bleibt, spaeter neuer Versuch
       }
       chestDone = true;
-      Sword.give();
-      Dialog.open('Truhe', [
-        'Du l\u00f6st das R\u00e4tsel und \u00f6ffnest die Truhe.',
-        'Darin liegt ein Schwert! Es \u00fcberspringt einmal eine Aufgabe und zerbricht danach.',
-        'Du tr\u00e4gst es im Platz links neben A und B oben rechts. Antippen oder Taste E setzt es ein.'
+      // Aufgabe ist zu: Deckel klappt auf, Schwert steigt auf, dann der Text
+      run([
+        { dur: 0.3, tick: function (p) { World.setChestOpen(p); } },
+        { dur: 0.7, start: function () { chestSword = { x: pos.x, y: pos.y, p: 0 }; },
+          tick: function (p) { chestSword.p = p; } },
+        { dur: 0.3 },
+        { dur: 0, end: function () {
+          chestSword = null;
+          Sword.give();   // Schwert wandert in den Slot im HUD
+          Dialog.open('Truhe', [
+            'Du l\u00f6st das R\u00e4tsel und \u00f6ffnest die Truhe.',
+            'Darin liegt ein Schwert! Es \u00fcberspringt einmal eine Aufgabe und zerbricht danach.',
+            'Du tr\u00e4gst es im Platz links neben A und B oben rechts. Antippen oder Taste E setzt es ein.'
+          ]);
+        } }
       ]);
-    }, 'Ein freiwilliges R\u00e4tsel der Truhe:', { abortable: true });
+    }, 'Ein freiwilliges R\u00e4tsel der Truhe:', { abortable: true, attempt: chestAttempts });
+  }
+
+  // Schwert steigt aus der Truhe auf, mit kurzem Funkeln
+  function drawChestSword(r, now) {
+    var c = chestSword;
+    var ease = 1 - (1 - c.p) * (1 - c.p);
+    var x = c.x + 1, y = Math.round(c.y + 2 - ease * 14);
+    Sword.drawIcon(r, x, y);
+    if (c.p > 0.6) {
+      var k = Math.floor(now / 90) % 2;
+      r.px(x + 12, y - 2 + k, 1, 3, '#ffffff');
+      r.px(x + 11, y - 1 + k, 3, 1, '#ffffff');
+    }
   }
 
   // Spielstart im Elternhaus bei der Mutter
@@ -161,7 +211,7 @@
 
   // Rückstoß nach einem verlorenen Kampf: Figur weicht vom Gegner weg,
   // damit nicht sofort der nächste Kampf beginnt (mit Kollision, im Bildschirm)
-  function knockback(enemy) {
+  function knockbackSteps(enemy) {
     var dx = Player.getX() - enemy.x, dy = Player.getY() - enemy.y;
     var vx = 0, vy = 0;
     if (Math.abs(dx) >= Math.abs(dy) && dx !== 0) vx = dx > 0 ? 1 : -1;
@@ -173,22 +223,23 @@
       vy = f === 'up' ? 1 : f === 'down' ? -1 : 0;
     }
     var speed = Config.KNOCKBACK / Config.KNOCKBACK_TIME;
-    run([
+    return [
       { dur: Config.KNOCKBACK_TIME, tick: function (p, dt) {
         var nx = Math.max(0, Math.min(W - 16, Player.getX() + vx * speed * dt)) - Player.getX();
         var ny = Math.max(0, Math.min(H - 16, Player.getY() + vy * speed * dt)) - Player.getY();
         Player.push(World, nx, ny);
       } }
-    ]);
+    ];
   }
 
   // Alle Herzen verloren: Abblende, an der letzten Rastquelle wieder zu sich kommen
-  function respawn() {
-    run([
+  function respawnSteps() {
+    return [
       { dur: 0.5, tick: function (p) { fade = p; } },
       { dur: 0.3, end: function () {
         World.setScreen(lastRest.screen);
         Player.setPosition(lastRest.x, lastRest.y, lastRest.facing);
+        Player.blink(0);
         Hud.fill();
       } },
       { dur: 0.5, tick: function (p) { fade = 1 - p; } },
@@ -201,7 +252,7 @@
           Dialog.open('', ['Du kommst an der Quelle wieder zu dir. Deine Herzen sind wieder voll.']);
         }
       } }
-    ]);
+    ];
   }
 
   // Dungeon betreten: Abblende, Eingangshalle, wieder aufblenden
@@ -316,6 +367,7 @@
     if (World.isOutdoor()) Enemies.draw(Render, now, World.getScreen());
     if (spaeth) drawSpaeth(Render, now);
     World.drawOverlay(Render, now);
+    if (chestSword) drawChestSword(Render, now);
     if (doorClip) {
       // Figur in der Türöffnung sichtbar halten (vor dem dunklen Flur)
       ctx.save();
@@ -353,7 +405,9 @@
     } else {
       Player.update(World, Input, dt);
       // Gegner bewegen und Beruehrung pruefen (startet den Kampf)
-      Enemies.update(World, dt, Player.getX(), Player.getY(), startBattle);
+      // (solange die Figur nach einem Fehler blinkt, startet kein Kampf)
+      Enemies.update(World, dt, Player.getX(), Player.getY(),
+        Player.isBlinking() ? null : startBattle);
       // Szene auslösen, bevor die Spielfigur das Dorf Richtung Osten verlässt
       if (!spaethDone && !spaeth && World.getScreen() === 'ost' && Player.getX() >= 232) {
         startSpaeth();

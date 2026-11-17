@@ -11,7 +11,7 @@ Diese Anweisung gilt dauerhaft für alle Arbeiten in diesem Projekt. Lies sie vo
 - Schreibe klaren, gut kommentierten Code (Kommentare auf Deutsch) ohne unnötige Komplexität. Keine externen Bibliotheken, keine externen Schriften, keine Build-Werkzeuge, kein Server.
 - Kommuniziere auf Deutsch, knapp und direkt.
 - Erfinde keine personenbezogenen Daten. Das Spiel sammelt und sendet keine Daten. Figuren im Spiel tragen Rollenbezeichnungen (Mama, Nachbarin, Freund, Verkäufer), keine echten Namen.
-- **Git:** Entwickelt wird auf einem eigenen Arbeitszweig. Nach Freigabe durch den Nutzer wird auf `main` zusammengeführt (GitHub Pages veröffentlicht von `main`).
+- **Git:** Gearbeitet wird direkt auf `main` (keine Arbeitszweige). Nach jedem freigegebenen Schritt wird auf `main` gepusht; GitHub Pages veröffentlicht von `main` automatisch neu. Springt der Pages-Build nicht an, wird ein Neu-Deploy ausgelöst.
 - Halte diese Datei aktuell: Wenn der Nutzer neue Regeln, Texte oder Entscheidungen freigibt, schlage eine passende Ergänzung von `AGENTS.md` vor.
 
 ## Ziel und Rahmen
@@ -42,8 +42,12 @@ Ein Mathe-Übungsspiel als Top-Down-Abenteuer im Stil eines modernen 2D-Zelda (O
   - `player.js`: Spielfigur, Bewegung, Laufanimation
   - `dialog.js`: Textbox und Sprechblasen-Hinweis
   - `fx.js`: Atmosphäre (Wolkenschatten, Schmetterlinge, Vignette)
-  - `hud.js`: Herzen und Gegenstandsplätze
-  - `main.js`: Spielschleife, Abläufe (Tür-Animation, Bildschirmwechsel, Abblenden)
+  - `hud.js`: Herzen (mit Animation beim Herzverlust) und Gegenstandsplätze
+  - `enemies.js`: Gegner, Bewegung, Besiegt-Animation, Herz-Drops
+  - `taskui.js`: Aufgabenbox mit Zahlenblock bzw. Graph-Modus, Ausblenden beim Schließen
+  - `tasks.js`, `testpage.js`: Aufgabenvorlagen und Testseite
+  - `sword.js`: Schwert-Joker und sein HUD-Slot
+  - `main.js`: Spielschleife, Abläufe (Tür-Animation, Bildschirmwechsel, Abblenden, Kampf-Ausgang, Truhe)
   - Später kommen Dateien für Kampf, Aufgaben, Dungeons, Merkbuch, Speicherung und Ton dazu.
 - Logische Auflösung 256 × 224 Pixel, Kacheln 16 × 16, ein Bildschirm = 16 × 14 Kacheln. Karten werden als Textzeilen (ein Zeichen pro Kachel) definiert.
 - **Grafik:** komplett per Code gezeichnete Pixelgrafik (Canvas), Optik eines modernen 2D-Zelda: weiche Farbverläufe, Autotiling (durchgehende Wege, Ufer mit Schaum), Schatten, buschige Baumkronen über der Spielfigur, animiertes Wasser, wippende Blumen, Rauch aus Schornsteinen, Wolkenschatten, Schmetterlinge, leichte Vignette. Statische Teile werden einmal vorberechnet, nur Animationen werden pro Bild gezeichnet. Grafik bleibt sauber vom Spielcode getrennt, damit einzelne Grafiken später durch ein freies Tileset ersetzt werden können.
@@ -94,7 +98,7 @@ Ein Mathe-Übungsspiel als Top-Down-Abenteuer im Stil eines modernen 2D-Zelda (O
 - Kein Echtzeit-Schwertkampf. Berührt der Spieler ein Monster, pausiert das Spiel und zeigt genau eine Aufgabe. Richtig heißt Monster besiegt.
 - Bosse stellen mehrere feste, von der Lehrkraft geprüfte Aufgaben nacheinander. Bei Bossen nimmt der Boss pro richtiger Antwort Schaden.
 - Das Schwert ist das einzige Item: ein Joker für einen Einsatz. Es überspringt eine Aufgabe und zerbricht danach. Bei Bossen wirkt es nicht. Man trägt höchstens eines. Es gibt es nur als Belohnung aus freiwilligen Rätsel-Truhen.
-- Fehlerbehandlung gestuft: erster Fehler kostet ein Herz, zweiter Fehler zeigt einen Hinweis, dritter Fehler zeigt kurz die Lösung. Die Aufgabe kommt später mit neuen Zahlen wieder.
+- Fehlerbehandlung gestuft über die Versuche am selben Gegner (bzw. an derselben Truhe): Jede falsche Antwort beendet die Aufgabe und kostet ein Herz. Ab dem 2. Versuch steht der Hinweis gleich mit in der Aufgabe. Ist der 3. Versuch (oder die Antwort beim letzten Herz) falsch, wird vor dem Schließen kurz die Lösung gezeigt. Jeder neue Versuch kommt mit neuen Zahlen.
 - Herzen bleiben knapp: Besiegte Monster lassen nur manchmal ein Herz fallen (etwa jedes dritte Mal, nur bei richtiger Antwort im ersten Versuch). Rastquellen füllen alle Herzen auf. Die genauen Werte werden beim Testen festgelegt und stehen daher als Konstanten an einer Stelle.
 - Bei null Herzen geht es im Dungeon zum Eingang und in der Oberwelt zur letzten Rastquelle. Gelöste Türen und Rätsel bleiben gelöst, nur ein getragenes Schwert geht verloren.
 - Rastquellen sind unbegrenzt nutzbar: im Startdorf, vor jedem Dungeon-Eingang und in jedem Dungeon auf halber Strecke. Sie speichern automatisch.
@@ -138,7 +142,12 @@ Gebaut wird immer nur der Meilenstein, den der Nutzer freigibt, mit Test nach je
 - **Rastquelle im Startdorf:** Brunnen im Dorfplatz (Ost-Bildschirm), speichert automatisch.
 - **Wiederaufbau der Schule:** wird im Abspann gezeigt; danach ist die Schule begehbar, mit den befreiten Lehrkräften (passt zum frei begehbaren Endspiel-Zustand).
 - **HUD:** Das Schwert bekommt einen eigenen Slot links neben den A/B-Plätzen (A rot, B blau bleiben in der bisherigen Anordnung oben rechts).
-- **Herzverlust:** Jeder Fehler in einer Aufgabe kostet ein Herz (2. Fehler zusätzlich Hinweis, 3. Fehler Lösung). Sind alle Herzen weg, wird die Lösung gezeigt und die Aufgabe endet.
+- **Herzverlust (Variante A):** Jede falsche Antwort in Kampf oder Truhen-Rätsel schließt die Aufgabe und kostet ein Herz. 2. Versuch: Hinweis von Anfang an sichtbar. 3. Versuch falsch oder letztes Herz verloren: kurz die Lösung, dann schließt die Aufgabe. Ein Abbruch mit B (nur Truhe) kostet nichts und zählt nicht als Versuch. Die Probeaufgabe auf der Testseite behält die Stufen innerhalb der Box (2. Fehler Hinweis, 3. Fehler Lösung).
+- **Kampf-Animationen** (Werte in `config.js` bzw. als Konstanten oben in den Dateien):
+  - *Antwort richtig:* Haken, dann blendet die Aufgabenbox aus (`TASK_CLOSE_TIME`). Danach blitzt der Gegner weiß auf, zittert und zerfällt in eine Rauchwolke mit Funken. Ein Herz-Drop springt in einem Bogen aus der Wolke.
+  - *Antwort falsch:* Kreuz (bzw. Lösung), dann blendet die Aufgabenbox aus. Danach blinkt oben im HUD das verlorene Herz, zerplatzt in Pixel und wird leer; die Spielfigur weicht zurück und blinkt (`PLAYER_BLINK`). Solange sie blinkt, startet kein neuer Kampf. Bei null Herzen folgt danach Abblende und Rücksprung zur Quelle.
+  - *Schwert-Joker:* Aufgabe blendet aus, Besiegt-Animation, danach der Text „Dein Schwert zerbricht …“.
+- **Rätsel-Truhe:** Nach dem gelösten Rätsel blendet die Aufgabe aus, der Deckel klappt auf, das Schwert steigt funkelnd aus der Truhe und wandert in den HUD-Slot. Erst danach öffnet sich der Text mit der Erklärung. Die Truhe bleibt offen. Falsche Antworten kosten ein Herz mit derselben Animation wie im Kampf.
 - **Null Herzen:** Die Spielfigur kommt an der zuletzt benutzten Rastquelle wieder zu sich (Start: Brunnen), mit vollen Herzen. Besiegte Gegner bleiben besiegt.
 - **Rastquelle:** Der Brunnen füllt die Herzen auf und merkt sich die Stelle für den Rücksprung (Speichern folgt später). Die Nachbarin erklärt das.
 - **Rücktaste in Aufgaben:** löscht eine Ziffer (bei der Probeaufgabe auf der Testseite: sind alle Felder leer, bricht sie ab wie B).

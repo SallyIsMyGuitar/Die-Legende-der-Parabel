@@ -1,4 +1,5 @@
-// hud.js: Anzeige oben – Herzen links, Gegenstandsplätze rechts (noch ohne Funktion)
+// hud.js: Anzeige oben – Herzen links, Gegenstandsplätze rechts
+// Ein verlorenes Herz blinkt kurz und zerplatzt dann (Animation).
 // Anzahl der Herzen kommt aus config.js
 var Hud = (function () {
   'use strict';
@@ -16,6 +17,8 @@ var Hud = (function () {
 
   var MAX = Config.HEARTS_MAX;
   var hearts = MAX;   // aktuelle Herzen
+  var lost = null;    // Animation des zuletzt verlorenen Herzens: { i, t0 }
+  var LOST_BLINK = 450, LOST_BURST = 400;   // Millisekunden: Blinken, Zerplatzen
 
   var LETTERS = {
     A: ['.#.', '#.#', '###', '#.#', '#.#'],
@@ -53,10 +56,34 @@ var Hud = (function () {
     var shadow = { o: 'rgba(0,0,0,0.35)', r: 'rgba(0,0,0,0.35)', H: 'rgba(0,0,0,0.35)' };
     for (var i = 0; i < MAX; i++) {
       sprite(r, HEART, 7 + i * 9, 7, shadow);
-      sprite(r, HEART, 6 + i * 9, 6, i < hearts ? COLORS : EMPTY);
+      var full = i < hearts;
+      // Verlorenes Herz blinkt erst zwischen voll und leer
+      if (lost && lost.i === i && performance.now() - lost.t0 < LOST_BLINK) {
+        full = Math.floor((performance.now() - lost.t0) / 75) % 2 === 0;
+      }
+      sprite(r, HEART, 6 + i * 9, 6, full ? COLORS : EMPTY);
     }
+    drawBurst(r);
     slot(r, Render.WIDTH - 44, 5, 'A');
     slot(r, Render.WIDTH - 24, 5, 'B');
+  }
+
+  // Danach zerplatzt es in kleine rote Pixel, die nach außen fliegen
+  function drawBurst(r) {
+    if (!lost) return;
+    var t = performance.now() - lost.t0 - LOST_BLINK;
+    if (t < 0) return;
+    if (t > LOST_BURST) { lost = null; return; }
+    var p = t / LOST_BURST;
+    var cx = 9 + lost.i * 9, cy = 8;
+    var ctx = r.getCtx();
+    ctx.globalAlpha = 1 - p;
+    for (var k = 0; k < 8; k++) {
+      var w = k / 8 * Math.PI * 2;
+      var d = 2 + p * 9;
+      r.px(Math.round(cx + Math.cos(w) * d), Math.round(cy + Math.sin(w) * d + p * p * 4), 2, 2, k % 2 ? '#e8344a' : '#ffb0b8');
+    }
+    ctx.globalAlpha = 1;
   }
 
   // Einzelnes Herz zeichnen (z. B. fallen gelassenes Herz auf dem Boden)
@@ -69,9 +96,14 @@ var Hud = (function () {
     draw: draw,
     drawHeart: drawHeart,
     heal: function (n) { hearts = Math.min(MAX, hearts + n); },
-    fill: function () { hearts = MAX; },
+    fill: function () { hearts = MAX; lost = null; },
     getHearts: function () { return hearts; },
     setHearts: function (n) { hearts = Math.max(0, Math.min(MAX, n)); },
-    loseHeart: function () { hearts = Math.max(0, hearts - 1); }
+    // Herz abziehen; das Herz blinkt im HUD und zerplatzt
+    loseHeart: function () {
+      if (hearts === 0) return;
+      hearts--;
+      lost = { i: hearts, t0: performance.now() };
+    }
   };
 })();
