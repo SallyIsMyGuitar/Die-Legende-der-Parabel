@@ -107,6 +107,7 @@ Ein Mathe-Übungsspiel als Top-Down-Abenteuer im Stil eines modernen 2D-Zelda (O
 - Zahlen: nur ganze Zahlen und Dezimalzahlen mit höchstens einer Nachkommastelle. Komma und Punkt werden gleichermaßen akzeptiert. Keine Brüche.
 - Parabel einstellen über Plus- und Minus-Tasten mit festen Schritten (0,5 bei a, 1 bei d und e). Die Parabel zeichnet sich live im Koordinatensystem mit. Keine freien Schieberegler.
 - Die Mathematik muss fachlich korrekt und im Stil der bayerischen Realschule formuliert sein. Verwende „Schülerinnen und Schüler“ bzw. „Lehrerinnen und Lehrer“ / „Lehrkräfte“, wo Personen angesprochen werden.
+- **Schreibweisen folgen den Merkkästen des Lehrbuchs:** Scheitelform „y = a(x − xs)² + ys“, Scheitel „S(xs|ys)“, allgemeine Form „y = ax² + bx + c“, Diskriminante „D = b² − 4ac“, Lösungsmenge „L = {…}“, Dezimalzahlen mit Komma. Bezeichnung „Scheitelform“ (nicht „Scheitelpunktsform“).
 
 ## Speichern
 
