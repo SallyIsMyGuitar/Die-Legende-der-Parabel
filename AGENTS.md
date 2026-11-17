@@ -37,7 +37,12 @@ Ein Mathe-Übungsspiel als Top-Down-Abenteuer im Stil eines modernen 2D-Zelda (O
   - `buildings.js`: Häuser, Laden, Schule, Zaun, Tor, Brunnen, Tür-Animation
   - `interior.js`: Raum-Rahmen für Innenräume, gemeinsame Möbel, Elternhaus
   - `rooms.js`: weitere Innenräume (Nachbarin, Freund, Laden)
-  - `world.js`: Bildschirme der Oberwelt, Kollision, Übergänge, Gesprächsziele
+  - `world.js`: Bildschirme der Oberwelt, Kollision, Übergänge, Gesprächsziele (inkl. Rätsel-Truhe und Quelle an der Ruine)
+  - `tasks.js`: Aufgabenvorlagen und feste Boss-Aufgaben
+  - `taskui.js`: Aufgabenbox (Zahlenblock, Graph-Modus mit live gezeichneter Parabel, Fehlerstufen)
+  - `testpage.js`: Testseite für die Lehrkraft
+  - `enemies.js`: Gegner auf dem Weg zum Dungeon und im Dungeon
+  - `dungeon.js`: Höhle der Parabeln (drei Räume, Höhlen-Optik, Quelle)
   - `input.js`: Tastatur und Touch (Multitouch), einmalige Tastendrücke für A/B
   - `player.js`: Spielfigur, Bewegung, Laufanimation
   - `dialog.js`: Textbox und Sprechblasen-Hinweis
@@ -125,14 +130,14 @@ Gebaut wird immer nur der Meilenstein, den der Nutzer freigibt, mit Test nach je
 
 1. Grundgerüst mit Spielfigur, Touch-Steuerung und einem Bildschirm. – **erledigt**
 2. Startdorf und Oberwelt mit Bildschirmwechsel. – **erledigt:** Startdorf (2 Bildschirme), Bildschirmwechsel, 4 betretbare Häuser mit Tür-Animation, Dialogsystem mit NPC-Texten, Spielstart im Elternhaus, Rastquelle am Brunnen (speichert automatisch), drei weitere Bildschirme mit Weg zum ersten Dungeon (Ruine), Szene am Ost-Ausgang mit Herrn Späth (hält die Spielfigur an, gibt einen Tipp, dreht sich beim Gespräch zur Spielfigur).
-3. Kampf- und Aufgabensystem mit Aufgabenvorlagen und Testseite.
-4. Erster kompletter Dungeon mit Erklär-NPCs, Merkbuch und Boss.
+3. Kampf- und Aufgabensystem mit Aufgabenvorlagen und Testseite. – **erledigt:** 4 Aufgabentypen, Aufgabenbox mit Zahlenblock und Graph-Modus (Parabel Live einstellen; Punkt P erst nach dem ersten Fehler sichtbar), gestufte Fehler (Herz, Hinweis, Lösung), Besiegt-Animation mit Herz-Drops, Schwert als Joker (E bzw. Slot-Antippen, kein Herz-Drop, Sperre bei Boss/Truhe/Probe), Testseite mit 10 Beispielen je Typ und Probeaufgabe.
+4. Erster kompletter Dungeon mit Erklär-NPCs, Merkbuch und Boss. – **erledigt:** Höhle der Parabeln mit drei Räumen (Eingangshalle, Mittelraum mit Quelle, Vorraum), Höhlen-Optik mit Fackeln, Gegner (Fledermäuse, Kristallgeister), Forscherin als Erklär-NPC, Merkbuch (M bzw. HUD-Symbol, jederzeit öffnen), Wächter-Boss mit 3 festen Aufgaben, Tor-Öffnung nach dem Sieg, Wappenzähler. Rastquellen: Brunnen (Dorf), Quelle vor der Ruine, Quelle im Mittelraum.
 5. Die weiteren vier Dungeons einzeln.
 6. Abspann (inkl. Befreiung der Lehrkräfte und Wiederaufbau der Schule), Wiederholungsmodus, Feinschliff.
 
 ## Offene Fragen (vor der Umsetzung mit dem Nutzer klären)
 
-- Neue Texte noch freigeben: Nachbarin (3. und 4. Seite: „Übrigens: Ein Schluck aus dem Brunnen auf dem Dorfplatz füllt deine Herzen wieder auf.“ / „Und solltest du einmal alle Herzen verlieren, kommst du an der Quelle wieder zu dir, an der du zuletzt getrunken hast.“), Brunnen („Du trinkst vom klaren Wasser. Deine Herzen sind wieder voll.“), Rücksprung („Du kommst an der Quelle wieder zu dir. Deine Herzen sind wieder voll.“).
+- Neue Texte noch freigeben: Nachbarin (3. und 4. Seite: „Übrigens: Ein Schluck aus dem Brunnen auf dem Dorfplatz füllt deine Herzen wieder auf.“ / „Und solltest du einmal alle Herzen verlieren, kommst du an der Quelle wieder zu dir, an der du zuletzt getrunken hast.“). Die Texte von Brunnen und Rücksprung sind im Spiel, die neuen Texte seit dem Schwert (Truhe, Schwert-Zerbrechen, Schwert-Verlust beim Rücksprung), der Forscherin, der Steintafel und des Boss-Siegs sind Vorschläge und noch nicht ausdrücklich freigegeben.
 
 - Schriftgröße der Dialoge: Die Pixelschrift ist auf 256 × 224 ausgelegt; auf dem iPad prüfen, ob sie groß genug ist.
 
@@ -152,3 +157,8 @@ Gebaut wird immer nur der Meilenstein, den der Nutzer freigibt, mit Test nach je
 - **Rastquelle:** Der Brunnen füllt die Herzen auf und merkt sich die Stelle für den Rücksprung (Speichern folgt später). Die Nachbarin erklärt das.
 - **Rücktaste in Aufgaben:** löscht eine Ziffer (bei der Probeaufgabe auf der Testseite: sind alle Felder leer, bricht sie ab wie B).
 - **Gegner-Aufgaben:** Jeder Bildschirm auf dem Weg zum ersten Dungeon hat einen festen Aufgabentyp (Wiese leicht, Wald mittel, Ruine schwer). Der Aufgabentext beginnt mit einem kurzen Kontext, der auf den Tipp des dortigen Erklär-NPCs verweist. Besiegte Gegner bleiben dauerhaft besiegt; bei Nichtlösen kommt die Aufgabe mit neuen Zahlen wieder.
+- **Graph-Modus (Variante C):** Nur „Scheitelform aufstellen“ nutzt die Parabel-Eingabe mit live gezeichneter Parabel. Der Punkt P ist versteckt, bis ein Fehler passiert – ohne P muss gerechnet werden. „Streckfaktor a bestimmen“ nutzt Zahleneingabe mit großen Wertebereichen.
+- **Schwert:** Taste E oder Antippen des Schwert-Slots im HUD (links neben A und B; davor der Buch-Platz). Ein Einsatz überspringt die Aufgabe ohne Herz-Drop, das Schwert zerbricht. Es wirkt nicht bei Bossen, in der Rätsel-Truhe und in der Probeaufgabe. Bei null Herzen geht es verloren. Die Truhe an der Ruine (freiwilliges Rätsel, abbrechbar mit B) ist die Belohnungsquelle.
+- **Merkbuch:** Taste M oder Buch-Symbol im HUD, jederzeit öffnen (pausiert auch Kämpfe), hoch/runter blättern, B schließt. Merksätze der Erklär-NPCs landen beim Ansprechen automatisch darin (Wanderin, Förster, Forscherin).
+- **Boss des ersten Dungeons:** Drei feste, freigegebene Aufgaben (a = 1 der Normalparabel; Scheitel S(0|0); Graph: y = 0,5(x − 3)² − 2 mit P(5|0)). Pro richtiger Antwort verliert der Wächter ein Herz; nach dem Sieg öffnet sich das Tor, ein Story-Dialog enthüllt einen Teil der Geschichte und das erste Wappen wird gezählt (Anzeige im Abspann, später).
+- **Rastquellen bisher:** Brunnen im Dorfplatz, steinerne Quelle vor dem Dungeon-Eingang an der Ruine, Quelle im Dungeon-Mittelraum. Alle speichern automatisch und füllen die Herzen auf.
