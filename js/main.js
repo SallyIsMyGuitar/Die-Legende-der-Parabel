@@ -9,6 +9,13 @@
   Input.init();
   TaskUi.init();
 
+  // --- Kampf: Beruehrung mit einem Gegner startet genau eine Aufgabe -------
+  function startBattle(enemy) {
+    TaskUi.open(Enemies.typeIdOf(enemy), Enemies.seedOf(enemy), function (solved) {
+      if (solved) Enemies.defeat(enemy);   // richtig = Monster besiegt
+    });
+  }
+
   // Spielstart im Elternhaus bei der Mutter
   World.setScreen(World.START.screen);
   Player.setPosition(World.START.x, World.START.y, World.START.facing);
@@ -195,6 +202,7 @@
     }
     World.drawGround(Render, now);
     Player.draw(Render);
+    if (World.isOutdoor()) Enemies.draw(Render, now, World.getScreen());
     if (spaeth) drawSpaeth(Render, now);
     World.drawOverlay(Render, now);
     if (doorClip) {
@@ -233,6 +241,8 @@
       turnedNpc = null;
     } else {
       Player.update(World, Input, dt);
+      // Gegner bewegen und Beruehrung pruefen (startet den Kampf)
+      Enemies.update(World, dt, Player.getX(), Player.getY(), startBattle);
       // Szene auslösen, bevor die Spielfigur das Dorf Richtung Osten verlässt
       if (!spaethDone && !spaeth && World.getScreen() === 'ost' && Player.getX() >= 232) {
         startSpaeth();
