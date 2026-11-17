@@ -117,7 +117,8 @@ var World = (function () {
             texts: [
               'Die Normalparabel hat die Gleichung y = x². Ihr Scheitel liegt im Ursprung.',
               'Die Pilzwesen hier fragen dich genau danach. Seit die Schule zerstört wurde, traut sich kaum jemand mehr auf diese Wiese.'
-            ]
+            ],
+            merk: { id: 'normalparabel', name: 'Normalparabel', text: 'Die Normalparabel ist y = x² mit Scheitel S(0|0).' }
           }
         }
       ],
@@ -151,7 +152,8 @@ var World = (function () {
             texts: [
               'Je größer a, desto schmaler die Parabel. a streckt oder staucht sie.',
               'Die Moosgeister prüfen genau das. Bestehst du, erreichst du die Ruine und kommst der Höhle der Parabeln einen Schritt näher.'
-            ]
+            ],
+            merk: { id: 'streckfaktor', name: 'Streckfaktor a', text: 'a streckt die Parabel (|a| > 1) oder staucht sie (|a| < 1).' }
           }
         }
       ],
@@ -336,7 +338,7 @@ var World = (function () {
     for (var k = 0; k < npcs.length; k++) {
       var n = npcs[k];
       if (Math.floor(n.x / TILE) === tx && Math.floor(n.y / TILE) === ty) {
-        return { name: n.talk.name, texts: n.talk.texts, hintX: n.x + 8, hintY: n.y, npc: n };
+        return { name: n.talk.name, texts: n.talk.texts, merk: n.talk.merk, hintX: n.x + 8, hintY: n.y, npc: n };
       }
     }
     return null;

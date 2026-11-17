@@ -428,6 +428,8 @@
               turnedNpc = target.npc;
             }
             Dialog.open(target.name, target.texts);
+            // Gehoerter Merksatz landet automatisch im Merkbuch
+            if (target.merk) Merkbuch.add(target.merk);
           }
           target = null;
         }

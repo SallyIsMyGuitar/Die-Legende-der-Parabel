@@ -58,7 +58,7 @@ var Interior = (function () {
     var tiles = [[npc.x / TILE, npc.y / TILE]].concat(npc.talkTiles || []);
     for (var i = 0; i < tiles.length; i++) {
       if (tiles[i][0] === tx && tiles[i][1] === ty) {
-        return { name: npc.talk.name, texts: npc.talk.texts, hintX: npc.x + 8, hintY: npc.y };
+        return { name: npc.talk.name, texts: npc.talk.texts, merk: npc.talk.merk, hintX: npc.x + 8, hintY: npc.y };
       }
     }
     return null;
