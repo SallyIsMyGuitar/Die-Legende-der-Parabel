@@ -204,6 +204,30 @@
     ]);
   }
 
+  // Dungeon betreten: Abblende, Eingangshalle, wieder aufblenden
+  function enterDungeon(room) {
+    run([
+      { dur: 0.25, tick: function (p) { fade = p; } },
+      { dur: 0, end: function () {
+        World.setScreen(room);
+        Player.setPosition(8 * 16, 11 * 16, 'up');
+      } },
+      { dur: 0.25, tick: function (p) { fade = 1 - p; } }
+    ]);
+  }
+
+  // Übergang zwischen Dungeon-Räumen (Höhlenöffnungen) mit Abblende
+  function roomWarp(w) {
+    run([
+      { dur: 0.25, tick: function (p) { fade = p; } },
+      { dur: 0, end: function () {
+        World.setScreen(w.to.screen || w.to.room);
+        Player.setPosition(w.to.x, w.to.y, w.to.facing || 'up');
+      } },
+      { dur: 0.25, tick: function (p) { fade = 1 - p; } }
+    ]);
+  }
+
   // Haus betreten: Tür geht auf, Figur geht hinein, Abblende, Raum
   function enterHouse(w) {
     var b = w.building;
@@ -354,6 +378,8 @@
         var w = World.checkWarp(Player.getX(), Player.getY(), Player.getFacing());
         if (w && w.type === 'enter') enterHouse(w);
         else if (w && w.type === 'exit') leaveHouse(w);
+        else if (w && w.type === 'dungeon') enterDungeon(w.room);
+        else if (w && w.type === 'warp') roomWarp(w);
         else {
           var edge = World.checkEdge(Player.getX(), Player.getY());
           if (edge) startSlide(edge);

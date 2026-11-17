@@ -38,8 +38,22 @@ var Interior = (function () {
 
   // Bewohner, mit dem man an Kachel (tx, ty) reden kann (oder null).
   // npc.talkTiles erlaubt zusätzliche Kacheln, z. B. die Ladentheke.
+  // Zusaetzlich koennen Raeume Objekte haben (z. B. Quelle, Steintafel)
+  // mit eigener Aktion wie 'rest' (Rastquelle).
   function talkTarget(room, tx, ty) {
-    var npc = rooms[room].npc;
+    var def = rooms[room];
+    var objs = def.objects || [];
+    for (var o = 0; o < objs.length; o++) {
+      for (var j = 0; j < objs[o].tiles.length; j++) {
+        if (objs[o].tiles[j][0] === tx && objs[o].tiles[j][1] === ty) {
+          return {
+            name: objs[o].name, texts: objs[o].texts, action: objs[o].action,
+            spawn: objs[o].spawn, hintX: objs[o].x, hintY: objs[o].y
+          };
+        }
+      }
+    }
+    var npc = def.npc;
     if (!npc || !npc.talk) return null;
     var tiles = [[npc.x / TILE, npc.y / TILE]].concat(npc.talkTiles || []);
     for (var i = 0; i < tiles.length; i++) {
@@ -48,6 +62,12 @@ var Interior = (function () {
       }
     }
     return null;
+  }
+
+  // Uebergang einer Hoehlenoeffnung (Kachel 'M') im angegebenen Raum
+  function matWarp(room, tx, ty) {
+    var m = rooms[room].mats;
+    return m ? m[tx + ',' + ty] : null;
   }
 
   // --- Raum-Rahmen -----------------------------------------------------
@@ -417,10 +437,15 @@ var Interior = (function () {
     var st = { layer: Render.createLayer(W, H), overlay: null, sprites: null };
     Render.setTarget(st.layer.ctx);
     Render.px(0, 0, W, H, '#0e0b12');
-    drawFloor(Render, def.floor);
-    drawWalls(Render, def.wall);
-    def.bake(Render);
-    drawMat(Render);
+    if (def.bakeFull) {
+      // Eigene Raumgrafik (z. B. Hoehle im Dungeon), Boden/Wand/Matte fertig
+      def.bakeFull(Render);
+    } else {
+      drawFloor(Render, def.floor);
+      drawWalls(Render, def.wall);
+      def.bake(Render);
+      drawMat(Render);
+    }
     if (def.bakeOverlay) {
       st.overlay = Render.createLayer(W, H);
       Render.setTarget(st.overlay.ctx);
@@ -464,6 +489,7 @@ var Interior = (function () {
     isBlocked: isBlocked,
     isExit: isExit,
     talkTarget: talkTarget,
+    matWarp: matWarp,
     drawGround: drawGround,
     drawOverlay: drawOverlay,
     SPAWN: SPAWN,
