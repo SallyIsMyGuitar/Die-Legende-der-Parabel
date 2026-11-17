@@ -165,5 +165,35 @@ var Tasks = (function () {
     return task;
   }
 
-  return { TYPES: TYPES, make: make, fmt: fmt, spfText: spfText };
+  // --- Boss der Hoehle der Parabeln: feste, von der Lehrkraft gepruefte Aufgaben
+  // Thema des Dungeons: Normalparabel und Parameter.
+  var BOSS_HOEHLE = [
+    {
+      frage: 'Die Normalparabel: Gib ihren Streckfaktor a an.',
+      felder: [{ key: 'a', label: 'a' }],
+      loesung: [1],
+      loesungstext: 'y = x\u00b2, also a = 1',
+      hinweis: 'Die Normalparabel ist y = x\u00b2.'
+    },
+    {
+      frage: 'An welcher Stelle liegt der Scheitel der Normalparabel? Gib xs und ys an.',
+      felder: [{ key: 'xs', label: 'xs' }, { key: 'ys', label: 'ys' }],
+      loesung: [0, 0],
+      loesungstext: 'S(0|0)',
+      hinweis: 'Vergleiche y = x\u00b2 mit y = a(x \u2212 xs)\u00b2 + ys.'
+    },
+    {
+      frage: 'Stelle die Parabel mit a = 0,5 und S(3|\u22122) ein. Sie geht durch P(5|0).',
+      felder: [{ key: 'a', label: 'a' }, { key: 'xs', label: 'xs' }, { key: 'ys', label: 'ys' }],
+      loesung: [0.5, 3, -2],
+      loesungstext: 'y = 0,5(x \u2212 3)\u00b2 \u2212 2',
+      hinweis: 'Setze xs = 3 und ys = \u22122 ein und pr\u00fcfe mit P(5|0).',
+      graph: true,
+      graphFix: { xp: 5, yp: 0 }
+    }
+  ];
+
+  function bossTasks() { return BOSS_HOEHLE.slice(); }
+
+  return { TYPES: TYPES, make: make, fmt: fmt, spfText: spfText, bossTasks: bossTasks };
 })();

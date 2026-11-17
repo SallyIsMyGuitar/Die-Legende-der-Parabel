@@ -21,6 +21,52 @@
     }
   }
 
+  // --- Boss des ersten Dungeons: feste Aufgaben nacheinander ---------------
+  var BOSS_CONTEXT = 'Der W\u00e4chter der H\u00f6hle der Parabeln fragt:';
+  var BOSS_VICTORY_TEXTS = [
+    'Der W\u00e4chter zerf\u00e4llt zu Staub und Stein. Das Tor \u00f6ffnet sich.',
+    'Eine tiefe Stimme raunt durch die H\u00f6hle: \u201eNicht schlecht, kleiner Rechner ... Doch die Schule habe ich zerst\u00f6rt, und ich warte im Schloss.\u201c',
+    'Du hast das erste Wappen erhalten: das Wappen der Parabel.'
+  ];
+  var bossAttempts = 1;    // Versuche an der aktuellen Boss-Aufgabe
+  var wappens = 0;         // gesammelte Wappen (fuer den Abspann)
+
+  function startBossTask() {
+    Boss.startFight();
+    var def = Tasks.bossTasks()[Boss.index()];
+    // Feste Aufgabe mit Kontext uebernehmen
+    var task = {
+      frage: BOSS_CONTEXT + ' ' + def.frage,
+      felder: def.felder,
+      loesung: def.loesung,
+      loesungstext: def.loesungstext,
+      hinweis: def.hinweis,
+      graph: def.graph,
+      graphFix: def.graphFix
+    };
+    TaskUi.openFixed(task, function (solved, errors) {
+      if (solved) {
+        bossAttempts = 1;
+        if (Boss.damage() > 0) {
+          // naechste feste Aufgabe nach kurzem Durchatmen
+          run([{ dur: 0.5 }, { dur: 0, end: function () { startBossTask(); } }]);
+        } else {
+          Boss.die();
+          wappens++;
+          run([
+            { dur: 1.3 },
+            { dur: 0, end: function () {
+              Dialog.open('W\u00e4chter der H\u00f6hle der Parabeln', BOSS_VICTORY_TEXTS);
+            } }
+          ]);
+        }
+      } else {
+        bossAttempts++;                     // gleiche Aufgabe kommt wieder
+        hurt({ x: 102, y: 60 });   // Rueckstoss vom Boss weg
+      }
+    }, { boss: true, attempt: bossAttempts });
+  }
+
   // --- Kampf: Beruehrung mit einem Gegner startet genau eine Aufgabe -------
   // Die Aufgabenbox blendet erst aus, dann folgt die Animation:
   //   richtig = Gegner blitzt auf und zerfaellt in eine Rauchwolke
@@ -368,6 +414,7 @@
     // Gegner zeichnen: draußen und in den Dungeon-Räumen
     if (World.isOutdoor() || Enemies.hasScreen(World.getScreen()))
       Enemies.draw(Render, now, World.getScreen());
+    if (World.getScreen() === 'dboss') Boss.draw(Render, now);
     if (spaeth) drawSpaeth(Render, now);
     World.drawOverlay(Render, now);
     if (chestSword) drawChestSword(Render, now);
@@ -418,7 +465,11 @@
       Enemies.update(World, dt, Player.getX(), Player.getY(),
         Player.isBlinking() ? null : startBattle);
       // Szene auslösen, bevor die Spielfigur das Dorf Richtung Osten verlässt
-      if (!spaethDone && !spaeth && World.getScreen() === 'ost' && Player.getX() >= 232) {
+      // Boss des ersten Dungeons: Beruehrung startet die feste Aufgabenreihe
+      if (World.getScreen() === 'dboss' && !Boss.isDefeated() && !Player.isBlinking() &&
+          Math.abs(Player.getX() + 8 - 112) < 15 && Math.abs(Player.getY() + 8 - 74) < 15) {
+        startBossTask();
+      } else if (!spaethDone && !spaeth && World.getScreen() === 'ost' && Player.getX() >= 232) {
         startSpaeth();
       } else {
         target = World.talkTarget(Player.getX(), Player.getY(), Player.getFacing());
@@ -461,6 +512,7 @@
     Dialog.draw(Render);
     TestPage.draw(Render);
     TaskUi.draw(Render);
+    if (World.getScreen() === 'dboss' && Boss.isFighting()) Boss.drawHearts(Render);
     Merkbuch.draw(Render);
     if (fade > 0) Render.px(0, 0, W, H, 'rgba(0,0,0,' + fade + ')');
     Input.clearPressed();
