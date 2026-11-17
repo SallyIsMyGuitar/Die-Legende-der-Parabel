@@ -58,6 +58,14 @@
     r.px(x + 10, y + 11, 3, 2, '#2e2a3a');
   }
 
+  // Stalagmit: kleiner Felz, auf dem ein Hoehlen-Bewohner steht (blockiert)
+  function stalagmite(r, tx, ty) {
+    var x = tx * TILE, y = ty * TILE;
+    r.px(x + 6, y + 12, 4, 3, '#3a3546');
+    r.px(x + 5, y + 8, 6, 5, '#4c4658');
+    r.px(x + 7, y + 5, 2, 4, '#5e5870');
+  }
+
   // Hoehlenoeffnung (Uebergang): dunkles Loch mit Steinsim
   function caveOpening(r, tx, ty, top) {
     var x = tx * TILE, y = ty * TILE;
@@ -165,6 +173,7 @@
         }
         caveFloor(r, tx, ty);
         if (c === 'x') rock(r, tx, ty);
+        else if (c === 'N') stalagmite(r, tx, ty);
         else if (c === 'Q') r.px(tx * TILE, ty * TILE, TILE, TILE, '#1c3a5e');
         else if (c === 'M') caveOpening(r, tx, ty, ty < 7);
       }
@@ -182,7 +191,7 @@
     map: [
       '################',
       '#WWWWWWWMWWWWWW#',
-      '#W............W#',
+      '#W..N.........W#',
       '#W............W#',
       '#W....x....x..W#',
       '#W............W#',
@@ -200,7 +209,21 @@
       '8,1': { room: 'dmittel', x: 8 * TILE, y: 11 * TILE, facing: 'up' },
       '8,12': { screen: 'ruine', x: 6 * TILE, y: 5 * TILE, facing: 'down' }
     },
-    torches: [[4, 1], [11, 1], [4, 12], [11, 12]]
+    torches: [[4, 1], [11, 1], [4, 12], [11, 12]],
+    // Erklaer-NPC der Hoehle: Merksatz zur Scheitelform
+    npc: {
+      x: 3 * TILE, y: 2 * TILE,
+      sprites: function () { return People.wanderer(); },
+      talk: {
+        name: 'Forscherin',
+        texts: [
+          'Ich erforsche die Parabeln dieser H\u00f6hle. Merke dir: Aus dem Scheitel S(xs|ys) und einem weiteren Punkt P stellst du die Scheitelform auf.',
+          'Die Flederm\u00e4use und Kristallgeister pr\u00fcen genau das. Besiegst du sie alle, wartet vor dem verschlossenen Tor der W\u00e4chter des Bosses.'
+        ],
+        merk: { id: 'scheitelform', name: 'Scheitelform aufstellen', text: 'Aus S(xs|ys) und Punkt P ergibt sich die Scheitelform: Setze beide Punkte in y = a(x \u2212 xs)\u00b2 + ys ein.' }
+      },
+      frame: function (t) { return { i: 0, dx: 0, dy: 0 }; }
+    }
   };
 
   // Mittelraum: Quelle als Rastquelle auf halber Strecke
