@@ -4,6 +4,8 @@
 // Kampf: Das Spiel pausiert und zeigt genau eine Aufgabe (taskui.js).
 // Richtig geloest = Gegner dauerhaft besiegt, sonst bleibt er stehen und
 // die Aufgabe kommt spaeter mit neuen Zahlen wieder.
+// Besiegt-Animation: Gegner blitzt weiss auf und zerfaellt in eine
+// Rauchwolke mit Funken; ein Herz-Drop springt danach aus der Wolke.
 var Enemies = (function () {
   'use strict';
 
@@ -110,6 +112,7 @@ var Enemies = (function () {
     ruine: { rows: GOLEM, colors: GOLEM_COLORS }
   };
   var spriteCache = {};
+  var flashCache = {};   // weisse Silhouette fuer das Aufblitzen
 
   function spriteOf(screen) {
     if (!spriteCache[screen]) {
@@ -118,6 +121,21 @@ var Enemies = (function () {
     }
     return spriteCache[screen];
   }
+
+  function flashOf(screen) {
+    if (!flashCache[screen]) {
+      var s = SPRITES[screen];
+      var white = {};
+      Object.keys(s.colors).forEach(function (k) { white[k] = '#ffffff'; });
+      flashCache[screen] = Render.sprite(s.rows, white, false);
+    }
+    return flashCache[screen];
+  }
+
+  // Zeiten der Besiegt-Animation in Millisekunden
+  var FLASH_MS = 320;    // Aufblitzen (weiss/normal im Wechsel, leichtes Zittern)
+  var POOF_MS = 480;     // Rauchwolke mit Funken
+  var DROP_HOP_MS = 300; // Herz springt aus der Wolke
 
   // --- Gegner-Definition je Bildschirm ---------------------------------------
   // Startposition in Kacheln; Bewegung passiert nur auf freien Kacheln.
@@ -141,7 +159,8 @@ var Enemies = (function () {
   // Zustand: einmalig angelegt, ueberlebt Bildschirmwechsel
   var enemies = [];
   var defeated = {};   // 'screen:index' -> true, dauerhaft besiegt
-  var drops = [];      // fallen gelassene Herzen: { screen, x, y }
+  var drops = [];      // fallen gelassene Herzen: { screen, x, y, t0 }
+  var dying = [];      // laufende Besiegt-Animationen: { e, t0 }
   var firstTryWins = 0;   // Siege im ersten Versuch (fuer Herz-Drops)
 
   Object.keys(DEFS).forEach(function (screen) {
@@ -197,6 +216,7 @@ var Enemies = (function () {
     for (var d = drops.length - 1; d >= 0; d--) {
       var h = drops[d];
       if (h.screen !== world.getScreen()) continue;
+      if (performance.now() < h.t0) continue;   // noch in der Wolke
       if (Math.abs(playerX - h.x) < TOUCH && Math.abs(playerY - h.y) < TOUCH) {
         Hud.heal(1);
         drops.splice(d, 1);
@@ -218,7 +238,8 @@ var Enemies = (function () {
       else en.y += dy;
 
       // Beruehrung mit der Spielfigur startet den Kampf
-      if (en.cooldown <= 0 &&
+      // (nicht, solange die Figur nach einem Fehler blinkt: onBattle = null)
+      if (onBattle && en.cooldown <= 0 &&
           Math.abs(playerX - en.x) < TOUCH &&
           Math.abs(playerY - en.y) < TOUCH) {
         en.cooldown = COOLDOWN;
@@ -241,26 +262,83 @@ var Enemies = (function () {
 
   function contextOf(e) { return KONTEXT[e.screen]; }
 
-  // Richtig geloest: Gegner dauerhaft besiegt.
+  // Wievielter Versuch gegen diesen Gegner (1 = erster Kontakt)
+  function attemptOf(e) { return e.attempts; }
+
+  // Richtig geloest: Gegner dauerhaft besiegt, Besiegt-Animation startet.
   // Bei Sieg im ersten Versuch laesst jeder n-te Gegner ein Herz fallen.
   function defeat(e, firstTry) {
     defeated[e.screen + ':' + e.index] = true;
+    var t0 = performance.now();
+    dying.push({ e: e, t0: t0 });
     if (!firstTry) return;
     firstTryWins++;
     if (firstTryWins % Config.HEART_DROP_EVERY === 0) {
-      drops.push({ screen: e.screen, x: e.x, y: e.y });
+      // Herz erscheint erst, wenn sich die Wolke lichtet
+      drops.push({ screen: e.screen, x: e.x, y: e.y, t0: t0 + FLASH_MS + POOF_MS * 0.5 });
     }
+  }
+
+  // Dauer der Besiegt-Animation in Sekunden (fuer Ablaeufe in main.js)
+  var DEFEAT_TIME = (FLASH_MS + POOF_MS) / 1000;
+
+  // Besiegt-Animation zeichnen: erst Aufblitzen, dann Rauchwolke mit Funken
+  function drawDying(r, now, d) {
+    var e = d.e, t = now - d.t0;
+    var ctx = r.getCtx();
+    if (t < FLASH_MS) {
+      var shake = Math.floor(t / 40) % 2 ? 1 : -1;
+      var img = Math.floor(t / 60) % 2 ? spriteOf(e.screen) : flashOf(e.screen);
+      r.image(img, Math.round(e.x) + shake, Math.round(e.y));
+      return;
+    }
+    var p = (t - FLASH_MS) / POOF_MS;
+    var cx = Math.round(e.x) + 8, cy = Math.round(e.y) + 8;
+    // Wolke: fuenf Ballen, die nach aussen wachsen und erst in der
+    // zweiten Haelfte verblassen
+    ctx.globalAlpha = p < 0.5 ? 1 : Math.max(0, 2 - p * 2);
+    for (var k = 0; k < 5; k++) {
+      var w = k / 5 * Math.PI * 2 + 0.6;
+      var dist = 2 + p * 8;
+      var rad = Math.max(1, Math.round(5 - p * 3 + (k % 2)));
+      var bx = Math.round(cx + Math.cos(w) * dist);
+      var by = Math.round(cy + Math.sin(w) * dist * 0.8 - p * 3);
+      r.ellipse(bx, by, rad, rad, '#cfc8d8');
+      r.ellipse(bx - 1, by - 1, Math.max(1, rad - 2), Math.max(1, rad - 2), '#ffffff');
+    }
+    // Funken: kleine gelbe Kreuze, die schnell nach aussen fliegen
+    for (var f = 0; f < 6; f++) {
+      var fw = f / 6 * Math.PI * 2;
+      var fd = 4 + p * 16;
+      var fx = Math.round(cx + Math.cos(fw) * fd), fy = Math.round(cy + Math.sin(fw) * fd);
+      r.px(fx, fy - 1, 1, 3, '#fff2a0');
+      r.px(fx - 1, fy, 3, 1, '#fff2a0');
+      r.px(fx, fy, 1, 1, '#ffffff');
+    }
+    ctx.globalAlpha = 1;
   }
 
   // --- Zeichnen ----------------------------------------------------------------
 
   function draw(r, time, screen) {
     var ctx = r.getCtx();
-    // fallen gelassene Herzen, leicht wippend
+    var now = performance.now();
+    // fallen gelassene Herzen: springen aus der Wolke, dann leicht wippend
     for (var d = 0; d < drops.length; d++) {
       if (drops[d].screen !== screen) continue;
+      var dt = now - drops[d].t0;
+      if (dt < 0) continue;
       var hb = Math.floor(time / 250) % 2;
+      if (dt < DROP_HOP_MS) {
+        var q = dt / DROP_HOP_MS;
+        hb = Math.round(Math.sin(q * Math.PI) * 8);   // Bogen nach oben
+      }
       Hud.drawHeart(r, Math.round(drops[d].x) + 4, Math.round(drops[d].y) + 5 - hb);
+    }
+    // laufende Besiegt-Animationen; fertige werden entfernt
+    for (var a = dying.length - 1; a >= 0; a--) {
+      if (now - dying[a].t0 > FLASH_MS + POOF_MS) { dying.splice(a, 1); continue; }
+      if (dying[a].e.screen === screen) drawDying(r, now, dying[a]);
     }
     for (var i = 0; i < enemies.length; i++) {
       var e = enemies[i];
@@ -278,6 +356,8 @@ var Enemies = (function () {
     update: update,
     draw: draw,
     defeat: defeat,
+    DEFEAT_TIME: DEFEAT_TIME,
+    attemptOf: attemptOf,
     seedOf: seedOf,
     typeIdOf: typeIdOf,
     contextOf: contextOf

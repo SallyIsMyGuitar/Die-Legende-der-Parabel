@@ -1,7 +1,12 @@
 // taskui.js: Aufgabenbox - pausiert das Spiel und stellt eine Aufgabe
-// Strukturierte Eingabefelder, Zahlenblock für Touch und Maus, gestufte Fehler:
-// Jeder Fehler kostet ein Herz; 2. Fehler = Hinweis, 3. Fehler = Lösung zeigen.
-// Sind alle Herzen weg, wird sofort die Lösung gezeigt und die Aufgabe beendet.
+// Strukturierte Eingabefelder, Zahlenblock für Touch und Maus.
+// Kampf und Rätsel-Truhe (mit Rückmeldung): Jede Antwort beendet die Aufgabe.
+//   Richtig = Haken, Box blendet aus, danach Besiegt-Animation (main.js).
+//   Falsch  = Kreuz, Box blendet aus, danach Herzverlust mit Blinken (main.js).
+//   Ab dem 2. Versuch steht der Hinweis gleich dabei; ist der 3. Versuch
+//   (oder das letzte Herz) falsch, wird vorher kurz die Lösung gezeigt.
+// Probeaufgabe (Testseite, ohne Rückmeldung): gestufte Fehler in der Box,
+//   2. Fehler = Hinweis, 3. Fehler = Lösung.
 // Richtig/falsch nie nur über Farbe: grüner Haken bzw. rotes Kreuz.
 var TaskUi = (function () {
   'use strict';
@@ -22,6 +27,8 @@ var TaskUi = (function () {
   var phaseTime = 0;
   var onResult = null;        // Rueckmeldung fuer den Kampf: (geloest, fehler, joker)
   var abortable = false;      // true = mit B abbrechbar (freiwilliges Raetsel)
+  var attempt = 1;            // wievielter Versuch an dieser Stelle (Kampf/Truhe)
+  var closing = null;         // Ausblenden: { t, solved, joker } oder null
   var prevDirs = {};          // vorheriger Zustand der Richtungstasten
 
   // Links/Rechts wie A/B genau einmal pro Tastendruck auswerten
@@ -100,18 +107,28 @@ var TaskUi = (function () {
     graphVals = { a: 1, xs: 0, ys: 0 };
     graphSel = 0;
     errors = 0;
-    hintShown = false;
     phase = 'input';
     phaseTime = 0;
     onResult = resultCallback || null;
     abortable = !!(opts && opts.abortable);
+    attempt = (opts && opts.attempt) || 1;
+    // ab dem 2. Versuch steht der Hinweis gleich mit in der Aufgabe
+    hintShown = !!onResult && attempt >= 2;
+    closing = null;
     active = true;
   }
 
+  // Sofort schliessen (Abbruch mit B)
   function finish(solved, joker) {
     active = false;
     task = null;
+    closing = null;
     if (onResult) onResult(solved, errors, !!joker);
+  }
+
+  // Box ausblenden lassen; die Rueckmeldung kommt erst danach
+  function close(solved, joker) {
+    closing = { t: 0, solved: solved, joker: !!joker };
   }
 
   // Schwert einsetzen: ueberspringt genau eine Aufgabe und zerbricht danach.
@@ -119,7 +136,7 @@ var TaskUi = (function () {
   function useSword() {
     if (!onResult || abortable || !Sword.has()) return;
     Sword.breakSword();
-    finish(true, true);
+    close(true, true);
   }
 
   function allEmpty() {
@@ -173,15 +190,21 @@ var TaskUi = (function () {
 
   function onWrong() {
     errors++;
+    phaseTime = 0;
+    if (onResult) {
+      // Kampf/Truhe: Herz geht erst nach dem Schliessen verloren (main.js).
+      // 3. Versuch oder letztes Herz: vorher kurz die Lösung zeigen.
+      phase = attempt >= 3 || Hud.getHearts() <= 1 ? 'solution' : 'wrong';
+      return;
+    }
+    // Probeaufgabe: gestufte Fehler innerhalb der Box
     Hud.loseHeart();
-    // dritter Fehler oder keine Herzen mehr: Lösung zeigen, Aufgabe endet
-    if (errors >= 3 || (onResult && Hud.getHearts() === 0)) {
+    if (errors >= 3) {
       phase = 'solution';
     } else {
       phase = 'wrong';
       if (errors === 2) hintShown = true;
     }
-    phaseTime = 0;
   }
 
   // --- Tastatur (Ziffern direkt, A = pruefen, B = abbrechen) ---------------
@@ -258,6 +281,11 @@ var TaskUi = (function () {
   // --- Ablauf ---------------------------------------------------------------
   function update(dt, input) {
     if (!active) return;
+    if (closing) {
+      closing.t += dt;
+      if (closing.t >= Config.TASK_CLOSE_TIME) finish(closing.solved, closing.joker);
+      return;
+    }
     if (phase === 'input') {
       // Ein Kampf laesst sich nicht abbrechen; nur die Probeaufgabe
       // auf der Testseite kann mit B abgebrochen werden.
@@ -289,8 +317,9 @@ var TaskUi = (function () {
     phaseTime += dt;
     var dauer = phase === 'solution' ? SOLUTION_TIME : FEEDBACK_TIME;
     if (phaseTime >= dauer) {
-      if (phase === 'right') finish(true);
-      else if (phase === 'solution') finish(false);
+      if (phase === 'right') close(true);
+      else if (phase === 'solution') close(false);
+      else if (onResult) close(false);   // Kampf/Truhe: falsch beendet die Aufgabe
       else {
         phase = 'input';
         values = task.felder.map(function () { return ''; });
@@ -302,6 +331,14 @@ var TaskUi = (function () {
   function draw(r) {
     if (!active) return;
     var ctx = r.getCtx();
+    // beim Schliessen blendet die ganze Box samt Abdunklung aus
+    ctx.save();
+    if (closing) ctx.globalAlpha = Math.max(0, 1 - closing.t / Config.TASK_CLOSE_TIME);
+    drawBox(r, ctx);
+    ctx.restore();
+  }
+
+  function drawBox(r, ctx) {
 
     // Abblenden und Box mit Rahmen (wie die Dialogbox)
     r.px(0, 0, Render.WIDTH, Render.HEIGHT, 'rgba(10,8,16,0.55)');

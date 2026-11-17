@@ -10,6 +10,7 @@ var Player = (function () {
   var y = 5 * TILE;
   var facing = 'down';
   var animTime = 0; // für Laufanimation
+  var blinkUntil = 0; // Zeitpunkt (ms), bis zu dem die Figur blinkt
 
   function getX() { return x; }
   function getY() { return y; }
@@ -166,8 +167,16 @@ var Player = (function () {
     r.ellipse(px + 8, py + 15, 6, 2, '#0c2a12');
     ctx.globalAlpha = 1;
 
+    // Nach einem Fehler blinkt die Figur (jedes zweite Bild unsichtbar)
+    var now = performance.now();
+    if (now < blinkUntil && Math.floor(now / 70) % 2 === 1) return;
+
     r.image(sprites[facing][phase], px, py - bob);
   }
+
+  // Blinken starten (Sekunden); 0 beendet es sofort
+  function blink(dur) { blinkUntil = performance.now() + dur * 1000; }
+  function isBlinking() { return performance.now() < blinkUntil; }
 
   // Figur an neue Position setzen (z. B. beim Betreten eines Raums)
   function setPosition(nx, ny, dir) {
@@ -188,6 +197,8 @@ var Player = (function () {
     setPosition: setPosition,
     scriptMove: scriptMove,
     draw: draw,
+    blink: blink,
+    isBlinking: isBlinking,
     getX: getX,
     getY: getY,
     getFacing: getFacing

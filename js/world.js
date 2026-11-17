@@ -339,6 +339,18 @@ var World = (function () {
 
   function doorRect(b) { return Buildings.doorRect(b); }
 
+  // Rätsel-Truhe öffnen (p = 0 zu, 1 offen) auf dem aktuellen Bildschirm
+  function setChestOpen(p) {
+    if (states[current]) states[current].chestOpen = p;
+  }
+
+  // Pixelposition der Truhe auf dem aktuellen Bildschirm (oder null)
+  function chestPos() {
+    var st = states[current];
+    var sg = st && (st.def.signs || []).filter(function (g) { return g.action === 'chest'; })[0];
+    return sg ? { x: sg.tiles[0][0] * TILE, y: sg.tiles[0][1] * TILE } : null;
+  }
+
   // --- Masken für Weg und Wasser (Autotiling) ----------------------------
   function shapeMask(id, top, side, round, roundTop) {
     var m = new Uint8Array(W * H);
@@ -566,6 +578,21 @@ var World = (function () {
     r.px(x + 7, y + 9, 2, 1, '#b8863a');
     r.px(x + 3, y + 6, 1, 8, '#4a2f1c');
     r.px(x + 12, y + 6, 1, 8, '#4a2f1c');
+  }
+
+  // Geöffnete Truhe über die geschlossene zeichnen: Deckel klappt nach
+  // hinten auf (p = 0 zu, 1 ganz offen), innen dunkel mit goldenem Schimmer
+  function drawChestOpen(r, tx, ty, p) {
+    var x = tx * TILE, y = ty * TILE;
+    var lift = Math.round(p * 3);   // Deckel wandert nach oben
+    // Innenraum (überdeckt den geschlossenen Deckel)
+    r.px(x + 4, y + 3, 8, 5, '#2a1a10');
+    r.px(x + 5, y + 6, 6, 1, p > 0.5 ? '#c89a3a' : '#3a2416');
+    // aufgeklappter Deckel, von hinten gesehen (wird schmaler)
+    var h = Math.max(1, 4 - lift);
+    r.px(x + 3, y + 3 - lift, 10, h, '#8a5c34');
+    r.px(x + 3, y + 3 - lift, 10, 1, '#a87848');
+    r.px(x + 3, y + 2 + h - lift, 10, 1, '#5a381e');
   }
 
   // Kleines Holzschild (Hinweisschild an der Ruine)
@@ -833,6 +860,12 @@ var World = (function () {
     var st = stateOf(name);
     r.image(st.overlay.canvas, 0, 0);
     var ctx = r.getCtx();
+    // geöffnete Rätsel-Truhe (nach gelöstem Rätsel)
+    if (st.chestOpen > 0) {
+      (st.def.signs || []).forEach(function (sg) {
+        if (sg.action === 'chest') drawChestOpen(r, sg.tiles[0][0], sg.tiles[0][1], st.chestOpen);
+      });
+    }
     st.def.buildings.forEach(function (b) {
       if (st.doors[b.room] > 0) Buildings.openDoor(r, b, st.doors[b.room]);
       if (!b.chimney) return;
@@ -859,6 +892,8 @@ var World = (function () {
     isOutdoor: isOutdoor,
     setDoorOpen: setDoorOpen,
     doorRect: doorRect,
+    setChestOpen: setChestOpen,
+    chestPos: chestPos,
     START: START,
     WIDTH: W,
     HEIGHT: H,
