@@ -206,7 +206,9 @@
         name: 'Nachbarin',
         texts: [
           'Früher hat man die Schulglocke bis hierher gehört.',
-          'Ich habe da so ein Gefühl, dass gerade du die Schule wieder aufbauen kannst.'
+          'Ich habe da so ein Gefühl, dass gerade du die Schule wieder aufbauen kannst.',
+          'Übrigens: Ein Schluck aus dem Brunnen auf dem Dorfplatz füllt deine Herzen wieder auf.',
+          'Und solltest du einmal alle Herzen verlieren, kommst du an der Quelle wieder zu dir, an der du zuletzt getrunken hast.'
         ]
       },
       // Schaukeln im Schaukelstuhl

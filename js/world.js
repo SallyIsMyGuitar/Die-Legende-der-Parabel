@@ -73,7 +73,10 @@ var World = (function () {
         {
           tiles: [[7, 7]], x: 7 * 16, y: 7 * 16,
           name: 'Brunnen',
-          texts: ['Die Rastquelle am Brunnen füllt später alle Herzen wieder auf.']
+          texts: ['Du trinkst vom klaren Wasser. Deine Herzen sind wieder voll.'],
+          action: 'rest',
+          // Hier wacht die Spielfigur auf, wenn sie alle Herzen verliert
+          spawn: { x: 7 * 16, y: 8 * 16, facing: 'up' }
         },
         {
           tiles: [[8, 9]], x: 8 * 16, y: 9 * 16,
@@ -296,7 +299,7 @@ var World = (function () {
       for (var j = 0; j < signs[i].tiles.length; j++) {
         var t = signs[i].tiles[j];
         if (t[0] === tx && t[1] === ty) {
-          return { name: signs[i].name, texts: signs[i].texts, action: signs[i].action, hintX: signs[i].x, hintY: signs[i].y };
+          return { name: signs[i].name, texts: signs[i].texts, action: signs[i].action, spawn: signs[i].spawn, hintX: signs[i].x, hintY: signs[i].y };
         }
       }
     }
