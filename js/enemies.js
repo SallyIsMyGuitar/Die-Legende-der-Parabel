@@ -22,14 +22,18 @@ var Enemies = (function () {
   var TYPES = {
     wiese: 'scheitelAblesen',   // Wanderin: Normalparabel, Scheitel
     wald: 'aBestimmen',         // Foerster: a streckt oder staucht
-    ruine: 'spfAufstellen'       // Waechter vor der Hoehle der Parabeln
+    ruine: 'spfAufstellen',     // Waechter vor der Hoehle der Parabeln
+    dhalle: 'scheitelAblesen',  // Hoehle: Normalparabel, Scheitel
+    dmittel: 'aBestimmen'       // Hoehle: a streckt oder staucht
   };
 
   // Kurzer Kontext vor der Aufgabe, nimmt Bezug auf den NPC-Tipp
   var KONTEXT = {
     wiese: 'Erinnerung der Wanderin: Die Normalparabel ist y = x\u00b2.',
     wald: 'Tipp des Försters: a streckt oder staucht die Parabel.',
-    ruine: 'Der Wächter der Höhle der Parabeln fragt:'
+    ruine: 'Der Wächter der Höhle der Parabeln fragt:',
+    dhalle: 'Flattern in der Eingangshalle: Die Normalparabel ist y = x\u00b2, ihr Scheitel ist S(0|0).',
+    dmittel: 'Echo aus der Höhle: a streckt oder staucht die Parabel.'
   };
 
   // --- Sprites (16x16, ein Frame; Bewegung ueber Wippen) ---------------------
@@ -106,10 +110,54 @@ var Enemies = (function () {
     w: '#ffd858', e: '#7a2a20'
   };
 
+  // Fledermaus der Eingangshalle: dunkle Schwingen, gelbe Augen
+  var BAT = [
+    '................',
+    '................',
+    '................',
+    '..p..........p..',
+    '..pp........pp..',
+    '..ppp......ppp..',
+    '..ppppbbbbpppp..',
+    '..pppbbbbbbppp..',
+    '...ppbybbybpp...',
+    '....bbbbbb......',
+    '....b.bb.b......',
+    '.....bbbb.......',
+    '......bb........',
+    '................',
+    '................',
+    '................'
+  ];
+  var BAT_COLORS = { p: '#3e3054', b: '#5e4a78', y: '#f6d64a' };
+
+  // Kristallgeist im Mittelraum: schwebender Kristall mit dunklen Augen
+  var CRYSTAL = [
+    '................',
+    '.......cc.......',
+    '......cwwc......',
+    '.....cwwwwc.....',
+    '.....cwwwwc.....',
+    '....ccwwwwcc....',
+    '....cwewwewc....',
+    '....cwwwwwwc....',
+    '....cwwwwwwc....',
+    '.....cwwwwc.....',
+    '....ccwwwwcc....',
+    '....c..cc..c....',
+    '......cccc......',
+    '.......cc.......',
+    '................',
+    '................'
+  ];
+  var CRYSTAL_COLORS = { c: '#2a6a7a', w: '#8ed8e8', e: '#1c2a3a' };
+
   var SPRITES = {
     wiese: { rows: MUSHROOM, colors: MUSHROOM_COLORS },
     wald: { rows: MOSS, colors: MOSS_COLORS },
-    ruine: { rows: GOLEM, colors: GOLEM_COLORS }
+    ruine: { rows: GOLEM, colors: GOLEM_COLORS },
+    dhalle: { rows: BAT, colors: BAT_COLORS },
+    dmittel: { rows: CRYSTAL, colors: CRYSTAL_COLORS }
   };
   var spriteCache = {};
   var flashCache = {};   // weisse Silhouette fuer das Aufblitzen
@@ -153,6 +201,14 @@ var Enemies = (function () {
       { x: 4, y: 8 },
       { x: 12, y: 10 },
       { x: 8, y: 12 }
+    ],
+    dhalle: [
+      { x: 4, y: 4 },
+      { x: 12, y: 8 }
+    ],
+    dmittel: [
+      { x: 4, y: 9 },
+      { x: 12, y: 5 }
     ]
   };
 
@@ -254,7 +310,7 @@ var Enemies = (function () {
 
   // Samen fuer die Aufgabe: Gegner + Versuchzaehler => neue Zahlen pro Versuch
   function seedOf(e) {
-    var screenNo = { wiese: 1, wald: 2, ruine: 3 }[e.screen] || 1;
+    var screenNo = { wiese: 1, wald: 2, ruine: 3, dhalle: 4, dmittel: 5 }[e.screen] || 1;
     return screenNo * 100 + e.index * 10 + e.attempts;
   }
 
@@ -264,6 +320,9 @@ var Enemies = (function () {
 
   // Wievielter Versuch gegen diesen Gegner (1 = erster Kontakt)
   function attemptOf(e) { return e.attempts; }
+
+  // Hat der Bildschirm Gegner? (dafuer, ob im Dungeon gezeichnet wird)
+  function hasScreen(screen) { return !!DEFS[screen]; }
 
   // Richtig geloest: Gegner dauerhaft besiegt, Besiegt-Animation startet.
   // Bei Sieg im ersten Versuch laesst jeder n-te Gegner ein Herz fallen.
@@ -358,6 +417,7 @@ var Enemies = (function () {
     defeat: defeat,
     DEFEAT_TIME: DEFEAT_TIME,
     attemptOf: attemptOf,
+    hasScreen: hasScreen,
     seedOf: seedOf,
     typeIdOf: typeIdOf,
     contextOf: contextOf
