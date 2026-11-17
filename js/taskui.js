@@ -27,6 +27,7 @@ var TaskUi = (function () {
   var phaseTime = 0;
   var onResult = null;        // Rueckmeldung fuer den Kampf: (geloest, fehler, joker)
   var abortable = false;      // true = mit B abbrechbar (freiwilliges Raetsel)
+  var bossMode = false;       // Bosskampf: das Schwert wirkt hier nicht
   var attempt = 1;            // wievielter Versuch an dieser Stelle (Kampf/Truhe)
   var closing = null;         // Ausblenden: { t, solved, joker } oder null
   var prevDirs = {};          // vorheriger Zustand der Richtungstasten
@@ -111,8 +112,29 @@ var TaskUi = (function () {
     phaseTime = 0;
     onResult = resultCallback || null;
     abortable = !!(opts && opts.abortable);
+    bossMode = !!(opts && opts.boss);
     attempt = (opts && opts.attempt) || 1;
     // ab dem 2. Versuch steht der Hinweis gleich mit in der Aufgabe
+    hintShown = !!onResult && attempt >= 2;
+    closing = null;
+    active = true;
+  }
+
+  // Feste Aufgabe (Boss): direkt oeffnen, ohne Vorlage und Zufallszahlen
+  function openFixed(def, resultCallback, opts) {
+    if (!resultCallback && Hud.getHearts() === 0) Hud.fill();
+    task = def;
+    values = task.felder.map(function () { return ''; });
+    fieldIndex = 0;
+    graphVals = { a: 1, xs: 0, ys: 0 };
+    graphSel = 0;
+    errors = 0;
+    phase = 'input';
+    phaseTime = 0;
+    onResult = resultCallback || null;
+    abortable = !!(opts && opts.abortable);
+    bossMode = !!(opts && opts.boss);
+    attempt = (opts && opts.attempt) || 1;
     hintShown = !!onResult && attempt >= 2;
     closing = null;
     active = true;
@@ -134,7 +156,7 @@ var TaskUi = (function () {
   // Schwert einsetzen: ueberspringt genau eine Aufgabe und zerbricht danach.
   // Nur im echten Kampf (nicht Probeaufgabe, nicht freiwilliges Raetsel).
   function useSword() {
-    if (!onResult || abortable || !Sword.has()) return;
+    if (!onResult || abortable || bossMode || !Sword.has()) return;
     Sword.breakSword();
     close(true, true);
   }
@@ -543,6 +565,7 @@ var TaskUi = (function () {
   return {
     init: init,
     open: open,
+    openFixed: openFixed,
     update: update,
     draw: draw,
     isActive: function () { return active; }

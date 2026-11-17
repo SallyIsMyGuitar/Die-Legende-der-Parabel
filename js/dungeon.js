@@ -135,6 +135,18 @@
     r.px(x + 15, y + 20, 2, 2, '#b8863a');
   }
 
+  // Offenes Boss-Tor (nach dem Sieg): dunkler Durchgang, Fluegel angeschlagen
+  function drawGateOpen(r) {
+    r.px(6 * TILE - 2, 1 * TILE - 2, 36, 2, '#5e5870');
+    r.px(6 * TILE, 1 * TILE, 32, 48, '#0a0812');
+    r.px(6 * TILE, 1 * TILE, 32, 1, '#3e3a4a');
+    r.px(6 * TILE, 1 * TILE, 5, 48, '#2e2a3a');
+    r.px(6 * TILE + 27, 1 * TILE, 5, 48, '#2e2a3a');
+    // schwaches Licht im Durchgang
+    r.px(6 * TILE + 13, 1 * TILE + 34, 6, 12, '#141a26');
+    r.px(6 * TILE + 14, 1 * TILE + 38, 4, 8, '#1e2e40');
+  }
+
   // Steintafel vor dem Tor (Hinweis, dass der Boss noch fehlt)
   function tablet(r) {
     var x = 6 * TILE, y = 3 * TILE;
@@ -309,6 +321,12 @@
     };
     R.overlay = vignette;
   });
+
+  // Vorraum: oeffnet das Tor im Laufbild, sobald der Boss besiegt ist
+  BOSS.anim = function (r, t) {
+    flames(r, t, BOSS.torches);
+    if (typeof Boss !== 'undefined' && Boss.isDefeated()) drawGateOpen(r);
+  };
 
   Interior.register('dhalle', HALLE);
   Interior.register('dmittel', MITTEL);
