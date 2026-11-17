@@ -364,7 +364,9 @@
     }
     World.drawGround(Render, now);
     Player.draw(Render);
-    if (World.isOutdoor()) Enemies.draw(Render, now, World.getScreen());
+    // Gegner zeichnen: draußen und in den Dungeon-Räumen
+    if (World.isOutdoor() || Enemies.hasScreen(World.getScreen()))
+      Enemies.draw(Render, now, World.getScreen());
     if (spaeth) drawSpaeth(Render, now);
     World.drawOverlay(Render, now);
     if (chestSword) drawChestSword(Render, now);
