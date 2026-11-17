@@ -127,23 +127,18 @@ var Tasks = (function () {
 
   // --- Typ 4: Streckfaktor a aus Scheitel und einem Punkt ---
   // Passt zum Tipp des Foersters (a streckt oder staucht die Parabel).
-  // Werte bleiben im sichtbaren Bereich des Koordinatensystems (Graph-Modus).
+  // Zahleneingabe: a soll gerechnet werden, nicht am Bildschirm eingepasst.
   function aBestimmen(rng) {
-    var a, xs, ys, abstand, yp;
-    do {
-      a = pick(rng, [0.5, 1, 2, -0.5, -1, -2]);
-      xs = randInt(rng, -2, 2);
-      ys = randInt(rng, -2, 2);
-      abstand = pick(rng, [-2, 2]);
-      yp = a * abstand * abstand + ys;
-    } while (Math.abs(yp) > 5);
+    var a = pick(rng, [0.5, 1, 2, -0.5, -1, -2]);
+    var xs = randInt(rng, -4, 4);
+    var ys = randInt(rng, -5, 5);
+    var abstand = pick(rng, [-3, -2, 2, 3]);
     var xp = xs + abstand;
+    var yp = a * abstand * abstand + ys;
     return {
-      frage: 'Die Parabel geht durch S(' + fmt(xs) + '|' + fmt(ys) + ') und P(' + fmt(xp) + '|' + fmt(yp) + '). Stelle den Streckfaktor a ein.',
+      frage: 'Die Parabel geht durch S(' + fmt(xs) + '|' + fmt(ys) + ') und P(' + fmt(xp) + '|' + fmt(yp) + '). Gib den Streckfaktor a an.',
       felder: [{ key: 'a', label: 'a' }],
       loesung: [a],
-      graph: true,
-      graphFix: { xs: xs, ys: ys, xp: xp, yp: yp },
       loesungstext: 'a = ' + fmt(a),
       hinweis: 'Setze P in y = a(x \u2212 xs)\u00b2 + ys ein und löse nach a auf.'
     };

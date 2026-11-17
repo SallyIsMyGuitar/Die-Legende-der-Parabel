@@ -415,19 +415,23 @@ var TaskUi = (function () {
       prev = py;
     }
 
-    // Punkt S (folgt der Einstellung bzw. der Aufgabe) und Punkt P,
-    // ebenfalls auf das Panel begrenzt
+    // Punkt S (folgt der Einstellung bzw. der Aufgabe), ebenfalls begrenzt.
+    // Punkt P ist zunaechst versteckt: Ohne ihn laesst sich a nicht visuell
+    // einpassen, sondern muss gerechnet werden. Nach dem ersten Fehler
+    // (oder in der Loesung) erscheint P als visuelle Kontrolle.
     var sxp = cx + xs * GRAPH.sx;
     var syp = cy - ys * GRAPH.sy;
     r.px(sxp - 2, syp - 2, 4, 4, '#f6f0e2');
-    var pxp = cx + task.graphFix.xp * GRAPH.sx;
-    var pyp = cy - task.graphFix.yp * GRAPH.sy;
-    for (var c = -2; c <= 2; c++) {
-      r.px(pxp + c, pyp + c, 1, 1, '#7ec97e');
-      r.px(pxp + c, pyp - c, 1, 1, '#7ec97e');
-    }
     Font.draw(ctx, 'S', sxp + 4, syp - 3, '#f6f0e2');
-    Font.draw(ctx, 'P', pxp + 4, pyp - 3, '#7ec97e');
+    if (errors > 0 || phase !== 'input') {
+      var pxp = cx + task.graphFix.xp * GRAPH.sx;
+      var pyp = cy - task.graphFix.yp * GRAPH.sy;
+      for (var c = -2; c <= 2; c++) {
+        r.px(pxp + c, pyp + c, 1, 1, '#7ec97e');
+        r.px(pxp + c, pyp - c, 1, 1, '#7ec97e');
+      }
+      Font.draw(ctx, 'P', pxp + 4, pyp - 3, '#7ec97e');
+    }
     ctx.restore();
 
     // Eine Zeile je einstellbarem Parameter: Minus, Wert, Plus
