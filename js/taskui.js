@@ -1,6 +1,7 @@
 // taskui.js: Aufgabenbox - pausiert das Spiel und stellt eine Aufgabe
 // Strukturierte Eingabefelder, Zahlenblock für Touch und Maus, gestufte Fehler:
-// 1. Fehler = Herzverlust, 2. Fehler = Hinweis, 3. Fehler = Lösung zeigen.
+// Jeder Fehler kostet ein Herz; 2. Fehler = Hinweis, 3. Fehler = Lösung zeigen.
+// Sind alle Herzen weg, wird sofort die Lösung gezeigt und die Aufgabe beendet.
 // Richtig/falsch nie nur über Farbe: grüner Haken bzw. rotes Kreuz.
 var TaskUi = (function () {
   'use strict';
@@ -17,7 +18,7 @@ var TaskUi = (function () {
   var hintShown = false;
   var phase = 'input';        // 'input' | 'right' | 'wrong' | 'solution'
   var phaseTime = 0;
-  var onResult = null;        // Rueckmeldung fuer den Kampf: true = geloest
+  var onResult = null;        // Rueckmeldung fuer den Kampf: (geloest, fehler)
   var prevDirs = {};          // vorheriger Zustand der Richtungstasten
 
   // Links/Rechts wie A/B genau einmal pro Tastendruck auswerten
@@ -58,7 +59,7 @@ var TaskUi = (function () {
   // --- Aufgabe oeffnen -----------------------------------------------------
   function open(typeId, seed, resultCallback, kontext) {
     // Ohne Kampf (Probeaufgabe): leere Herzen wie an einer Rastquelle auffuellen
-    if (!resultCallback && Hud.getHearts() === 0) Hud.setHearts(3);
+    if (!resultCallback && Hud.getHearts() === 0) Hud.fill();
     task = Tasks.make(typeId, seed, kontext);
     values = task.felder.map(function () { return ''; });
     fieldIndex = 0;
@@ -73,7 +74,12 @@ var TaskUi = (function () {
   function finish(solved) {
     active = false;
     task = null;
-    if (onResult) onResult(solved);
+    if (onResult) onResult(solved, errors);
+  }
+
+  function allEmpty() {
+    for (var i = 0; i < values.length; i++) if (values[i] !== '') return false;
+    return true;
   }
 
   // --- Eingabe in das aktive Feld ------------------------------------------
@@ -111,7 +117,8 @@ var TaskUi = (function () {
   function onWrong() {
     errors++;
     Hud.loseHeart();
-    if (errors >= 3) {
+    // dritter Fehler oder keine Herzen mehr: Lösung zeigen, Aufgabe endet
+    if (errors >= 3 || (onResult && Hud.getHearts() === 0)) {
       phase = 'solution';
     } else {
       phase = 'wrong';
@@ -167,8 +174,15 @@ var TaskUi = (function () {
     if (!active) return;
     if (phase === 'input') {
       // Ein Kampf laesst sich nicht abbrechen; nur die Probeaufgabe
-      // auf der Testseite kann mit B abgebrochen werden
-      if (!onResult && input.pressed('b')) { finish(false); return; }
+      // auf der Testseite kann mit B abgebrochen werden.
+      // Rücktaste (Tastatur) löscht eine Ziffer; sind alle Felder leer,
+      // bricht sie die Probeaufgabe ab wie B.
+      var del = input.pressed('del');
+      var b = input.pressed('b');
+      if (del) {
+        if (!onResult && allEmpty()) { finish(false); return; }
+        typeChar('<');
+      } else if (b && !onResult) { finish(false); return; }
       if (input.pressed('a')) checkAnswer();
       if (pressedDir(input, 'left')) fieldIndex = (fieldIndex + task.felder.length - 1) % task.felder.length;
       if (pressedDir(input, 'right')) fieldIndex = (fieldIndex + 1) % task.felder.length;
@@ -233,7 +247,7 @@ var TaskUi = (function () {
       }
     }
     if (phase === 'solution') {
-      Font.draw(ctx, 'Loesung:', BOX.x + 10, 108, '#e8344a');
+      Font.draw(ctx, 'Lösung:', BOX.x + 10, 108, '#e8344a');
       Font.draw(ctx, task.loesungstext, BOX.x + 10, 120, '#f6f0e2');
     }
 
@@ -253,7 +267,8 @@ var TaskUi = (function () {
         Font.draw(ctx, label, kr.x + Math.floor((kr.w - Font.width(label)) / 2), kr.y + 5, '#f6f0e2');
       }
     }
-    Font.draw(ctx, 'A: pruefen  B: abbrechen', BOX.x + 10, BOX.y + BOX.h - 12, '#8a8496');
+    var fuss = onResult ? 'A/OK: prüfen  <: löschen' : 'A/OK: prüfen  B: abbrechen';
+    Font.draw(ctx, fuss, BOX.x + 10, BOX.y + BOX.h - 12, '#8a8496');
   }
 
   // Kleiner grüner Haken (Form, nicht nur Farbe)

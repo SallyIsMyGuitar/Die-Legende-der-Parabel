@@ -177,8 +177,14 @@ var Player = (function () {
     animTime = 0;
   }
 
+  // Verschieben mit Kollision, ohne Laufanimation (z. B. Rückstoß)
+  function push(world, dx, dy) {
+    move(world, dx, dy);
+  }
+
   return {
     update: update,
+    push: push,
     setPosition: setPosition,
     scriptMove: scriptMove,
     draw: draw,

@@ -9,10 +9,23 @@
   Input.init();
   TaskUi.init();
 
+  // --- Rastquelle: zuletzt benutzte Quelle (Start: Brunnen im Dorf) --------
+  // Bei null Herzen kommt die Spielfigur hier wieder zu sich.
+  var lastRest = { screen: 'ost', x: 7 * 16, y: 8 * 16, facing: 'up' };
+
+  function useRest(target) {
+    Hud.fill();
+    if (target.spawn) {
+      lastRest = { screen: World.getScreen(), x: target.spawn.x, y: target.spawn.y, facing: target.spawn.facing };
+    }
+  }
+
   // --- Kampf: Beruehrung mit einem Gegner startet genau eine Aufgabe -------
   function startBattle(enemy) {
-    TaskUi.open(Enemies.typeIdOf(enemy), Enemies.seedOf(enemy), function (solved) {
-      if (solved) Enemies.defeat(enemy);   // richtig = Monster besiegt
+    TaskUi.open(Enemies.typeIdOf(enemy), Enemies.seedOf(enemy), function (solved, errors) {
+      if (solved) Enemies.defeat(enemy, errors === 0);   // richtig = Monster besiegt
+      else if (Hud.getHearts() === 0) respawn();          // alle Herzen weg
+      else knockback(enemy);                               // Figur weicht zurück
     }, Enemies.contextOf(enemy));   // Kontext aus dem Tipp des NPCs
   }
 
@@ -113,6 +126,45 @@
         spaeth = null;
         spaethPhase = null;
         spaethDone = true;
+      } }
+    ]);
+  }
+
+  // Rückstoß nach einem verlorenen Kampf: Figur weicht vom Gegner weg,
+  // damit nicht sofort der nächste Kampf beginnt (mit Kollision, im Bildschirm)
+  function knockback(enemy) {
+    var dx = Player.getX() - enemy.x, dy = Player.getY() - enemy.y;
+    var vx = 0, vy = 0;
+    if (Math.abs(dx) >= Math.abs(dy) && dx !== 0) vx = dx > 0 ? 1 : -1;
+    else if (dy !== 0) vy = dy > 0 ? 1 : -1;
+    else {
+      // genau übereinander: entgegen der Blickrichtung
+      var f = Player.getFacing();
+      vx = f === 'left' ? 1 : f === 'right' ? -1 : 0;
+      vy = f === 'up' ? 1 : f === 'down' ? -1 : 0;
+    }
+    var speed = Config.KNOCKBACK / Config.KNOCKBACK_TIME;
+    run([
+      { dur: Config.KNOCKBACK_TIME, tick: function (p, dt) {
+        var nx = Math.max(0, Math.min(W - 16, Player.getX() + vx * speed * dt)) - Player.getX();
+        var ny = Math.max(0, Math.min(H - 16, Player.getY() + vy * speed * dt)) - Player.getY();
+        Player.push(World, nx, ny);
+      } }
+    ]);
+  }
+
+  // Alle Herzen verloren: Abblende, an der letzten Rastquelle wieder zu sich kommen
+  function respawn() {
+    run([
+      { dur: 0.5, tick: function (p) { fade = p; } },
+      { dur: 0.3, end: function () {
+        World.setScreen(lastRest.screen);
+        Player.setPosition(lastRest.x, lastRest.y, lastRest.facing);
+        Hud.fill();
+      } },
+      { dur: 0.5, tick: function (p) { fade = 1 - p; } },
+      { dur: 0, end: function () {
+        Dialog.open('', ['Du kommst an der Quelle wieder zu dir. Deine Herzen sind wieder voll.']);
       } }
     ]);
   }
@@ -253,6 +305,7 @@
           if (target.action === 'testpage') {
             TestPage.open();   // Schild der Testseite für die Lehrkraft
           } else {
+            if (target.action === 'rest') useRest(target);   // Rastquelle
             if (target.npc) {
               target.npc.facing = faceToward(target.npc, Player.getX(), Player.getY());
               turnedNpc = target.npc;

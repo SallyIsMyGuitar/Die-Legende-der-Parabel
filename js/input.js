@@ -24,7 +24,8 @@ var Input = (function () {
       if (!e.repeat) lightButton('a');
     } else if (e.code === 'Backspace') {
       e.preventDefault();
-      if (!e.repeat) lightButton('b');
+      // Rücktaste = B; zusätzlich 'del', damit die Aufgabenbox eine Ziffer löschen kann
+      if (!e.repeat) { lightButton('b'); pressedOnce.del = true; }
     }
   }
 

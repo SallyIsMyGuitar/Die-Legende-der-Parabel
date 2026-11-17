@@ -12,7 +12,7 @@ var Enemies = (function () {
   var SPEED = 18;            // Pixel pro Sekunde, langsamer als die Spielfigur
   var TURN_MIN = 0.8;        // Sekunden bis zur moeglichen Richtungsaenderung
   var TURN_MAX = 2.0;
-  var COOLDOWN = 1.5;        // Sekunden nach einem Kampf ohne neue Beruehrung
+  var COOLDOWN = Config.ENEMY_COOLDOWN;   // Sekunden ohne neue Beruehrung nach einem Kampf
   var TOUCH = 13;            // Ueberlappung in Pixeln, die als Beruehrung zaehlt
 
   // Feste Aufgabentypen je Bildschirm, von leicht zu schwer,
@@ -141,6 +141,8 @@ var Enemies = (function () {
   // Zustand: einmalig angelegt, ueberlebt Bildschirmwechsel
   var enemies = [];
   var defeated = {};   // 'screen:index' -> true, dauerhaft besiegt
+  var drops = [];      // fallen gelassene Herzen: { screen, x, y }
+  var firstTryWins = 0;   // Siege im ersten Versuch (fuer Herz-Drops)
 
   Object.keys(DEFS).forEach(function (screen) {
     DEFS[screen].forEach(function (d, i) {
@@ -191,6 +193,16 @@ var Enemies = (function () {
       active.push(e);
     }
 
+    // Fallen gelassenes Herz aufheben (Beruehrung) = ein Herz zurueck
+    for (var d = drops.length - 1; d >= 0; d--) {
+      var h = drops[d];
+      if (h.screen !== world.getScreen()) continue;
+      if (Math.abs(playerX - h.x) < TOUCH && Math.abs(playerY - h.y) < TOUCH) {
+        Hud.heal(1);
+        drops.splice(d, 1);
+      }
+    }
+
     for (var j = 0; j < active.length; j++) {
       var en = active[j];
       if (en.cooldown > 0) en.cooldown -= dt;
@@ -229,15 +241,27 @@ var Enemies = (function () {
 
   function contextOf(e) { return KONTEXT[e.screen]; }
 
-  // Richtig geloest: Gegner dauerhaft besiegt
-  function defeat(e) {
+  // Richtig geloest: Gegner dauerhaft besiegt.
+  // Bei Sieg im ersten Versuch laesst jeder n-te Gegner ein Herz fallen.
+  function defeat(e, firstTry) {
     defeated[e.screen + ':' + e.index] = true;
+    if (!firstTry) return;
+    firstTryWins++;
+    if (firstTryWins % Config.HEART_DROP_EVERY === 0) {
+      drops.push({ screen: e.screen, x: e.x, y: e.y });
+    }
   }
 
   // --- Zeichnen ----------------------------------------------------------------
 
   function draw(r, time, screen) {
     var ctx = r.getCtx();
+    // fallen gelassene Herzen, leicht wippend
+    for (var d = 0; d < drops.length; d++) {
+      if (drops[d].screen !== screen) continue;
+      var hb = Math.floor(time / 250) % 2;
+      Hud.drawHeart(r, Math.round(drops[d].x) + 4, Math.round(drops[d].y) + 5 - hb);
+    }
     for (var i = 0; i < enemies.length; i++) {
       var e = enemies[i];
       if (e.screen !== screen) continue;

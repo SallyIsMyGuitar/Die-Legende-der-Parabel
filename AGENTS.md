@@ -30,6 +30,7 @@ Ein Mathe-Übungsspiel als Top-Down-Abenteuer im Stil eines modernen 2D-Zelda (O
 - **Zielgerät:** Schul-iPads mit Safari, Touch-Steuerung, Querformat (im Hochformat erscheint ein Hinweis zum Drehen). Zusätzlich Tastatursteuerung am PC.
 - **Hosting:** GitHub Pages. Die Seite wird als Ordner mit mehreren Dateien ausgeliefert und ist auch als Verknüpfung auf dem Home-Bildschirm nutzbar (Vollbild).
 - **Aufbau:** `index.html`, `css/style.css` und getrennte JavaScript-Dateien, eingebunden per Script-Tags. Kein Build-Schritt, kein Bundler. Aktueller Stand:
+  - `config.js`: Spielwerte an einer Stelle (Herzen, Herz-Drop-Rate, Kampf-Cooldown, Rückstoß)
   - `render.js`: Canvas-Skalierung (ganzzahlig, scharfe Pixel), Zeichenhilfen, Ebenen, Sprites, Farbhilfen
   - `font.js`: eigene Pixelschrift für Dialoge (Groß-/Kleinbuchstaben, ä, ö, ü, ß, Ziffern, Satzzeichen)
   - `people.js`: Sprites der Dorfbewohner
@@ -127,6 +128,8 @@ Gebaut wird immer nur der Meilenstein, den der Nutzer freigibt, mit Test nach je
 
 ## Offene Fragen (vor der Umsetzung mit dem Nutzer klären)
 
+- Neue Texte noch freigeben: Nachbarin (3. und 4. Seite: „Übrigens: Ein Schluck aus dem Brunnen auf dem Dorfplatz füllt deine Herzen wieder auf.“ / „Und solltest du einmal alle Herzen verlieren, kommst du an der Quelle wieder zu dir, an der du zuletzt getrunken hast.“), Brunnen („Du trinkst vom klaren Wasser. Deine Herzen sind wieder voll.“), Rücksprung („Du kommst an der Quelle wieder zu dir. Deine Herzen sind wieder voll.“).
+
 - Schriftgröße der Dialoge: Die Pixelschrift ist auf 256 × 224 ausgelegt; auf dem iPad prüfen, ob sie groß genug ist.
 
 ## Getroffene Entscheidungen
@@ -135,4 +138,8 @@ Gebaut wird immer nur der Meilenstein, den der Nutzer freigibt, mit Test nach je
 - **Rastquelle im Startdorf:** Brunnen im Dorfplatz (Ost-Bildschirm), speichert automatisch.
 - **Wiederaufbau der Schule:** wird im Abspann gezeigt; danach ist die Schule begehbar, mit den befreiten Lehrkräften (passt zum frei begehbaren Endspiel-Zustand).
 - **HUD:** Das Schwert bekommt einen eigenen Slot links neben den A/B-Plätzen (A rot, B blau bleiben in der bisherigen Anordnung oben rechts).
+- **Herzverlust:** Jeder Fehler in einer Aufgabe kostet ein Herz (2. Fehler zusätzlich Hinweis, 3. Fehler Lösung). Sind alle Herzen weg, wird die Lösung gezeigt und die Aufgabe endet.
+- **Null Herzen:** Die Spielfigur kommt an der zuletzt benutzten Rastquelle wieder zu sich (Start: Brunnen), mit vollen Herzen. Besiegte Gegner bleiben besiegt.
+- **Rastquelle:** Der Brunnen füllt die Herzen auf und merkt sich die Stelle für den Rücksprung (Speichern folgt später). Die Nachbarin erklärt das.
+- **Rücktaste in Aufgaben:** löscht eine Ziffer (bei der Probeaufgabe auf der Testseite: sind alle Felder leer, bricht sie ab wie B).
 - **Gegner-Aufgaben:** Jeder Bildschirm auf dem Weg zum ersten Dungeon hat einen festen Aufgabentyp (Wiese leicht, Wald mittel, Ruine schwer). Der Aufgabentext beginnt mit einem kurzen Kontext, der auf den Tipp des dortigen Erklär-NPCs verweist. Besiegte Gegner bleiben dauerhaft besiegt; bei Nichtlösen kommt die Aufgabe mit neuen Zahlen wieder.

@@ -1,4 +1,5 @@
 // hud.js: Anzeige oben – Herzen links, Gegenstandsplätze rechts (noch ohne Funktion)
+// Anzahl der Herzen kommt aus config.js
 var Hud = (function () {
   'use strict';
 
@@ -13,7 +14,8 @@ var Hud = (function () {
   var COLORS = { o: '#2a1020', r: '#e8344a', H: '#ffb0b8' };
   var EMPTY = { o: '#2a1020', r: '#3a3444', H: '#55506a' };   // leeres Herz
 
-  var hearts = 3;   // aktuelle Herzen (voll = 3)
+  var MAX = Config.HEARTS_MAX;
+  var hearts = MAX;   // aktuelle Herzen
 
   var LETTERS = {
     A: ['.#.', '#.#', '###', '#.#', '#.#'],
@@ -49,7 +51,7 @@ var Hud = (function () {
 
   function draw(r) {
     var shadow = { o: 'rgba(0,0,0,0.35)', r: 'rgba(0,0,0,0.35)', H: 'rgba(0,0,0,0.35)' };
-    for (var i = 0; i < 3; i++) {
+    for (var i = 0; i < MAX; i++) {
       sprite(r, HEART, 7 + i * 9, 7, shadow);
       sprite(r, HEART, 6 + i * 9, 6, i < hearts ? COLORS : EMPTY);
     }
@@ -57,10 +59,19 @@ var Hud = (function () {
     slot(r, Render.WIDTH - 24, 5, 'B');
   }
 
+  // Einzelnes Herz zeichnen (z. B. fallen gelassenes Herz auf dem Boden)
+  function drawHeart(r, x, y) {
+    sprite(r, HEART, x + 1, y + 1, { o: 'rgba(0,0,0,0.35)', r: 'rgba(0,0,0,0.35)', H: 'rgba(0,0,0,0.35)' });
+    sprite(r, HEART, x, y, COLORS);
+  }
+
   return {
     draw: draw,
+    drawHeart: drawHeart,
+    heal: function (n) { hearts = Math.min(MAX, hearts + n); },
+    fill: function () { hearts = MAX; },
     getHearts: function () { return hearts; },
-    setHearts: function (n) { hearts = Math.max(0, Math.min(3, n)); },
+    setHearts: function (n) { hearts = Math.max(0, Math.min(MAX, n)); },
     loseHeart: function () { hearts = Math.max(0, hearts - 1); }
   };
 })();
