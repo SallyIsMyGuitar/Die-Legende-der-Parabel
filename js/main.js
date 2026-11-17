@@ -22,11 +22,40 @@
 
   // --- Kampf: Beruehrung mit einem Gegner startet genau eine Aufgabe -------
   function startBattle(enemy) {
-    TaskUi.open(Enemies.typeIdOf(enemy), Enemies.seedOf(enemy), function (solved, errors) {
-      if (solved) Enemies.defeat(enemy, errors === 0);   // richtig = Monster besiegt
-      else if (Hud.getHearts() === 0) respawn();          // alle Herzen weg
+    TaskUi.open(Enemies.typeIdOf(enemy), Enemies.seedOf(enemy), function (solved, errors, joker) {
+      if (solved) {
+        if (joker) {
+          // Schwert: Aufgabe uebersprungen, kein Herz-Drop, Schwert zerbricht
+          Enemies.defeat(enemy, false);
+          Dialog.open('', ['Dein Schwert zerbricht. Der Gegner weicht zurück \u2013 diesmal ohne Rechnung.']);
+        } else {
+          Enemies.defeat(enemy, errors === 0);   // richtig = Monster besiegt
+        }
+      } else if (Hud.getHearts() === 0) respawn();          // alle Herzen weg
       else knockback(enemy);                               // Figur weicht zurück
     }, Enemies.contextOf(enemy));   // Kontext aus dem Tipp des NPCs
+  }
+
+  // --- R\u00e4tsel-Truhe an der Ruine: Belohnung ist das Schwert --------------
+  var chestDone = false;   // Truhe ist nach dem Raetsel leer
+  function openChest() {
+    if (chestDone) {
+      Dialog.open('Truhe', ['Die Truhe ist leer.']);
+      return;
+    }
+    TaskUi.open('scheitelAllgemein', Math.floor(Date.now() / 1000) % 100000, function (solved) {
+      if (!solved) {
+        if (Hud.getHearts() === 0) respawn();   // alle Herzen im Raetsel verloren
+        return;                                  // Truhe bleibt, spaeter neuer Versuch
+      }
+      chestDone = true;
+      Sword.give();
+      Dialog.open('Truhe', [
+        'Du l\u00f6st das R\u00e4tsel und \u00f6ffnest die Truhe.',
+        'Darin liegt ein Schwert! Es \u00fcberspringt einmal eine Aufgabe und zerbricht danach.',
+        'Du tr\u00e4gst es im Platz links neben A und B oben rechts. Antippen oder Taste E setzt es ein.'
+      ]);
+    }, 'Ein freiwilliges R\u00e4tsel der Truhe:', { abortable: true });
   }
 
   // Spielstart im Elternhaus bei der Mutter
@@ -164,7 +193,13 @@
       } },
       { dur: 0.5, tick: function (p) { fade = 1 - p; } },
       { dur: 0, end: function () {
-        Dialog.open('', ['Du kommst an der Quelle wieder zu dir. Deine Herzen sind wieder voll.']);
+        // Ein getragenes Schwert geht bei null Herzen verloren
+        if (Sword.has()) {
+          Sword.breakSword();
+          Dialog.open('', ['Du kommst an der Quelle wieder zu dir. Deine Herzen sind wieder voll. Dein Schwert ist verloren.']);
+        } else {
+          Dialog.open('', ['Du kommst an der Quelle wieder zu dir. Deine Herzen sind wieder voll.']);
+        }
       } }
     ]);
   }
@@ -304,6 +339,8 @@
           Player.setPosition(Player.getX(), Player.getY());   // Laufanimation anhalten
           if (target.action === 'testpage') {
             TestPage.open();   // Schild der Testseite für die Lehrkraft
+          } else if (target.action === 'chest') {
+            openChest();       // Rätsel-Truhe mit dem Schwert
           } else {
             if (target.action === 'rest') useRest(target);   // Rastquelle
             if (target.npc) {
@@ -328,6 +365,7 @@
     Fx.draw(Render, now, World.isOutdoor());
     if (target) Dialog.drawHint(Render, target.hintX, target.hintY, now);
     Hud.draw(Render);
+    Sword.draw(Render);
     Dialog.draw(Render);
     TestPage.draw(Render);
     TaskUi.draw(Render);

@@ -26,6 +26,9 @@ var Input = (function () {
       e.preventDefault();
       // Rücktaste = B; zusätzlich 'del', damit die Aufgabenbox eine Ziffer löschen kann
       if (!e.repeat) { lightButton('b'); pressedOnce.del = true; }
+    } else if (e.code === 'KeyE') {
+      // Schwert (Joker) in einer Aufgabe einsetzen
+      if (!e.repeat) pressedOnce.sword = true;
     }
   }
 

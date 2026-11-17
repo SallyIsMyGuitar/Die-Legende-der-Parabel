@@ -20,7 +20,8 @@ var TaskUi = (function () {
   var hintShown = false;
   var phase = 'input';        // 'input' | 'right' | 'wrong' | 'solution'
   var phaseTime = 0;
-  var onResult = null;        // Rueckmeldung fuer den Kampf: (geloest, fehler)
+  var onResult = null;        // Rueckmeldung fuer den Kampf: (geloest, fehler, joker)
+  var abortable = false;      // true = mit B abbrechbar (freiwilliges Raetsel)
   var prevDirs = {};          // vorheriger Zustand der Richtungstasten
 
   // Links/Rechts wie A/B genau einmal pro Tastendruck auswerten
@@ -90,7 +91,7 @@ var TaskUi = (function () {
   }
 
   // --- Aufgabe oeffnen -----------------------------------------------------
-  function open(typeId, seed, resultCallback, kontext) {
+  function open(typeId, seed, resultCallback, kontext, opts) {
     // Ohne Kampf (Probeaufgabe): leere Herzen wie an einer Rastquelle auffuellen
     if (!resultCallback && Hud.getHearts() === 0) Hud.fill();
     task = Tasks.make(typeId, seed, kontext);
@@ -103,13 +104,22 @@ var TaskUi = (function () {
     phase = 'input';
     phaseTime = 0;
     onResult = resultCallback || null;
+    abortable = !!(opts && opts.abortable);
     active = true;
   }
 
-  function finish(solved) {
+  function finish(solved, joker) {
     active = false;
     task = null;
-    if (onResult) onResult(solved, errors);
+    if (onResult) onResult(solved, errors, !!joker);
+  }
+
+  // Schwert einsetzen: ueberspringt genau eine Aufgabe und zerbricht danach.
+  // Nur im echten Kampf (nicht Probeaufgabe, nicht freiwilliges Raetsel).
+  function useSword() {
+    if (!onResult || abortable || !Sword.has()) return;
+    Sword.breakSword();
+    finish(true, true);
   }
 
   function allEmpty() {
@@ -188,6 +198,13 @@ var TaskUi = (function () {
     var rect = Render.getCanvas().getBoundingClientRect();
     var lx = (e.clientX - rect.left) / rect.width * Render.WIDTH;
     var ly = (e.clientY - rect.top) / rect.height * Render.HEIGHT;
+    // Schwert-Slot im HUD antippen setzt den Joker ein
+    var sr = Sword.rect();
+    if (lx >= sr.x && lx < sr.x + sr.w && ly >= sr.y && ly < sr.y + sr.h) {
+      useSword();
+      e.preventDefault();
+      return;
+    }
     if (task.graph) {
       for (var b = 0; b < task.felder.length; b++) {
         var minus = graphBtnRect(b, false);
@@ -252,16 +269,18 @@ var TaskUi = (function () {
         if (pressedDir(input, 'right')) graphSel = (graphSel + 1) % task.felder.length;
         if (pressedDir(input, 'up')) graphAdjust(task.felder[graphSel].key, 1);
         if (pressedDir(input, 'down')) graphAdjust(task.felder[graphSel].key, -1);
-        if (input.pressed('b') && !onResult) { finish(false); return; }
+        if (input.pressed('sword')) { useSword(); return; }
+        if (input.pressed('b') && (!onResult || abortable)) { finish(false); return; }
         if (input.pressed('a')) checkAnswer();
         return;
       }
       var del = input.pressed('del');
       var b = input.pressed('b');
+      if (input.pressed('sword')) { useSword(); return; }
       if (del) {
         if (!onResult && allEmpty()) { finish(false); return; }
         typeChar('<');
-      } else if (b && !onResult) { finish(false); return; }
+      } else if (b && (!onResult || abortable)) { finish(false); return; }
       if (input.pressed('a')) checkAnswer();
       if (pressedDir(input, 'left')) fieldIndex = (fieldIndex + task.felder.length - 1) % task.felder.length;
       if (pressedDir(input, 'right')) fieldIndex = (fieldIndex + 1) % task.felder.length;
@@ -320,6 +339,7 @@ var TaskUi = (function () {
         Font.draw(ctx, task.loesungstext, BOX.x + 10, 164, '#f6f0e2');
       }
       var gfuss = onResult ? 'A/OK: pr\u00fcfen' : 'A/OK: pr\u00fcfen  B: abbrechen';
+      if (onResult && !abortable && Sword.has()) gfuss += '  E: Schwert';
       Font.draw(ctx, gfuss, BOX.x + 10, BOX.y + BOX.h - 12, '#8a8496');
       return;
     }
@@ -369,6 +389,7 @@ var TaskUi = (function () {
       }
     }
     var fuss = onResult ? 'A/OK: prüfen  <: löschen' : 'A/OK: prüfen  B: abbrechen';
+    if (onResult && !abortable && Sword.has()) fuss += '  E: Schwert';
     Font.draw(ctx, fuss, BOX.x + 10, BOX.y + BOX.h - 12, '#8a8496');
   }
 
