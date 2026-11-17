@@ -29,6 +29,9 @@ var Input = (function () {
     } else if (e.code === 'KeyE') {
       // Schwert (Joker) in einer Aufgabe einsetzen
       if (!e.repeat) pressedOnce.sword = true;
+    } else if (e.code === 'KeyM') {
+      // Merkbuch jederzeit oeffnen und schliessen
+      if (!e.repeat) pressedOnce.book = true;
     }
   }
 

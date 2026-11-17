@@ -8,6 +8,7 @@
   Render.init(canvas);
   Input.init();
   TaskUi.init();
+  Merkbuch.init();
 
   // --- Rastquelle: zuletzt benutzte Quelle (Start: Brunnen im Dorf) --------
   // Bei null Herzen kommt die Spielfigur hier wieder zu sich.
@@ -390,7 +391,13 @@
     lastTime = now;
 
     var target = null;
-    if (TaskUi.isActive()) {
+    // Merkbuch geht jederzeit auf und zu, auch mitten in einer Aufgabe
+    if (Input.pressed('book')) {
+      Merkbuch.isActive() ? Merkbuch.close() : Merkbuch.open();
+    }
+    if (Merkbuch.isActive()) {
+      Merkbuch.update(Input);
+    } else if (TaskUi.isActive()) {
       TaskUi.update(dt, Input);
     } else if (TestPage.isActive()) {
       TestPage.update(Input);
@@ -450,9 +457,11 @@
     if (target) Dialog.drawHint(Render, target.hintX, target.hintY, now);
     Hud.draw(Render);
     Sword.draw(Render);
+    Merkbuch.drawHud(Render);
     Dialog.draw(Render);
     TestPage.draw(Render);
     TaskUi.draw(Render);
+    Merkbuch.draw(Render);
     if (fade > 0) Render.px(0, 0, W, H, 'rgba(0,0,0,' + fade + ')');
     Input.clearPressed();
 
