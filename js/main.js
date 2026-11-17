@@ -13,7 +13,7 @@
   function startBattle(enemy) {
     TaskUi.open(Enemies.typeIdOf(enemy), Enemies.seedOf(enemy), function (solved) {
       if (solved) Enemies.defeat(enemy);   // richtig = Monster besiegt
-    });
+    }, Enemies.contextOf(enemy));   // Kontext aus dem Tipp des NPCs
   }
 
   // Spielstart im Elternhaus bei der Mutter

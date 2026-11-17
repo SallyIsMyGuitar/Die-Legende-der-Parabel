@@ -15,11 +15,19 @@ var Enemies = (function () {
   var COOLDOWN = 1.5;        // Sekunden nach einem Kampf ohne neue Beruehrung
   var TOUCH = 13;            // Ueberlappung in Pixeln, die als Beruehrung zaehlt
 
-  // Feste Aufgabentypen je Bildschirm, von leicht zu schwer
+  // Feste Aufgabentypen je Bildschirm, von leicht zu schwer,
+  // passend zum Tipp des Erklaer-NPCs auf dem jeweiligen Bildschirm
   var TYPES = {
-    wiese: 'scheitelAblesen',
-    wald: 'scheitelAllgemein',
-    ruine: 'spfAufstellen'
+    wiese: 'scheitelAblesen',   // Wanderin: Normalparabel, Scheitel
+    wald: 'aBestimmen',         // Foerster: a streckt oder staucht
+    ruine: 'spfAufstellen'       // Waechter vor der Hoehle der Parabeln
+  };
+
+  // Kurzer Kontext vor der Aufgabe, nimmt Bezug auf den NPC-Tipp
+  var KONTEXT = {
+    wiese: 'Erinnerung der Wanderin: Die Normalparabel ist y = x\u00b2.',
+    wald: 'Tipp des Försters: a streckt oder staucht die Parabel.',
+    ruine: 'Der Wächter der Höhle der Parabeln fragt:'
   };
 
   // --- Sprites (16x16, ein Frame; Bewegung ueber Wippen) ---------------------
@@ -219,6 +227,8 @@ var Enemies = (function () {
 
   function typeIdOf(e) { return TYPES[e.screen]; }
 
+  function contextOf(e) { return KONTEXT[e.screen]; }
+
   // Richtig geloest: Gegner dauerhaft besiegt
   function defeat(e) {
     defeated[e.screen + ':' + e.index] = true;
@@ -245,6 +255,7 @@ var Enemies = (function () {
     draw: draw,
     defeat: defeat,
     seedOf: seedOf,
-    typeIdOf: typeIdOf
+    typeIdOf: typeIdOf,
+    contextOf: contextOf
   };
 })();

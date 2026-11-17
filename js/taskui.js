@@ -56,10 +56,10 @@ var TaskUi = (function () {
   }
 
   // --- Aufgabe oeffnen -----------------------------------------------------
-  function open(typeId, seed, resultCallback) {
+  function open(typeId, seed, resultCallback, kontext) {
     // Ohne Kampf (Probeaufgabe): leere Herzen wie an einer Rastquelle auffuellen
     if (!resultCallback && Hud.getHearts() === 0) Hud.setHearts(3);
-    task = Tasks.make(typeId, seed);
+    task = Tasks.make(typeId, seed, kontext);
     values = task.felder.map(function () { return ''; });
     fieldIndex = 0;
     errors = 0;

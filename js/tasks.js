@@ -119,20 +119,43 @@ var Tasks = (function () {
     };
   }
 
-  // --- Liste aller Aufgabentypen (später kommen weitere Abschnitte dazu) ---
+  // --- Typ 4: Streckfaktor a aus Scheitel und einem Punkt ---
+  // Passt zum Tipp des Foersters (a streckt oder staucht die Parabel)
+  function aBestimmen(rng) {
+    var a = pick(rng, [0.5, 1, 2, -0.5, -1, -2]);
+    var xs = randInt(rng, -4, 4);
+    var ys = randInt(rng, -5, 5);
+    var abstand = pick(rng, [-3, -2, 2, 3]);
+    var xp = xs + abstand;
+    var yp = a * abstand * abstand + ys;
+    return {
+      frage: 'Die Parabel geht durch S(' + fmt(xs) + '|' + fmt(ys) + ') und P(' + fmt(xp) + '|' + fmt(yp) + '). Gib den Streckfaktor a an.',
+      felder: [{ key: 'a', label: 'a' }],
+      loesung: [a],
+      loesungstext: 'a = ' + fmt(a),
+      hinweis: 'Setze P in y = a(x \u2212 xs)\u00b2 + ys ein und löse nach a auf.'
+    };
+  }
+
+  // --- Liste aller Aufgabentypen (sp\u00e4ter kommen weitere Abschnitte dazu) ---
   var TYPES = [
     { id: 'scheitelAblesen', name: 'Scheitel ablesen (Scheitelform)', make: scheitelAblesen },
     { id: 'scheitelAllgemein', name: 'Scheitel (allg. Form)', make: scheitelAllgemein },
-    { id: 'spfAufstellen', name: 'Scheitelform aufstellen', make: spfAufstellen }
+    { id: 'spfAufstellen', name: 'Scheitelform aufstellen', make: spfAufstellen },
+    { id: 'aBestimmen', name: 'Streckfaktor a bestimmen', make: aBestimmen }
   ];
 
-  // Eine Aufgabe erzeugen; gleicher Typ + gleicher Samen = gleiche Aufgabe
-  function make(typeId, seed) {
+  // Eine Aufgabe erzeugen; gleicher Typ + gleicher Samen = gleiche Aufgabe.
+  // kontext (optional) stellt den Bezug zur Umgebung her, z. B. zum Tipp
+  // eines Erklaer-NPCs, und wird dem Fragetext vorangestellt.
+  function make(typeId, seed, kontext) {
     var type = null;
     for (var i = 0; i < TYPES.length; i++) {
       if (TYPES[i].id === typeId) type = TYPES[i];
     }
-    return type.make(rngFrom(seed * 2654435761 + 1));
+    var task = type.make(rngFrom(seed * 2654435761 + 1));
+    if (kontext) task.frage = kontext + ' ' + task.frage;
+    return task;
   }
 
   return { TYPES: TYPES, make: make, fmt: fmt };
