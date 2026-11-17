@@ -14,6 +14,8 @@ var TaskUi = (function () {
   var task = null;            // aktuelle Aufgabe (aus tasks.js)
   var values = [];            // Eingabe je Feld als Zeichenkette
   var fieldIndex = 0;         // aktives Eingabefeld
+  var graphVals = { a: 1, xs: 0, ys: 0 }; // eingestellte Parabel (Graph-Modus)
+  var graphSel = 0;           // gewählter Parameter im Graph-Modus
   var errors = 0;             // Fehlerzähler für die Stufen
   var hintShown = false;
   var phase = 'input';        // 'input' | 'right' | 'wrong' | 'solution'
@@ -56,6 +58,37 @@ var TaskUi = (function () {
     return { x: x, y: 84, w: w, h: 18 };
   }
 
+  // --- Graph-Modus: Parabel mit Plus/Minus-Tasten einstellen ---------------
+  var GRAPH = { x: 14, y: 66, w: 148, h: 68, sx: 16, sy: 6 };
+  var BTN = { w: 18, h: 14 };   // Größe der Plus/Minus-Tasten
+
+  // Tasten neben dem Koordinatensystem: eine Zeile je einstellbarem Parameter
+  function graphBtnRect(row, plus) {
+    return {
+      x: plus ? 222 : 170,
+      y: GRAPH.y + 2 + row * (BTN.h + 8),
+      w: BTN.w, h: BTN.h
+    };
+  }
+
+  function okRect() {
+    return { x: 170, y: GRAPH.y + 64, w: 70, h: 16 };
+  }
+
+  // Fester Wert aus der Aufgabe oder aktuelle Einstellung
+  function graphVal(key) {
+    return task.graphFix && task.graphFix[key] !== undefined ? task.graphFix[key] : graphVals[key];
+  }
+
+  // Schrittweiten und Bereiche: a in 0,5er-Schritten, xs/ys in 1er-Schritten
+  function graphAdjust(key, dir) {
+    var step = key === 'a' ? 0.5 : 1;
+    var min = key === 'a' ? -3 : key === 'xs' ? -4 : -5;
+    var max = key === 'a' ? 3 : key === 'xs' ? 4 : 5;
+    var v = Math.round((graphVals[key] + dir * step) * 2) / 2;
+    graphVals[key] = Math.max(min, Math.min(max, v));
+  }
+
   // --- Aufgabe oeffnen -----------------------------------------------------
   function open(typeId, seed, resultCallback, kontext) {
     // Ohne Kampf (Probeaufgabe): leere Herzen wie an einer Rastquelle auffuellen
@@ -63,6 +96,8 @@ var TaskUi = (function () {
     task = Tasks.make(typeId, seed, kontext);
     values = task.felder.map(function () { return ''; });
     fieldIndex = 0;
+    graphVals = { a: 1, xs: 0, ys: 0 };
+    graphSel = 0;
     errors = 0;
     hintShown = false;
     phase = 'input';
@@ -98,8 +133,20 @@ var TaskUi = (function () {
     if (v.replace('-', '').replace(',', '').length < 4) values[fieldIndex] = v + ch;
   }
 
-  // Eingabe pruefen: Komma und Punkt gleichwertig
+  // Eingabe pruefen: Komma und Punkt gleichwertig; im Graph-Modus
+  // werden die eingestellten Werte direkt verglichen
   function checkAnswer() {
+    if (task.graph) {
+      for (var g = 0; g < task.felder.length; g++) {
+        if (Math.abs(graphVals[task.felder[g].key] - task.loesung[g]) > 1e-6) {
+          onWrong();
+          return;
+        }
+      }
+      phase = 'right';
+      phaseTime = 0;
+      return;
+    }
     for (var i = 0; i < values.length; i++) {
       if (values[i] === '' || values[i] === '-' || values[i] === ',') return;
     }
@@ -129,18 +176,40 @@ var TaskUi = (function () {
 
   // --- Tastatur (Ziffern direkt, A = pruefen, B = abbrechen) ---------------
   function onKeyDown(e) {
-    if (!active || phase !== 'input') return;
+    if (!active || phase !== 'input' || task.graph) return;
     if (e.key >= '0' && e.key <= '9') { typeChar(e.key); e.preventDefault(); }
     else if (e.key === ',' || e.key === '.') { typeChar(','); e.preventDefault(); }
     else if (e.key === '-') { typeChar('-'); e.preventDefault(); }
   }
 
-  // Tippen/klicken in die Box: Felder und Zahlenblock treffen
+  // Tippen/klicken in die Box: Felder, Zahlenblock und Graph-Tasten treffen
   function onPointerDown(e) {
     if (!active || phase !== 'input') return;
     var rect = Render.getCanvas().getBoundingClientRect();
     var lx = (e.clientX - rect.left) / rect.width * Render.WIDTH;
     var ly = (e.clientY - rect.top) / rect.height * Render.HEIGHT;
+    if (task.graph) {
+      for (var b = 0; b < task.felder.length; b++) {
+        var minus = graphBtnRect(b, false);
+        var plus = graphBtnRect(b, true);
+        if (lx >= minus.x && lx < minus.x + minus.w && ly >= minus.y && ly < minus.y + minus.h) {
+          graphAdjust(task.felder[b].key, -1);
+          e.preventDefault();
+          return;
+        }
+        if (lx >= plus.x && lx < plus.x + plus.w && ly >= plus.y && ly < plus.y + plus.h) {
+          graphAdjust(task.felder[b].key, 1);
+          e.preventDefault();
+          return;
+        }
+      }
+      var ok = okRect();
+      if (lx >= ok.x && lx < ok.x + ok.w && ly >= ok.y && ly < ok.y + ok.h) {
+        checkAnswer();
+        e.preventDefault();
+      }
+      return;
+    }
     for (var i = 0; i < task.felder.length; i++) {
       var f = fieldRect(i);
       if (lx >= f.x && lx < f.x + f.w && ly >= f.y && ly < f.y + f.h) fieldIndex = i;
@@ -175,8 +244,18 @@ var TaskUi = (function () {
     if (phase === 'input') {
       // Ein Kampf laesst sich nicht abbrechen; nur die Probeaufgabe
       // auf der Testseite kann mit B abgebrochen werden.
-      // Rücktaste (Tastatur) löscht eine Ziffer; sind alle Felder leer,
+      // Ruecktaste (Tastatur) loescht eine Ziffer; sind alle Felder leer,
       // bricht sie die Probeaufgabe ab wie B.
+      if (task.graph) {
+        // Graph-Modus: links/rechts Parameter waehlen, hoch/runter einstellen
+        if (pressedDir(input, 'left')) graphSel = (graphSel + task.felder.length - 1) % task.felder.length;
+        if (pressedDir(input, 'right')) graphSel = (graphSel + 1) % task.felder.length;
+        if (pressedDir(input, 'up')) graphAdjust(task.felder[graphSel].key, 1);
+        if (pressedDir(input, 'down')) graphAdjust(task.felder[graphSel].key, -1);
+        if (input.pressed('b') && !onResult) { finish(false); return; }
+        if (input.pressed('a')) checkAnswer();
+        return;
+      }
       var del = input.pressed('del');
       var b = input.pressed('b');
       if (del) {
@@ -217,10 +296,32 @@ var TaskUi = (function () {
 
     Font.draw(ctx, 'Aufgabe', BOX.x + 10, BOX.y + 7, '#f0c040');
 
-    // Fragetext (maximal drei Zeilen)
-    var lines = Font.wrap(task.frage, BOX.w - 20).slice(0, 3);
+    // Fragetext (maximal drei Zeilen, im Graph-Modus zwei)
+    var lines = Font.wrap(task.frage, BOX.w - 20).slice(0, task.graph ? 2 : 3);
     for (var i = 0; i < lines.length; i++) {
       Font.draw(ctx, lines[i], BOX.x + 10, BOX.y + 20 + i * Font.LINE, '#f6f0e2');
+    }
+
+    // Graph-Modus: Koordinatensystem, live gezeichnete Parabel, Tasten
+    if (task.graph) {
+      Font.draw(ctx, Tasks.spfText(graphVals.a, graphVal('xs'), graphVal('ys')),
+        BOX.x + 10, BOX.y + 20 + lines.length * Font.LINE, '#f0c040');
+      drawGraph(r, ctx);
+      if (phase === 'right') drawCheck(r, 200, 150);
+      if (phase === 'wrong') drawCross(r, 200, 150);
+      if (hintShown && phase !== 'solution') {
+        var ghl = Font.wrap(task.hinweis, 180);
+        for (var gh = 0; gh < ghl.length && gh < 2; gh++) {
+          Font.draw(ctx, ghl[gh], BOX.x + 10, 152 + gh * Font.LINE, '#f0c040');
+        }
+      }
+      if (phase === 'solution') {
+        Font.draw(ctx, 'L\u00f6sung:', BOX.x + 10, 152, '#e8344a');
+        Font.draw(ctx, task.loesungstext, BOX.x + 10, 164, '#f6f0e2');
+      }
+      var gfuss = onResult ? 'A/OK: pr\u00fcfen' : 'A/OK: pr\u00fcfen  B: abbrechen';
+      Font.draw(ctx, gfuss, BOX.x + 10, BOX.y + BOX.h - 12, '#8a8496');
+      return;
     }
 
     // Eingabefelder mit Beschriftung
@@ -269,6 +370,98 @@ var TaskUi = (function () {
     }
     var fuss = onResult ? 'A/OK: prüfen  <: löschen' : 'A/OK: prüfen  B: abbrechen';
     Font.draw(ctx, fuss, BOX.x + 10, BOX.y + BOX.h - 12, '#8a8496');
+  }
+
+  // Koordinatensystem mit live gezeichneter Parabel und S/P-Marken
+  // S ist ein kleines Quadrat, P ein Kreuz (Form statt nur Farbe)
+  function drawGraph(r, ctx) {
+    var cx = GRAPH.x + GRAPH.w / 2;
+    var cy = GRAPH.y + GRAPH.h / 2;
+
+    r.px(GRAPH.x, GRAPH.y, GRAPH.w, GRAPH.h, '#0e0c14');
+    r.px(GRAPH.x, GRAPH.y, GRAPH.w, 1, '#efe4c4');
+    r.px(GRAPH.x, GRAPH.y + GRAPH.h - 1, GRAPH.w, 1, '#efe4c4');
+    r.px(GRAPH.x, GRAPH.y, 1, GRAPH.h, '#efe4c4');
+    r.px(GRAPH.x + GRAPH.w - 1, GRAPH.y, 1, GRAPH.h, '#efe4c4');
+
+    // Gitter (1 Einheit) und Achsen
+    for (var g = -4; g <= 4; g++) {
+      r.px(cx + g * GRAPH.sx, GRAPH.y + 1, 1, GRAPH.h - 2, '#221e30');
+    }
+    for (var h = -4; h <= 4; h++) {
+      r.px(GRAPH.x + 1, cy + h * GRAPH.sy, GRAPH.w - 2, 1, '#221e30');
+    }
+    r.px(cx, GRAPH.y + 1, 1, GRAPH.h - 2, '#8a8496');
+    r.px(GRAPH.x + 1, cy, GRAPH.w - 2, 1, '#8a8496');
+
+    // Parabel aus der aktuellen Einstellung, auf das Panel begrenzt
+    var a = graphVals.a;
+    var xs = graphVal('xs');
+    var ys = graphVal('ys');
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(GRAPH.x + 1, GRAPH.y + 1, GRAPH.w - 2, GRAPH.h - 2);
+    ctx.clip();
+    var prev = null;
+    for (var col = 0; col < GRAPH.w; col++) {
+      var wx = (col - GRAPH.w / 2) / GRAPH.sx;
+      var wy = a * (wx - xs) * (wx - xs) + ys;
+      var py = GRAPH.h / 2 - wy * GRAPH.sy;
+      if (prev !== null) {
+        var y0 = Math.min(py, prev);
+        ctx.fillStyle = '#f0c040';
+        ctx.fillRect(GRAPH.x + col, GRAPH.y + y0, 1, Math.abs(py - prev) + 1);
+      }
+      prev = py;
+    }
+
+    // Punkt S (folgt der Einstellung bzw. der Aufgabe) und Punkt P,
+    // ebenfalls auf das Panel begrenzt
+    var sxp = cx + xs * GRAPH.sx;
+    var syp = cy - ys * GRAPH.sy;
+    r.px(sxp - 2, syp - 2, 4, 4, '#f6f0e2');
+    var pxp = cx + task.graphFix.xp * GRAPH.sx;
+    var pyp = cy - task.graphFix.yp * GRAPH.sy;
+    for (var c = -2; c <= 2; c++) {
+      r.px(pxp + c, pyp + c, 1, 1, '#7ec97e');
+      r.px(pxp + c, pyp - c, 1, 1, '#7ec97e');
+    }
+    Font.draw(ctx, 'S', sxp + 4, syp - 3, '#f6f0e2');
+    Font.draw(ctx, 'P', pxp + 4, pyp - 3, '#7ec97e');
+    ctx.restore();
+
+    // Eine Zeile je einstellbarem Parameter: Minus, Wert, Plus
+    for (var f = 0; f < task.felder.length; f++) {
+      var key = task.felder[f].key;
+      var minus = graphBtnRect(f, false);
+      var plus = graphBtnRect(f, true);
+      var sel = f === graphSel && phase === 'input';
+      var ramen = sel ? '#f0c040' : '#efe4c4';
+      var farbe = sel ? '#3a3450' : '#2e2a3e';
+      r.px(minus.x, minus.y, minus.w, minus.h, farbe);
+      r.px(minus.x, minus.y, minus.w, 1, ramen);
+      r.px(minus.x, minus.y + minus.h - 1, minus.w, 1, ramen);
+      r.px(minus.x, minus.y, 1, minus.h, ramen);
+      r.px(minus.x + minus.w - 1, minus.y, 1, minus.h, ramen);
+      r.px(plus.x, plus.y, plus.w, plus.h, farbe);
+      r.px(plus.x, plus.y, plus.w, 1, ramen);
+      r.px(plus.x, plus.y + plus.h - 1, plus.w, 1, ramen);
+      r.px(plus.x, plus.y, 1, plus.h, ramen);
+      r.px(plus.x + plus.w - 1, plus.y, 1, plus.h, ramen);
+      Font.draw(ctx, '-', minus.x + Math.floor((minus.w - Font.width('-')) / 2), minus.y + 4, '#f6f0e2');
+      Font.draw(ctx, '+', plus.x + Math.floor((plus.w - Font.width('+')) / 2), plus.y + 4, '#f6f0e2');
+      var wert = key + '=' + Tasks.fmt(graphVals[key]);
+      Font.draw(ctx, wert, 190 + Math.floor((30 - Font.width(wert)) / 2), minus.y + 4, sel ? '#f0c040' : '#f6f0e2');
+    }
+
+    // OK-Taste
+    var ok = okRect();
+    r.px(ok.x, ok.y, ok.w, ok.h, '#3a6a3a');
+    r.px(ok.x, ok.y, ok.w, 1, '#efe4c4');
+    r.px(ok.x, ok.y + ok.h - 1, ok.w, 1, '#efe4c4');
+    r.px(ok.x, ok.y, 1, ok.h, '#efe4c4');
+    r.px(ok.x + ok.w - 1, ok.y, 1, ok.h, '#efe4c4');
+    Font.draw(ctx, 'OK', ok.x + Math.floor((ok.w - Font.width('OK')) / 2), ok.y + 5, '#f6f0e2');
   }
 
   // Kleiner grüner Haken (Form, nicht nur Farbe)
