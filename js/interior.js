@@ -415,7 +415,7 @@ var Interior = (function () {
           'Man sagt, die Lehrerinnen und Lehrer werden im Schloss gefangen gehalten.',
           'Nur wer alle Dungeons löst, kann das Schloss befreien. Pass auf dich auf!'
         ],
-        // Zusatzseite nach dem ersten Wappen (Vorschlag)
+        // Zusatzseite nach dem ersten Wappen (freigegeben)
         later: { wappen: 1, texts: ['Graf Gerade? Von dem habe ich noch nie gehört … Aber du hast den ersten Wächter befreit! Ich bin so stolz auf dich.'] }
       },
       // Mutter wiegt sich beim Rühren leicht hin und her

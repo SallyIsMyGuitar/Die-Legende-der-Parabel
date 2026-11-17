@@ -210,7 +210,7 @@
           'Übrigens: Ein Schluck aus dem Brunnen auf dem Dorfplatz füllt deine Herzen wieder auf.',
           'Und solltest du einmal alle Herzen verlieren, kommst du an der Quelle wieder zu dir, an der du zuletzt getrunken hast.'
         ],
-        // Zusatzseite nach dem ersten Wappen (Vorschlag)
+        // Zusatzseite nach dem ersten Wappen (freigegeben)
         later: { wappen: 1, texts: ['Ich wusste es! Wer einen Wächter befreien kann, der baut auch die Schule wieder auf.'] }
       },
       // Schaukeln im Schaukelstuhl
@@ -369,7 +369,7 @@
           'Keine Schule – klingt erst mal super, oder?',
           'Na ja … ehrlich gesagt vermisse ich sogar Mathe. Schau mal, mein Parabel-Poster!'
         ],
-        // Zusatzseite nach dem ersten Wappen (Vorschlag)
+        // Zusatzseite nach dem ersten Wappen (freigegeben)
         later: { wappen: 1, texts: ['Du hast einen Wächter mit Parabeln besiegt? Krass! Ich sag ja: Mathe ist eine Superkraft.'] }
       },
       // leichtes Wippen auf den Fußspitzen
@@ -541,7 +541,7 @@
           'Willkommen! Hefte, Stifte, Bücher – alles da.',
           'Ohne Schule kauft leider kaum jemand etwas. Kaufen geht noch nicht.'
         ],
-        // Zusatzseite nach dem ersten Wappen (Vorschlag)
+        // Zusatzseite nach dem ersten Wappen (freigegeben)
         later: { wappen: 1, texts: ['Man erzählt sich, du hast den Wächter der Höhle befreit! Wenn die Schule wieder öffnet, gibt es Hefte zum halben Preis.'] }
       },
       frame: function (t) {

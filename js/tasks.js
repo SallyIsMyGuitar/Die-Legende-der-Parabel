@@ -233,7 +233,7 @@ var Tasks = (function () {
 
   // --- Boss der Hoehle der Parabeln: feste, von der Lehrkraft gepruefte Aufgaben
   // Thema des Dungeons: Normalparabel und Parameter.
-  // Sie verbinden alles, was auf dem Weg geuebt wurde (Vorschlag, Freigabe offen).
+  // Sie verbinden alles, was auf dem Weg geuebt wurde (freigegeben).
   var BOSS_HOEHLE = [
     {
       frage: 'Gib den Scheitelpunkt der Parabel y = −0,5(x + 2)² + 3 an.',

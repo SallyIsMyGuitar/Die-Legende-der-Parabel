@@ -89,6 +89,7 @@ Ein Mathe-Übungsspiel als Top-Down-Abenteuer im Stil eines modernen 2D-Zelda (O
   - *Freund:* „Keine Schule – klingt erst mal super, oder?“ / „Na ja … ehrlich gesagt vermisse ich sogar Mathe. Schau mal, mein Parabel-Poster!“
   - *Verkäufer:* „Willkommen! Hefte, Stifte, Bücher – alles da.“ / „Ohne Schule kauft leider kaum jemand etwas. Kaufen geht noch nicht.“
   - *Schild am Schultor:* „GESPERRT. Die Schule bleibt geschlossen, bis die Lehrkräfte zurück sind.“
+  - *Überarbeitung Story (freigegeben):* Texte von Wanderin, Förster und Einsiedler (`world.js`), Schild an der Ruine, Forscherin, Alte Inschrift und Steintafel nach dem Sieg (`dungeon.js`), Bann-Texte sowie Vorstellung und Sieg des Wächters (`main.js`), Zusatzseiten nach dem ersten Wappen für Mama, Nachbarin, Freund und Verkäufer (`interior.js`, `rooms.js`). Der Wortlaut steht im Code und wird nur nach Go geändert.
 - Auf dem Weg zu jedem Dungeon stehen Erklär-NPCs mit kurzen Dialogen, je ein Gedanke pro Dialog. Dort gibt es Pflicht-Rätsel, leicht und direkt an die Erklärung gekoppelt, als Verständnis-Check.
 - Alles Gehörte (Merksätze der Erklär-NPCs) landet automatisch in einem Merkbuch, das jederzeit geöffnet werden kann, auch mitten in einer Aufgabe.
 - Die Dungeons sind strikt linear. Der Sieg über den Dungeon-Boss öffnet das nächste Tor (Felsen, Wasser, Sandsturm, Burgtor), gibt ein Wappen als reine Trophäe ohne Funktion und enthüllt einen weiteren Teil der Geschichte.
@@ -143,9 +144,7 @@ Gebaut wird immer nur der Meilenstein, den der Nutzer freigibt, mit Test nach je
 
 ## Offene Fragen (vor der Umsetzung mit dem Nutzer klären)
 
-- **Überarbeitung Spielbarkeit und Story (Vorschläge, noch freizugeben):** neue Texte von Wanderin, Förster, Einsiedler, Forscherin, Alter Inschrift, Schild an der Ruine, Bann, Wächter (Vorstellung und Sieg), Steintafel nach dem Sieg, Zusatzseiten nach dem ersten Wappen (Mama, Nachbarin, Freund, Verkäufer) sowie die drei neuen festen Boss-Aufgaben (S von y = −0,5(x + 2)² + 3; a aus S(1|−4) und P(3|4); Graph mit S(−1|3) und P(1|1), a = −0,5).
-
-- Neue Texte noch freigeben: Nachbarin (3. und 4. Seite: „Übrigens: Ein Schluck aus dem Brunnen auf dem Dorfplatz füllt deine Herzen wieder auf.“ / „Und solltest du einmal alle Herzen verlieren, kommst du an der Quelle wieder zu dir, an der du zuletzt getrunken hast.“). Die Texte von Brunnen und Rücksprung sind im Spiel, die neuen Texte seit dem Schwert (Truhe, Schwert-Zerbrechen, Schwert-Verlust beim Rücksprung), der Forscherin, der Steintafel und des Boss-Siegs sind Vorschläge und noch nicht ausdrücklich freigegeben.
+- Neue Texte noch freigeben: Nachbarin (3. und 4. Seite: „Übrigens: Ein Schluck aus dem Brunnen auf dem Dorfplatz füllt deine Herzen wieder auf.“ / „Und solltest du einmal alle Herzen verlieren, kommst du an der Quelle wieder zu dir, an der du zuletzt getrunken hast.“). Die Texte von Brunnen und Rücksprung sind im Spiel, die neuen Texte seit dem Schwert (Truhe, Schwert-Zerbrechen, Schwert-Verlust beim Rücksprung) sind Vorschläge und noch nicht ausdrücklich freigegeben.
 
 - Schriftgröße der Dialoge: Die Pixelschrift ist auf 256 × 224 ausgelegt; auf dem iPad prüfen, ob sie groß genug ist.
 
@@ -168,7 +167,7 @@ Gebaut wird immer nur der Meilenstein, den der Nutzer freigibt, mit Test nach je
 - **Graph-Modus (Variante C):** Nur „Scheitelform aufstellen“ nutzt die Parabel-Eingabe mit live gezeichneter Parabel. Der Punkt P ist versteckt, bis ein Fehler passiert – ohne P muss gerechnet werden. „Streckfaktor a bestimmen“ nutzt Zahleneingabe mit großen Wertebereichen.
 - **Schwert:** Taste E oder Antippen des Schwert-Slots im HUD (links neben A und B; davor der Buch-Platz). Ein Einsatz überspringt die Aufgabe ohne Herz-Drop, das Schwert zerbricht. Es wirkt nicht bei Bossen, in der Rätsel-Truhe und in der Probeaufgabe. Bei null Herzen geht es verloren. Die Truhe an der Ruine (freiwilliges Rätsel, abbrechbar mit B) ist die Belohnungsquelle.
 - **Merkbuch:** Taste M oder Buch-Symbol im HUD, jederzeit öffnen (pausiert auch Kämpfe), hoch/runter blättern, B schließt. Merksätze der Erklär-NPCs landen beim Ansprechen automatisch darin (Wanderin, Förster, Forscherin).
-- **Boss des ersten Dungeons:** Drei feste, freigegebene Aufgaben (a = 1 der Normalparabel; Scheitel S(0|0); Graph: y = 0,5(x − 3)² − 2 mit P(5|0)). Pro richtiger Antwort verliert der Wächter ein Herz; nach dem Sieg öffnet sich das Tor, ein Story-Dialog enthüllt einen Teil der Geschichte und das erste Wappen wird gezählt (Anzeige im Abspann, später).
+- **Boss des ersten Dungeons:** Drei feste, freigegebene Aufgaben (siehe Lernpfad Dungeon 1; ersetzen die früheren Aufgaben a = 1, S(0|0) und y = 0,5(x − 3)² − 2). Pro richtiger Antwort verliert der Wächter ein Herz; nach dem Sieg öffnet sich das Tor, ein Story-Dialog enthüllt einen Teil der Geschichte und das erste Wappen wird gezählt (Anzeige im Abspann, später).
 - **Speichern:** automatisch im Local Storage (Schlüssel `legende-der-parabel-v1`) an Rastquellen, nach dem Boss und nach jedem Fortschritt (Gegner erlöst, Truhe, neuer Merksatz, Szene). Gespeichert werden: letzte Rastquelle, besiegte Gegner, Truhe, Schwert, Merkbuch, Boss, Wappen, Szene mit Herrn Späth, Fehlerstatistik (richtig/falsch). Geladen wird immer an der letzten Rastquelle mit vollen Herzen.
 - **Titelbild:** „A: Spiel starten“ bzw. mit Spielstand „A: Weiterspielen / B: Neues Spiel“ (mit Rückfrage, löscht den Spielstand). Hinweis: Der Spielstand bleibt nur auf diesem Gerät.
 - **Balance:** 4 Herzen, Herz-Drop bei jedem 2. Sieg im ersten Versuch (`config.js`).
@@ -180,6 +179,6 @@ Gebaut wird immer nur der Meilenstein, den der Nutzer freigibt, mit Test nach je
   - Höhle, Halle – Forscherin: P einsetzen, a berechnen → „Streckfaktor a bestimmen“
   - Höhle, Mittelraum – Alte Inschrift an der Wand: Scheitelform aufstellen → „Scheitelform aufstellen“ (Graph)
   - Truhe (Plus, freiwillig): „Verschiebung“ (y = ax² wird verschoben, Scheitelform angeben)
-  - Boss: drei feste Aufgaben, die alles verbinden; vor der ersten Aufgabe stellt sich der Wächter vor.
+  - Boss: drei feste, freigegebene Aufgaben, die alles verbinden (S von y = −0,5(x + 2)² + 3 → S(−2|3); a aus S(1|−4) und P(3|4) → a = 2; Graph mit S(−1|3) und P(1|1) → y = −0,5(x + 1)² + 3); vor der ersten Aufgabe stellt sich der Wächter vor.
 - **Formeln im Text:** Der Zeilenumbruch trennt nie an Rechenzeichen (=, +, −, <, >), Formeln bleiben in einer Zeile.
 - **Rastquellen bisher:** Brunnen im Dorfplatz, steinerne Quelle vor dem Dungeon-Eingang an der Ruine, Quelle im Dungeon-Mittelraum. Alle speichern automatisch und füllen die Herzen auf.
