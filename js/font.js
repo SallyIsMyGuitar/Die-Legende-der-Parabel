@@ -135,9 +135,25 @@ var Font = (function () {
     return cx - x;
   }
 
-  // Zeilenumbruch an Wortgrenzen
+  // Rechenzeichen, an denen nie umbrochen wird (Formeln bleiben zusammen)
+  var OPS = { '=': 1, '+': 1, '-': 1, '\u2212': 1, '<': 1, '>': 1 };
+
+  // Woerter zu Bloecken zusammenfassen: ein alleinstehendes Rechenzeichen
+  // klebt am Wort davor und danach, z. B. "y = x² + 3" bleibt in einer Zeile
+  function glue(text) {
+    var raw = text.split(' '), out = [];
+    for (var i = 0; i < raw.length; i++) {
+      var prev = out.length ? out[out.length - 1] : null;
+      var lastWord = prev ? prev.split(' ').pop() : '';
+      if (prev !== null && (OPS[raw[i]] || OPS[lastWord])) out[out.length - 1] = prev + ' ' + raw[i];
+      else out.push(raw[i]);
+    }
+    return out;
+  }
+
+  // Zeilenumbruch an Wortgrenzen (nicht innerhalb von Formeln)
   function wrap(text, maxW) {
-    var words = text.split(' '), lines = [], line = '';
+    var words = glue(text), lines = [], line = '';
     for (var i = 0; i < words.length; i++) {
       var test = line ? line + ' ' + words[i] : words[i];
       if (width(test) > maxW && line) {

@@ -106,6 +106,22 @@
     r.px(x - 2, y + h + 1, w + 4, 1, '#332f40');
   }
 
+  // Alte Inschrift an der Hoehlenwand im Mittelraum (Kachel 6,1)
+  function inscription(r) {
+    var x = 6 * TILE, y = 1 * TILE;
+    r.px(x + 2, y + 2, 12, 12, '#5e5870');
+    r.px(x + 3, y + 3, 10, 10, '#8a8496');
+    r.px(x + 3, y + 3, 10, 1, '#a8a2b4');
+    // eingeritzte Zeilen und eine kleine Parabel
+    r.px(x + 5, y + 6, 6, 1, '#3e3a4a');
+    r.px(x + 5, y + 8, 5, 1, '#3e3a4a');
+    r.px(x + 4, y + 9, 1, 2, '#3e3a4a');
+    r.px(x + 5, y + 11, 1, 1, '#3e3a4a');
+    r.px(x + 6, y + 12, 4, 1, '#3e3a4a');
+    r.px(x + 10, y + 11, 1, 1, '#3e3a4a');
+    r.px(x + 11, y + 9, 1, 2, '#3e3a4a');
+  }
+
   // Wasserschimmer (animiert)
   function poolShimmer(r, t) {
     var x = 7 * TILE, y = 4 * TILE, w = 2 * TILE, h = 4 * TILE;
@@ -222,17 +238,18 @@
       '8,12': { screen: 'ruine', x: 6 * TILE, y: 5 * TILE, facing: 'down' }
     },
     torches: [[4, 1], [11, 1], [4, 12], [11, 12]],
-    // Erklaer-NPC der Hoehle: Merksatz zur Scheitelform
+    // Erklaer-NPC der Hoehle: Merksatz zum Bestimmen von a
     npc: {
       x: 3 * TILE, y: 2 * TILE,
-      sprites: function () { return People.wanderer(); },
+      sprites: function () { return People.researcher(); },
       talk: {
         name: 'Forscherin',
         texts: [
-          'Ich erforsche die Parabeln dieser H\u00f6hle. Merke dir: Aus dem Scheitel S(xs|ys) und einem weiteren Punkt P stellst du die Scheitelform auf.',
-          'Die Flederm\u00e4use und Kristallgeister pr\u00fcen genau das. Besiegst du sie alle, wartet vor dem verschlossenen Tor der W\u00e4chter des Bosses.'
+          'Oh, Besuch! Ich erforsche diese Höhle. Seit der Bann wirkt, flattern hier verzauberte Fledermäuse herum.',
+          'Sie fragen nach dem Streckfaktor a. Kennst du den Scheitel S und einen Punkt P, setzt du P in y = a(x − xs)² + ys ein und löst nach a auf.',
+          'Beispiel: S(1|2) und P(3|10). Dann gilt 10 = a(3 − 1)² + 2, also 10 = 4a + 2, 8 = 4a und a = 2.'
         ],
-        merk: { id: 'scheitelform', name: 'Scheitelform aufstellen', text: 'Aus S(xs|ys) und Punkt P ergibt sich die Scheitelform: Setze beide Punkte in y = a(x \u2212 xs)\u00b2 + ys ein.' }
+        merk: { id: 'abestimmen', name: 'Streckfaktor a bestimmen', text: 'Setze P in y = a(x − xs)² + ys ein und löse nach a auf. Beispiel: S(1|2), P(3|10): 10 = 4a + 2, also a = 2.' }
       },
       frame: function (t) { return { i: 0, dx: 0, dy: 0 }; }
     }
@@ -261,8 +278,22 @@
       '8,12': { room: 'dhalle', x: 8 * TILE, y: 2 * TILE, facing: 'down' }
     },
     torches: [[4, 1], [11, 1], [4, 12], [11, 12]],
-    bakeExtra: poolBake,
+    bakeExtra: function (r) {
+      poolBake(r);
+      inscription(r);
+    },
     objects: [
+      {
+        // Erklaer-Objekt: Merksatz zum Aufstellen der Scheitelform
+        tiles: [[6, 1]],
+        x: 6 * TILE, y: 1 * TILE,
+        name: 'Alte Inschrift',
+        texts: [
+          'In den Stein ist geritzt: Wer die Scheitelform aufstellen will, nimmt xs und ys aus dem Scheitel S. Den Streckfaktor a liefert der Punkt P.',
+          'Darunter steht kleiner: Die Kristallgeister zeigen P erst, wenn man sich irrt. Also erst rechnen, dann einstellen!'
+        ],
+        merk: { id: 'spfaufstellen', name: 'Scheitelform aufstellen', text: 'xs und ys aus dem Scheitel S ablesen, dann P einsetzen und a berechnen. Ergebnis: y = a(x − xs)² + ys.' }
+      },
       {
         // Rastquelle: heilt alle Herzen, speichert die Ruecksprung-Stelle
         tiles: [[7, 3], [8, 3], [6, 4], [6, 5], [6, 6], [6, 7],
@@ -307,7 +338,9 @@
         tiles: [[6, 3], [7, 3]],
         x: 7 * TILE, y: 3 * TILE,
         name: 'Steintafel',
-        texts: ['Verschlossen. Erst wenn der W\u00e4chter der H\u00f6hle der Parabeln besiegt ist, \u00f6ffnet sich dieses Tor.']
+        texts: ['Verschlossen. Erst wenn der W\u00e4chter der H\u00f6hle der Parabeln besiegt ist, \u00f6ffnet sich dieses Tor.'],
+        // nach dem ersten Wappen ersetzt dieser Text den obigen
+        later: { wappen: 1, replace: true, texts: ['Das Tor steht offen, doch dahinter ist der Gang verschüttet. Der Weg zum nächsten Wächter muss woanders beginnen.'] }
       }
     ]
   };

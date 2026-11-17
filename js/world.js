@@ -115,10 +115,11 @@ var World = (function () {
           talk: {
             name: 'Wanderin',
             texts: [
-              'Die Normalparabel hat die Gleichung y = x². Ihr Scheitel liegt im Ursprung.',
-              'Die Pilzwesen hier fragen dich genau danach. Seit die Schule zerstört wurde, traut sich kaum jemand mehr auf diese Wiese.'
+              'Hallo! Seit die Schule zerstört ist, liegt ein seltsamer Bann über dem Land. Sogar die Pilzwesen hier sind verzaubert.',
+              'Sie lassen nur durch, wer die Normalparabel kennt: y = x². Ihr Scheitel liegt im Ursprung, also bei S(0|0).',
+              'Ein Punkt liegt auf der Normalparabel, wenn y = x² gilt. Zum Beispiel P(3|9), denn 3² = 9. Aber auch P(−3|9), denn (−3)² = 9!'
             ],
-            merk: { id: 'normalparabel', name: 'Normalparabel', text: 'Die Normalparabel ist y = x² mit Scheitel S(0|0).' }
+            merk: { id: 'normalparabel', name: 'Normalparabel', text: 'Die Normalparabel hat die Gleichung y = x² und den Scheitel S(0|0). P(x|y) liegt auf ihr, wenn y = x² gilt, z. B. P(−3|9).' }
           }
         }
       ],
@@ -150,10 +151,11 @@ var World = (function () {
           talk: {
             name: 'Förster',
             texts: [
-              'Je größer a, desto schmaler die Parabel. a streckt oder staucht sie.',
-              'Die Moosgeister prüfen genau das. Bestehst du, erreichst du die Ruine und kommst der Höhle der Parabeln einen Schritt näher.'
+              'Vor ein paar Nächten zog ein Graf mit einem Heer aus Linealen durch meinen Wald. Seitdem sind die Moosgeister wie verhext.',
+              'Sie fragen nach dem Streckfaktor a in y = ax². Ist |a| > 1, ist die Parabel gestreckt, also schmaler. Ist |a| < 1, ist sie gestaucht, also breiter.',
+              'Und ist a negativ, ist die Parabel nach unten geöffnet. Mit dem Faktor 2 gestreckt und nach unten geöffnet heißt also: y = −2x².'
             ],
-            merk: { id: 'streckfaktor', name: 'Streckfaktor a', text: 'a streckt die Parabel (|a| > 1) oder staucht sie (|a| < 1).' }
+            merk: { id: 'streckfaktor', name: 'Streckfaktor a', text: 'In y = ax² gilt: |a| > 1 gestreckt (schmaler), |a| < 1 gestaucht (breiter). a > 0: nach oben geöffnet, a < 0: nach unten geöffnet.' }
           }
         }
       ],
@@ -179,11 +181,25 @@ var World = (function () {
         'TTTTTTTTTTTTTTTT'
       ],
       buildings: [],
+      npcs: [
+        {
+          x: 12 * TILE, y: 6 * TILE, sprites: function () { return People.hermit(); },
+          talk: {
+            name: 'Einsiedler',
+            texts: [
+              'Du willst in die Höhle der Parabeln? Mutig. Ihr Wächter steht im Bann des Grafen und lässt niemanden vorbei.',
+              'Die Steingolems hier prüfen, ob du verschobene Parabeln verstehst: y = a(x − xs)² + ys hat den Scheitel S(xs|ys).',
+              'Pass beim Vorzeichen auf! Bei y = (x + 3)² − 1 ist xs = −3. Der Scheitel ist also S(−3|−1).'
+            ],
+            merk: { id: 'scheitelform', name: 'Scheitelform', text: 'y = a(x − xs)² + ys hat den Scheitel S(xs|ys). Vorsicht beim Vorzeichen: y = (x + 3)² − 1 hat S(−3|−1).' }
+          }
+        }
+      ],
       signs: [
         {
           tiles: [[5, 5]], x: 5 * 16, y: 5 * 16,
           name: 'Schild',
-          texts: ['Höhle der Parabeln. Der erste Dungeon wartet hinter dieser Mauer. Aus Scheitel und einem Punkt stellst du die Scheitelform auf.']
+          texts: ['Höhle der Parabeln. Wer eintreten will, muss erst die verzauberten Wesen vor dem Eingang erlösen.']
         },
         {
           // Freiwillige R\u00e4tsel-Truhe mit dem Schwert als Belohnung
@@ -329,7 +345,7 @@ var World = (function () {
       for (var j = 0; j < signs[i].tiles.length; j++) {
         var t = signs[i].tiles[j];
         if (t[0] === tx && t[1] === ty) {
-          return { name: signs[i].name, texts: signs[i].texts, action: signs[i].action, spawn: signs[i].spawn, hintX: signs[i].x, hintY: signs[i].y };
+          return { name: signs[i].name, texts: signs[i].texts, action: signs[i].action, spawn: signs[i].spawn, merk: signs[i].merk, later: signs[i].later, hintX: signs[i].x, hintY: signs[i].y };
         }
       }
     }
@@ -338,7 +354,7 @@ var World = (function () {
     for (var k = 0; k < npcs.length; k++) {
       var n = npcs[k];
       if (Math.floor(n.x / TILE) === tx && Math.floor(n.y / TILE) === ty) {
-        return { name: n.talk.name, texts: n.talk.texts, merk: n.talk.merk, hintX: n.x + 8, hintY: n.y, npc: n };
+        return { name: n.talk.name, texts: n.talk.texts, merk: n.talk.merk, later: n.talk.later, hintX: n.x + 8, hintY: n.y, npc: n };
       }
     }
     return null;
@@ -362,8 +378,9 @@ var World = (function () {
   function doorRect(b) { return Buildings.doorRect(b); }
 
   // Rätsel-Truhe öffnen (p = 0 zu, 1 offen) auf dem aktuellen Bildschirm
-  function setChestOpen(p) {
-    if (states[current]) states[current].chestOpen = p;
+  function setChestOpen(p, screen) {
+    var st = states[screen || current];
+    if (st) st.chestOpen = p;
   }
 
   // Pixelposition der Truhe auf dem aktuellen Bildschirm (oder null)

@@ -188,7 +188,27 @@ var People = (function () {
     }));
   }
 
+  // Forscherin (Hoehle): blonde Haare, heller Forschermantel, dunkle Hose
+  function researcher() {
+    return dirs(pal({
+      h: '#d8b860', H: '#f0d888',
+      t: '#e4e2ea', T: '#ffffff', D: '#a8a4b4',
+      p: '#3a3a4a', B: '#5a3a24'
+    }));
+  }
+
+  // Einsiedler (Ruine): weisse Haare, brauner Umhang, Sandalen
+  function hermit() {
+    return dirs(pal({
+      h: '#e8e4dc', H: '#ffffff',
+      t: '#7a5a3a', T: '#9a7650', D: '#56402a',
+      p: '#6a5038', B: '#a07850'
+    }));
+  }
+
   return {
+    researcher: researcher,
+    hermit: hermit,
     mother: mother,
     neighbor: neighbor,
     friend: friend,

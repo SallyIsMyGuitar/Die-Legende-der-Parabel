@@ -169,6 +169,8 @@ var Merkbuch = (function () {
     draw: draw,
     drawHud: drawHud,
     all: function () { return entries.slice(); },
+    // Spielstand laden: gespeicherte Eintraege uebernehmen
+    load: function (list) { entries = (list || []).slice(); },
     count: function () { return entries.length; },
     isActive: function () { return active; }
   };

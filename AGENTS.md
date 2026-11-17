@@ -11,6 +11,7 @@ Diese Anweisung gilt dauerhaft für alle Arbeiten in diesem Projekt. Lies sie vo
 - Schreibe klaren, gut kommentierten Code (Kommentare auf Deutsch) ohne unnötige Komplexität. Keine externen Bibliotheken, keine externen Schriften, keine Build-Werkzeuge, kein Server.
 - Kommuniziere auf Deutsch, knapp und direkt.
 - Erfinde keine personenbezogenen Daten. Das Spiel sammelt und sendet keine Daten. Figuren im Spiel tragen Rollenbezeichnungen (Mama, Nachbarin, Freund, Verkäufer), keine echten Namen.
+- **Lehrkräfte mit echtem Namen** (z. B. Herr Späth): Legt der Nutzer eine Lehrkraft mit Namen an, bleiben ihre Texte, ihr Aussehen und ihre Eigenheiten genau so, wie der Nutzer sie festgelegt hat. Nicht umschreiben, nicht „glätten“, nicht anonymisieren – auch nicht bei Überarbeitungen der übrigen Dialoge.
 - **Git:** Gearbeitet wird direkt auf `main` (keine Arbeitszweige). Nach jedem freigegebenen Schritt wird auf `main` gepusht; GitHub Pages veröffentlicht von `main` automatisch neu. Springt der Pages-Build nicht an, wird ein Neu-Deploy ausgelöst.
 - Halte diese Datei aktuell: Wenn der Nutzer neue Regeln, Texte oder Entscheidungen freigibt, schlage eine passende Ergänzung von `AGENTS.md` vor.
 
@@ -22,6 +23,8 @@ Ein Mathe-Übungsspiel als Top-Down-Abenteuer im Stil eines modernen 2D-Zelda (O
 
 - Die Schule im Startdorf ist zerstört und gesperrt. Die Lehrerinnen und Lehrer werden im Schloss gefangen gehalten.
 - Wer oder was dahintersteckt, erfährt man nach und nach durch die besiegten Bosse in den Dungeons.
+- **Gegenspieler (vorläufig): Graf Gerade.** Er duldet nichts, was sich krümmt, und hasst Parabeln am meisten. Deshalb ließ er die Schule zerstören und die Lehrkräfte ins Schloss bringen. Sein Bann aus starren, geraden Linien verzaubert die Wesen der Oberwelt und die Dungeon-Wächter; eine richtige Antwort erlöst sie. Der Name kann später noch geändert werden.
+- Erzählbogen bisher: Mama (Schule zerstört, Lehrkräfte im Schloss) → Wanderin (Bann über dem Land) → Förster (ein Graf mit einem Heer aus Linealen) → Einsiedler (Wächter im Bann des Grafen) → Forscherin → Wächter (stellt sich im Namen von Graf Gerade vor; nach dem Sieg: der Graf hasst Parabeln, hat weitere Wächter und ein Schloss) → Dorfbewohner reagieren nach dem ersten Wappen mit einer Zusatzseite.
 - Wer alle Dungeons löst und das Schloss befreit, befreit die Lehrkräfte. Danach wird die Schule wieder aufgebaut (sichtbar im Dorf, Teil des Finales bzw. Abspanns).
 - Die Spielfigur ist ein Schüler ohne Namen und wird immer nur mit „du“ angesprochen.
 
@@ -31,9 +34,12 @@ Ein Mathe-Übungsspiel als Top-Down-Abenteuer im Stil eines modernen 2D-Zelda (O
 - **Hosting:** GitHub Pages. Die Seite wird als Ordner mit mehreren Dateien ausgeliefert und ist auch als Verknüpfung auf dem Home-Bildschirm nutzbar (Vollbild).
 - **Aufbau:** `index.html`, `css/style.css` und getrennte JavaScript-Dateien, eingebunden per Script-Tags. Kein Build-Schritt, kein Bundler. Aktueller Stand:
   - `config.js`: Spielwerte an einer Stelle (Herzen, Herz-Drop-Rate, Kampf-Cooldown, Rückstoß)
+  - `save.js`: Spielstand im Local Storage (lesen, schreiben, löschen)
+  - `boss.js`: Wächter der Höhle (Herzen, Besiegt-Animation)
+  - `merkbuch.js`: Merkbuch (Sammlung und Ansicht)
   - `render.js`: Canvas-Skalierung (ganzzahlig, scharfe Pixel), Zeichenhilfen, Ebenen, Sprites, Farbhilfen
   - `font.js`: eigene Pixelschrift für Dialoge (Groß-/Kleinbuchstaben, ä, ö, ü, ß, Ziffern, Satzzeichen)
-  - `people.js`: Sprites der Dorfbewohner
+  - `people.js`: Sprites der Dorfbewohner und Erklär-NPCs (Wanderin, Förster, Einsiedler, Forscherin, Herr Späth)
   - `buildings.js`: Häuser, Laden, Schule, Zaun, Tor, Brunnen, Tür-Animation
   - `interior.js`: Raum-Rahmen für Innenräume, gemeinsame Möbel, Elternhaus
   - `rooms.js`: weitere Innenräume (Nachbarin, Freund, Laden)
@@ -131,11 +137,13 @@ Gebaut wird immer nur der Meilenstein, den der Nutzer freigibt, mit Test nach je
 1. Grundgerüst mit Spielfigur, Touch-Steuerung und einem Bildschirm. – **erledigt**
 2. Startdorf und Oberwelt mit Bildschirmwechsel. – **erledigt:** Startdorf (2 Bildschirme), Bildschirmwechsel, 4 betretbare Häuser mit Tür-Animation, Dialogsystem mit NPC-Texten, Spielstart im Elternhaus, Rastquelle am Brunnen (speichert automatisch), drei weitere Bildschirme mit Weg zum ersten Dungeon (Ruine), Szene am Ost-Ausgang mit Herrn Späth (hält die Spielfigur an, gibt einen Tipp, dreht sich beim Gespräch zur Spielfigur).
 3. Kampf- und Aufgabensystem mit Aufgabenvorlagen und Testseite. – **erledigt:** 4 Aufgabentypen, Aufgabenbox mit Zahlenblock und Graph-Modus (Parabel Live einstellen; Punkt P erst nach dem ersten Fehler sichtbar), gestufte Fehler (Herz, Hinweis, Lösung), Besiegt-Animation mit Herz-Drops, Schwert als Joker (E bzw. Slot-Antippen, kein Herz-Drop, Sperre bei Boss/Truhe/Probe), Testseite mit 10 Beispielen je Typ und Probeaufgabe.
-4. Erster kompletter Dungeon mit Erklär-NPCs, Merkbuch und Boss. – **erledigt:** Höhle der Parabeln mit drei Räumen (Eingangshalle, Mittelraum mit Quelle, Vorraum), Höhlen-Optik mit Fackeln, Gegner (Fledermäuse, Kristallgeister), Forscherin als Erklär-NPC, Merkbuch (M bzw. HUD-Symbol, jederzeit öffnen), Wächter-Boss mit 3 festen Aufgaben, Tor-Öffnung nach dem Sieg, Wappenzähler. Rastquellen: Brunnen (Dorf), Quelle vor der Ruine, Quelle im Mittelraum.
+4. Erster kompletter Dungeon mit Erklär-NPCs, Merkbuch und Boss. – **erledigt** (überarbeitet: Speichern, Lernpfad, Bann, Story, siehe „Getroffene Entscheidungen“): Höhle der Parabeln mit drei Räumen (Eingangshalle, Mittelraum mit Quelle, Vorraum), Höhlen-Optik mit Fackeln, Gegner (Fledermäuse, Kristallgeister), Forscherin als Erklär-NPC, Merkbuch (M bzw. HUD-Symbol, jederzeit öffnen), Wächter-Boss mit 3 festen Aufgaben, Tor-Öffnung nach dem Sieg, Wappenzähler. Rastquellen: Brunnen (Dorf), Quelle vor der Ruine, Quelle im Mittelraum.
 5. Die weiteren vier Dungeons einzeln.
 6. Abspann (inkl. Befreiung der Lehrkräfte und Wiederaufbau der Schule), Wiederholungsmodus, Feinschliff.
 
 ## Offene Fragen (vor der Umsetzung mit dem Nutzer klären)
+
+- **Überarbeitung Spielbarkeit und Story (Vorschläge, noch freizugeben):** neue Texte von Wanderin, Förster, Einsiedler, Forscherin, Alter Inschrift, Schild an der Ruine, Bann, Wächter (Vorstellung und Sieg), Steintafel nach dem Sieg, Zusatzseiten nach dem ersten Wappen (Mama, Nachbarin, Freund, Verkäufer) sowie die drei neuen festen Boss-Aufgaben (S von y = −0,5(x + 2)² + 3; a aus S(1|−4) und P(3|4); Graph mit S(−1|3) und P(1|1), a = −0,5).
 
 - Neue Texte noch freigeben: Nachbarin (3. und 4. Seite: „Übrigens: Ein Schluck aus dem Brunnen auf dem Dorfplatz füllt deine Herzen wieder auf.“ / „Und solltest du einmal alle Herzen verlieren, kommst du an der Quelle wieder zu dir, an der du zuletzt getrunken hast.“). Die Texte von Brunnen und Rücksprung sind im Spiel, die neuen Texte seit dem Schwert (Truhe, Schwert-Zerbrechen, Schwert-Verlust beim Rücksprung), der Forscherin, der Steintafel und des Boss-Siegs sind Vorschläge und noch nicht ausdrücklich freigegeben.
 
@@ -161,4 +169,17 @@ Gebaut wird immer nur der Meilenstein, den der Nutzer freigibt, mit Test nach je
 - **Schwert:** Taste E oder Antippen des Schwert-Slots im HUD (links neben A und B; davor der Buch-Platz). Ein Einsatz überspringt die Aufgabe ohne Herz-Drop, das Schwert zerbricht. Es wirkt nicht bei Bossen, in der Rätsel-Truhe und in der Probeaufgabe. Bei null Herzen geht es verloren. Die Truhe an der Ruine (freiwilliges Rätsel, abbrechbar mit B) ist die Belohnungsquelle.
 - **Merkbuch:** Taste M oder Buch-Symbol im HUD, jederzeit öffnen (pausiert auch Kämpfe), hoch/runter blättern, B schließt. Merksätze der Erklär-NPCs landen beim Ansprechen automatisch darin (Wanderin, Förster, Forscherin).
 - **Boss des ersten Dungeons:** Drei feste, freigegebene Aufgaben (a = 1 der Normalparabel; Scheitel S(0|0); Graph: y = 0,5(x − 3)² − 2 mit P(5|0)). Pro richtiger Antwort verliert der Wächter ein Herz; nach dem Sieg öffnet sich das Tor, ein Story-Dialog enthüllt einen Teil der Geschichte und das erste Wappen wird gezählt (Anzeige im Abspann, später).
+- **Speichern:** automatisch im Local Storage (Schlüssel `legende-der-parabel-v1`) an Rastquellen, nach dem Boss und nach jedem Fortschritt (Gegner erlöst, Truhe, neuer Merksatz, Szene). Gespeichert werden: letzte Rastquelle, besiegte Gegner, Truhe, Schwert, Merkbuch, Boss, Wappen, Szene mit Herrn Späth, Fehlerstatistik (richtig/falsch). Geladen wird immer an der letzten Rastquelle mit vollen Herzen.
+- **Titelbild:** „A: Spiel starten“ bzw. mit Spielstand „A: Weiterspielen / B: Neues Spiel“ (mit Rückfrage, löscht den Spielstand). Hinweis: Der Spielstand bleibt nur auf diesem Gerät.
+- **Balance:** 4 Herzen, Herz-Drop bei jedem 2. Sieg im ersten Versuch (`config.js`).
+- **Pflicht-Gegner (Bann):** Ein Bann aus geraden Lichtlinien sperrt den Weg nach vorn (Ostrand von Wiese und Wald, Höhleneingang an der Ruine, Öffnung nach oben in Halle und Mittelraum), bis alle Gegner dieses Bildschirms erlöst sind. Zurück geht es immer. Beim letzten Gegner erscheint „Der Bann löst sich auf“.
+- **Lernpfad Dungeon 1** (Merksatz und Aufgabe passen zusammen, von leicht nach schwer):
+  - Wiese – Wanderin: Normalparabel, Punkt auf y = x² → Typ „Punkt auf der Normalparabel“ (y oder x gesucht)
+  - Wald – Förster: Streckfaktor und Öffnung → Typ „a aus der Beschreibung“ (z. B. mit dem Faktor 2 gestreckt, nach unten geöffnet)
+  - Ruine – Einsiedler: Scheitelform, S(xs|ys), Vorzeichen → „Scheitel ablesen“
+  - Höhle, Halle – Forscherin: P einsetzen, a berechnen → „Streckfaktor a bestimmen“
+  - Höhle, Mittelraum – Alte Inschrift an der Wand: Scheitelform aufstellen → „Scheitelform aufstellen“ (Graph)
+  - Truhe (Plus, freiwillig): „Verschiebung“ (y = ax² wird verschoben, Scheitelform angeben)
+  - Boss: drei feste Aufgaben, die alles verbinden; vor der ersten Aufgabe stellt sich der Wächter vor.
+- **Formeln im Text:** Der Zeilenumbruch trennt nie an Rechenzeichen (=, +, −, <, >), Formeln bleiben in einer Zeile.
 - **Rastquellen bisher:** Brunnen im Dorfplatz, steinerne Quelle vor dem Dungeon-Eingang an der Ruine, Quelle im Dungeon-Mittelraum. Alle speichern automatisch und füllen die Herzen auf.

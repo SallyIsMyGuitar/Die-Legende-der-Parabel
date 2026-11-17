@@ -18,22 +18,22 @@ var Enemies = (function () {
   var TOUCH = 13;            // Ueberlappung in Pixeln, die als Beruehrung zaehlt
 
   // Feste Aufgabentypen je Bildschirm, von leicht zu schwer,
-  // passend zum Tipp des Erklaer-NPCs auf dem jeweiligen Bildschirm
+  // passend zum Merksatz des Erklaer-NPCs auf dem jeweiligen Bildschirm
   var TYPES = {
-    wiese: 'scheitelAblesen',   // Wanderin: Normalparabel, Scheitel
-    wald: 'aBestimmen',         // Foerster: a streckt oder staucht
-    ruine: 'spfAufstellen',     // Waechter vor der Hoehle der Parabeln
-    dhalle: 'scheitelAblesen',  // Hoehle: Normalparabel, Scheitel
-    dmittel: 'aBestimmen'       // Hoehle: a streckt oder staucht
+    wiese: 'normalPunkt',       // Wanderin: Normalparabel y = x²
+    wald: 'aBeschreibung',      // Foerster: a streckt/staucht, Oeffnung
+    ruine: 'scheitelAblesen',   // Einsiedler: Scheitelform, S(xs|ys)
+    dhalle: 'aBestimmen',       // Forscherin: P einsetzen, a berechnen
+    dmittel: 'spfAufstellen'    // Alte Inschrift: Scheitelform aufstellen
   };
 
-  // Kurzer Kontext vor der Aufgabe, nimmt Bezug auf den NPC-Tipp
+  // Kurzer Kontext vor der Aufgabe (die Wesen stehen im Bann von Graf Gerade)
   var KONTEXT = {
-    wiese: 'Erinnerung der Wanderin: Die Normalparabel ist y = x\u00b2.',
-    wald: 'Tipp des Försters: a streckt oder staucht die Parabel.',
-    ruine: 'Der Wächter der Höhle der Parabeln fragt:',
-    dhalle: 'Flattern in der Eingangshalle: Die Normalparabel ist y = x\u00b2, ihr Scheitel ist S(0|0).',
-    dmittel: 'Echo aus der Höhle: a streckt oder staucht die Parabel.'
+    wiese: 'Ein verzaubertes Pilzwesen fragt:',
+    wald: 'Ein verhexter Moosgeist fragt:',
+    ruine: 'Ein Steingolem knirscht:',
+    dhalle: 'Eine Fledermaus kreischt:',
+    dmittel: 'Ein Kristallgeist summt:'
   };
 
   // --- Sprites (16x16, ein Frame; Bewegung ueber Wippen) ---------------------
@@ -321,6 +321,23 @@ var Enemies = (function () {
   // Wievielter Versuch gegen diesen Gegner (1 = erster Kontakt)
   function attemptOf(e) { return e.attempts; }
 
+  // Wie viele Gegner sind auf diesem Bildschirm noch nicht besiegt?
+  // (der Bann am Ausgang loest sich erst bei 0)
+  function remaining(screen) {
+    var n = 0;
+    for (var i = 0; i < enemies.length; i++) {
+      if (enemies[i].screen === screen && !defeated[screen + ':' + enemies[i].index]) n++;
+    }
+    return n;
+  }
+
+  // Speichern/Laden: Liste der besiegten Gegner ('screen:index')
+  function getDefeated() { return Object.keys(defeated); }
+  function setDefeated(list) {
+    defeated = {};
+    (list || []).forEach(function (k) { defeated[k] = true; });
+  }
+
   // Hat der Bildschirm Gegner? (dafuer, ob im Dungeon gezeichnet wird)
   function hasScreen(screen) { return !!DEFS[screen]; }
 
@@ -420,6 +437,9 @@ var Enemies = (function () {
     hasScreen: hasScreen,
     seedOf: seedOf,
     typeIdOf: typeIdOf,
-    contextOf: contextOf
+    contextOf: contextOf,
+    remaining: remaining,
+    getDefeated: getDefeated,
+    setDefeated: setDefeated
   };
 })();

@@ -130,6 +130,8 @@ var Boss = (function () {
     draw: draw,
     drawHearts: drawHearts,
     isFighting: function () { return fighting; },
-    isDefeated: function () { return defeated; }
+    isDefeated: function () { return defeated; },
+    // Spielstand laden: Boss ist schon besiegt (ohne Animation)
+    setDefeated: function () { hp = 0; defeated = true; fighting = false; dieT = 0; }
   };
 })();

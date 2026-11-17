@@ -48,7 +48,8 @@ var Interior = (function () {
         if (objs[o].tiles[j][0] === tx && objs[o].tiles[j][1] === ty) {
           return {
             name: objs[o].name, texts: objs[o].texts, action: objs[o].action,
-            spawn: objs[o].spawn, hintX: objs[o].x, hintY: objs[o].y
+            spawn: objs[o].spawn, merk: objs[o].merk, later: objs[o].later,
+            hintX: objs[o].x, hintY: objs[o].y
           };
         }
       }
@@ -58,7 +59,7 @@ var Interior = (function () {
     var tiles = [[npc.x / TILE, npc.y / TILE]].concat(npc.talkTiles || []);
     for (var i = 0; i < tiles.length; i++) {
       if (tiles[i][0] === tx && tiles[i][1] === ty) {
-        return { name: npc.talk.name, texts: npc.talk.texts, merk: npc.talk.merk, hintX: npc.x + 8, hintY: npc.y };
+        return { name: npc.talk.name, texts: npc.talk.texts, merk: npc.talk.merk, later: npc.talk.later, hintX: npc.x + 8, hintY: npc.y };
       }
     }
     return null;
@@ -413,7 +414,9 @@ var Interior = (function () {
           'Ach, du bist wach! Seit die Schule zerstört wurde, ist es im Dorf so still …',
           'Man sagt, die Lehrerinnen und Lehrer werden im Schloss gefangen gehalten.',
           'Nur wer alle Dungeons löst, kann das Schloss befreien. Pass auf dich auf!'
-        ]
+        ],
+        // Zusatzseite nach dem ersten Wappen (Vorschlag)
+        later: { wappen: 1, texts: ['Graf Gerade? Von dem habe ich noch nie gehört … Aber du hast den ersten Wächter befreit! Ich bin so stolz auf dich.'] }
       },
       // Mutter wiegt sich beim Rühren leicht hin und her
       frame: function (t) { var f = Math.floor(t / 350) % 2; return { i: f, dx: f, dy: 0 }; }
@@ -452,7 +455,12 @@ var Interior = (function () {
       def.bakeOverlay(Render);
     }
     Render.setTarget(null);
-    if (def.npc) st.sprites = def.npc.sprites();
+    if (def.npc) {
+      // Figuren aus People liefern entweder [Bild, Blinzeln] oder Blickrichtungen
+      // ({ down, up, left, right }); im Raum wird die Vorderansicht genutzt.
+      var sp = def.npc.sprites();
+      st.sprites = sp.down || sp;
+    }
     def.state = st;
     return st;
   }

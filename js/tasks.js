@@ -144,12 +144,78 @@ var Tasks = (function () {
     };
   }
 
+  // --- Typ 5 (Wiese, leicht): Punkt auf der Normalparabel ---
+  // Passt zum Tipp der Wanderin: P(x|y) liegt auf y = x², wenn y = x² gilt.
+  // Mal ist y gesucht, mal das (positive oder negative) x.
+  function normalPunkt(rng) {
+    var x = randInt(rng, 1, 6) * pick(rng, [1, -1]);
+    var y = x * x;
+    if (rng() < 0.5) {
+      return {
+        frage: 'Der Punkt P(' + fmt(x) + '|y) liegt auf der Normalparabel y = x². Gib y an.',
+        felder: [{ key: 'y', label: 'y' }],
+        loesung: [y],
+        loesungstext: 'y = (' + fmt(x) + ')² = ' + fmt(y),
+        hinweis: 'Setze x in y = x² ein. Achtung: (−3)² = 9.'
+      };
+    }
+    var vz = x > 0 ? 'positiv' : 'negativ';
+    return {
+      frage: 'Der Punkt P(x|' + fmt(y) + ') liegt auf der Normalparabel y = x². x ist ' + vz + '. Gib x an.',
+      felder: [{ key: 'x', label: 'x' }],
+      loesung: [x],
+      loesungstext: 'x = ' + fmt(x) + ', denn (' + fmt(x) + ')² = ' + fmt(y),
+      hinweis: 'Welche Zahl ergibt quadriert ' + fmt(y) + '? Beachte das Vorzeichen.'
+    };
+  }
+
+  // --- Typ 6 (Wald, leicht bis mittel): a aus der Beschreibung ---
+  // Passt zum Tipp des Foersters: gestreckt/gestaucht und Oeffnung.
+  function aBeschreibung(rng) {
+    var betrag = pick(rng, [0.5, 2, 3, 0.5, 1.5, 4]);
+    var a = betrag * pick(rng, [1, -1]);
+    var form = betrag > 1 ? 'mit dem Faktor ' + fmt(betrag) + ' gestreckt'
+      : 'mit dem Faktor ' + fmt(betrag) + ' gestaucht';
+    var oeffnung = a > 0 ? 'nach oben' : 'nach unten';
+    return {
+      frage: 'Die Parabel y = ax² ist ' + form + ' und ' + oeffnung + ' geöffnet. Gib a an.',
+      felder: [{ key: 'a', label: 'a' }],
+      loesung: [a],
+      loesungstext: 'a = ' + fmt(a) + ', also ' + spfText(a, 0, 0),
+      hinweis: '|a| ist der Faktor. Nach unten geöffnet heißt: a ist negativ.'
+    };
+  }
+
+  // --- Typ 7 (Truhe, plus): verschobene Parabel in Scheitelform ---
+  // Passt zum Tipp des Einsiedlers: Verschiebung ergibt S(xs|ys).
+  function verschiebung(rng) {
+    var a = pick(rng, [0.5, 2, -1, -2, 3, -0.5]);
+    var xs, ys;
+    do {
+      xs = randInt(rng, -4, 4);
+      ys = randInt(rng, -4, 4);
+    } while (xs === 0 || ys === 0);
+    var rl = xs > 0 ? 'um ' + xs + ' nach rechts' : 'um ' + (-xs) + ' nach links';
+    var ou = ys > 0 ? 'um ' + ys + ' nach oben' : 'um ' + (-ys) + ' nach unten';
+    return {
+      frage: 'Die Parabel ' + spfText(a, 0, 0) + ' wird ' + rl + ' und ' + ou + ' verschoben. Gib die Scheitelform an.',
+      felder: [{ key: 'a', label: 'a' }, { key: 'xs', label: 'xs' }, { key: 'ys', label: 'ys' }],
+      loesung: [a, xs, ys],
+      loesungstext: spfText(a, xs, ys),
+      hinweis: 'Verschieben ändert a nicht. Rechts: xs > 0, unten: ys < 0.'
+    };
+  }
+
   // --- Liste aller Aufgabentypen (sp\u00e4ter kommen weitere Abschnitte dazu) ---
+  // Reihenfolge wie im Spiel: Wiese, Wald, Ruine, Hoehle (Halle, Mitte), Truhe
   var TYPES = [
+    { id: 'normalPunkt', name: 'Punkt auf der Normalparabel', make: normalPunkt },
+    { id: 'aBeschreibung', name: 'a aus der Beschreibung', make: aBeschreibung },
     { id: 'scheitelAblesen', name: 'Scheitel ablesen (Scheitelform)', make: scheitelAblesen },
     { id: 'scheitelAllgemein', name: 'Scheitel (allg. Form)', make: scheitelAllgemein },
+    { id: 'aBestimmen', name: 'Streckfaktor a bestimmen', make: aBestimmen },
     { id: 'spfAufstellen', name: 'Scheitelform aufstellen', make: spfAufstellen },
-    { id: 'aBestimmen', name: 'Streckfaktor a bestimmen', make: aBestimmen }
+    { id: 'verschiebung', name: 'Verschiebung (Truhe)', make: verschiebung }
   ];
 
   // Eine Aufgabe erzeugen; gleicher Typ + gleicher Samen = gleiche Aufgabe.
@@ -167,29 +233,30 @@ var Tasks = (function () {
 
   // --- Boss der Hoehle der Parabeln: feste, von der Lehrkraft gepruefte Aufgaben
   // Thema des Dungeons: Normalparabel und Parameter.
+  // Sie verbinden alles, was auf dem Weg geuebt wurde (Vorschlag, Freigabe offen).
   var BOSS_HOEHLE = [
     {
-      frage: 'Die Normalparabel: Gib ihren Streckfaktor a an.',
-      felder: [{ key: 'a', label: 'a' }],
-      loesung: [1],
-      loesungstext: 'y = x\u00b2, also a = 1',
-      hinweis: 'Die Normalparabel ist y = x\u00b2.'
-    },
-    {
-      frage: 'An welcher Stelle liegt der Scheitel der Normalparabel? Gib xs und ys an.',
+      frage: 'Gib den Scheitelpunkt der Parabel y = −0,5(x + 2)² + 3 an.',
       felder: [{ key: 'xs', label: 'xs' }, { key: 'ys', label: 'ys' }],
-      loesung: [0, 0],
-      loesungstext: 'S(0|0)',
-      hinweis: 'Vergleiche y = x\u00b2 mit y = a(x \u2212 xs)\u00b2 + ys.'
+      loesung: [-2, 3],
+      loesungstext: 'S(−2|3)',
+      hinweis: 'Bei (x + 2) ist xs = −2.'
     },
     {
-      frage: 'Stelle die Parabel mit a = 0,5 und S(3|\u22122) ein. Sie geht durch P(5|0).',
+      frage: 'Die Parabel hat den Scheitel S(1|−4) und geht durch P(3|4). Gib den Streckfaktor a an.',
+      felder: [{ key: 'a', label: 'a' }],
+      loesung: [2],
+      loesungstext: '4 = a(3 − 1)² − 4, also 8 = 4a, a = 2',
+      hinweis: 'Setze P ein: 4 = a(3 − 1)² − 4.'
+    },
+    {
+      frage: 'Stelle die Parabel mit S(−1|3) ein, die durch P(1|1) geht.',
       felder: [{ key: 'a', label: 'a' }, { key: 'xs', label: 'xs' }, { key: 'ys', label: 'ys' }],
-      loesung: [0.5, 3, -2],
-      loesungstext: 'y = 0,5(x \u2212 3)\u00b2 \u2212 2',
-      hinweis: 'Setze xs = 3 und ys = \u22122 ein und pr\u00fcfe mit P(5|0).',
+      loesung: [-0.5, -1, 3],
+      loesungstext: 'y = −0,5(x + 1)² + 3',
+      hinweis: 'Setze P ein: 1 = a(1 + 1)² + 3, also a = −0,5.',
       graph: true,
-      graphFix: { xp: 5, yp: 0 }
+      graphFix: { xp: 1, yp: 1 }
     }
   ];
 

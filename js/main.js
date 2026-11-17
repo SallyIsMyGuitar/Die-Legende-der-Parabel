@@ -19,14 +19,122 @@
     if (target.spawn) {
       lastRest = { screen: World.getScreen(), x: target.spawn.x, y: target.spawn.y, facing: target.spawn.facing };
     }
+    saveGame();   // Rastquellen speichern automatisch
+  }
+
+  // --- Spielstand: Fortschritt sammeln, speichern und laden ----------------
+  var stats = { right: 0, wrong: 0 };   // Fehlerstatistik (fuer Abspann/Code)
+  var bossIntroDone = false;            // Wächter hat sich schon vorgestellt
+
+  function collectState() {
+    return {
+      v: 1,
+      rest: lastRest,
+      defeated: Enemies.getDefeated(),
+      chest: chestDone,
+      sword: Sword.has(),
+      merk: Merkbuch.all(),
+      boss: Boss.isDefeated(),
+      bossIntro: bossIntroDone,
+      wappen: wappens,
+      spaeth: spaethDone,
+      stats: stats
+    };
+  }
+
+  function saveGame() { Save.write(collectState()); }
+
+  // Gespeicherten Stand uebernehmen; Start an der letzten Rastquelle
+  function applyState(st) {
+    if (st.rest && st.rest.screen) lastRest = st.rest;
+    Enemies.setDefeated(st.defeated);
+    if (st.chest) { chestDone = true; World.setChestOpen(1, 'ruine'); }
+    if (st.sword) Sword.give();
+    Merkbuch.load(st.merk);
+    if (st.boss) Boss.setDefeated();
+    bossIntroDone = !!st.bossIntro || !!st.boss;
+    wappens = st.wappen || 0;
+    if (st.spaeth) { spaethDone = true; placeSpaethNpc(); }
+    if (st.stats) stats = { right: st.stats.right || 0, wrong: st.stats.wrong || 0 };
+    World.setScreen(lastRest.screen);
+    Player.setPosition(lastRest.x, lastRest.y, lastRest.facing);
+    Hud.fill();
+  }
+
+  // Texte einer Figur: nach dem ersten Wappen kommen Zusatzseiten dazu
+  // (later.replace = true ersetzt die bisherigen Seiten)
+  function textsFor(target) {
+    var l = target.later;
+    if (!l || wappens < l.wappen) return target.texts;
+    return l.replace ? l.texts : target.texts.concat(l.texts);
+  }
+
+  // --- Bann von Graf Gerade: Ausgang gesperrt, bis alle Wesen erlöst sind ---
+  // 'edge' = Ostrand, 'dungeon' = Höhleneingang, 'warp' = Öffnung nach oben
+  var BANN = { wiese: 'edge', wald: 'edge', ruine: 'dungeon', dhalle: 'warp', dmittel: 'warp' };
+  var FORWARD = { dhalle: 'dmittel', dmittel: 'dboss' };   // Öffnung nach vorn
+
+  function bannActive(screen) {
+    return !!BANN[screen] && Enemies.remaining(screen) > 0;
+  }
+
+  // Figur prallt am Bann ab, kurzer Text mit der Zahl der übrigen Wesen
+  function bannBlock(nx, ny, facing) {
+    Player.setPosition(nx, ny, facing);
+    var n = Enemies.remaining(World.getScreen());
+    Dialog.open('Bann', ['Ein Bann aus starren, geraden Linien versperrt den Weg. Er löst sich erst, wenn alle verzauberten Wesen hier erlöst sind. Noch übrig: ' + n + '.']);
+  }
+
+  // Flächen, auf denen der Bann sichtbar flimmert
+  function bannRects(screen) {
+    var kind = BANN[screen];
+    if (kind === 'edge') {
+      var list = [];
+      for (var ty = 0; ty < 14; ty++) {
+        if (!World.isBlocked(15, ty)) list.push([15 * 16 + 6, ty * 16, 10, 16]);
+      }
+      return list;
+    }
+    if (kind === 'dungeon') return [[6 * 16, 4 * 16, 32, 16]];
+    return [[8 * 16, 1 * 16, 16, 16]];
+  }
+
+  // Bann zeichnen: senkrechte, gerade Lichtstreifen, die leicht pulsieren
+  function drawBann(r, now) {
+    var screen = World.getScreen();
+    if (!bannActive(screen)) return;
+    var ctx = r.getCtx();
+    var rects = bannRects(screen);
+    for (var i = 0; i < rects.length; i++) {
+      var b = rects[i];
+      for (var x = b[0] + 1; x < b[0] + b[2]; x += 3) {
+        ctx.globalAlpha = 0.35 + 0.3 * Math.sin(now / 180 + x * 0.7);
+        r.px(x, b[1], 1, b[3], '#c8a8ff');
+      }
+      ctx.globalAlpha = 0.5 + 0.3 * Math.sin(now / 120);
+      r.px(b[0], b[1] + ((Math.floor(now / 60) + i * 5) % b[3]), b[2], 1, '#ffffff');
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // Nach einem Sieg: Ist das letzte Wesen erlöst, löst sich der Bann
+  function bannReleased(screen) {
+    return !!BANN[screen] && Enemies.remaining(screen) === 0;
   }
 
   // --- Boss des ersten Dungeons: feste Aufgaben nacheinander ---------------
-  var BOSS_CONTEXT = 'Der W\u00e4chter der H\u00f6hle der Parabeln fragt:';
+  var BOSS_NAME = 'Wächter der Höhle';
+  var BOSS_CONTEXT = 'Der Wächter fragt:';
+  // Vorstellung beim ersten Kontakt (danach startet die erste Aufgabe)
+  var BOSS_INTRO_TEXTS = [
+    'Halt! Graf Gerade hat befohlen: Hier kommt keine Kurve durch!',
+    'Beantworte meine drei Fragen. Für jede richtige Antwort verliere ich ein Herz. Dein Schwert nützt dir bei mir nichts.'
+  ];
   var BOSS_VICTORY_TEXTS = [
-    'Der W\u00e4chter zerf\u00e4llt zu Staub und Stein. Das Tor \u00f6ffnet sich.',
-    'Eine tiefe Stimme raunt durch die H\u00f6hle: \u201eNicht schlecht, kleiner Rechner ... Doch die Schule habe ich zerst\u00f6rt, und ich warte im Schloss.\u201c',
-    'Du hast das erste Wappen erhalten: das Wappen der Parabel.'
+    'Der Bann zerbricht in tausend gerade Splitter. Der Wächter atmet auf, und das Tor öffnet sich.',
+    'Danke! Graf Gerade hat mich verzaubert. Er hasst alles, was sich krümmt – und Parabeln am allermeisten.',
+    'Darum ließ er eure Schule zerstören: Dort lernt man, wie Parabeln funktionieren. Er hat noch weitere Wächter … und ein Schloss.',
+    'Du erhältst das erste Wappen: das Wappen der Normalparabel. Kehre ins Dorf zurück und erzähle, was du erfahren hast.'
   ];
   var bossAttempts = 1;    // Versuche an der aktuellen Boss-Aufgabe
   var wappens = 0;         // gesammelte Wappen (fuer den Abspann)
@@ -45,6 +153,7 @@
       graphFix: def.graphFix
     };
     TaskUi.openFixed(task, function (solved, errors) {
+      if (solved) stats.right++; else stats.wrong++;
       if (solved) {
         bossAttempts = 1;
         if (Boss.damage() > 0) {
@@ -53,10 +162,11 @@
         } else {
           Boss.die();
           wappens++;
+          saveGame();   // nach dem Dungeon automatisch speichern
           run([
             { dur: 1.3 },
             { dur: 0, end: function () {
-              Dialog.open('W\u00e4chter der H\u00f6hle der Parabeln', BOSS_VICTORY_TEXTS);
+              Dialog.open(BOSS_NAME, BOSS_VICTORY_TEXTS);
             } }
           ]);
         }
@@ -75,18 +185,22 @@
     var attempt = Enemies.attemptOf(enemy);
     TaskUi.open(Enemies.typeIdOf(enemy), Enemies.seedOf(enemy), function (solved, errors, joker) {
       if (solved) {
+        if (!joker) stats.right++;
         // Herz-Drop nur bei richtiger Antwort im ersten Versuch, nie mit Schwert
         Enemies.defeat(enemy, !joker && attempt === 1);
-        if (joker) {
-          // Schwert: erst die Besiegt-Animation, dann der Hinweis
+        saveGame();
+        var texts = [];
+        if (joker) texts.push('Dein Schwert zerbricht. Der Gegner weicht zurück \u2013 diesmal ohne Rechnung.');
+        if (bannReleased(enemy.screen)) texts.push('Das letzte Wesen ist erlöst. Der Bann löst sich auf – der Weg ist frei!');
+        if (texts.length) {
+          // erst die Besiegt-Animation, dann der Hinweis
           run([
             { dur: Enemies.DEFEAT_TIME },
-            { dur: 0, end: function () {
-              Dialog.open('', ['Dein Schwert zerbricht. Der Gegner weicht zurück \u2013 diesmal ohne Rechnung.']);
-            } }
+            { dur: 0, end: function () { Dialog.open('', texts); } }
           ]);
         }
       } else {
+        stats.wrong++;
         hurt(enemy);
       }
     }, Enemies.contextOf(enemy), { attempt: attempt });   // Kontext aus dem Tipp des NPCs
@@ -115,13 +229,15 @@
       return;
     }
     chestAttempts++;
-    TaskUi.open('scheitelAllgemein', Math.floor(Date.now() / 1000) % 100000, function (solved, errors) {
+    // Plus-Raetsel zum Thema des ersten Dungeons: verschobene Parabel
+    TaskUi.open('verschiebung', Math.floor(Date.now() / 1000) % 100000, function (solved, errors) {
       var pos = World.chestPos();
       if (!solved) {
         if (errors === 0) chestAttempts--;      // mit B abgebrochen: zaehlt nicht
-        else hurt(pos);                          // falsch: Herz weg wie im Kampf
+        else { stats.wrong++; hurt(pos); }       // falsch: Herz weg wie im Kampf
         return;                                  // Truhe bleibt, spaeter neuer Versuch
       }
+      stats.right++;
       chestDone = true;
       // Aufgabe ist zu: Deckel klappt auf, Schwert steigt auf, dann der Text
       run([
@@ -132,6 +248,7 @@
         { dur: 0, end: function () {
           chestSword = null;
           Sword.give();   // Schwert wandert in den Slot im HUD
+          saveGame();
           Dialog.open('Truhe', [
             'Du l\u00f6st das R\u00e4tsel und \u00f6ffnest die Truhe.',
             'Darin liegt ein Schwert! Es \u00fcberspringt einmal eine Aufgabe und zerbricht danach.',
@@ -139,7 +256,7 @@
           ]);
         } }
       ]);
-    }, 'Ein freiwilliges R\u00e4tsel der Truhe:', { abortable: true, attempt: chestAttempts });
+    }, 'R\u00e4tsel der Truhe:', { abortable: true, attempt: chestAttempts });
   }
 
   // Schwert steigt aus der Truhe auf, mit kurzem Funkeln
@@ -155,9 +272,71 @@
     }
   }
 
-  // Spielstart im Elternhaus bei der Mutter
+  // Spielstart im Elternhaus bei der Mutter (bzw. Titelbild davor)
   World.setScreen(World.START.screen);
   Player.setPosition(World.START.x, World.START.y, World.START.facing);
+
+  // --- Titelbild: Neues Spiel oder Weiterspielen ---------------------------
+  // phase 'menu' | 'confirm' (Spielstand wirklich löschen?) | null = Spiel läuft
+  var saved = Save.read();
+  var title = { phase: 'menu' };
+
+  function updateTitle() {
+    if (title.phase === 'menu') {
+      if (Input.pressed('a')) {
+        if (saved) applyState(saved);
+        title = null;
+      } else if (saved && Input.pressed('b')) {
+        title.phase = 'confirm';
+      }
+    } else if (title.phase === 'confirm') {
+      if (Input.pressed('a')) {
+        Save.clear();      // neu beginnen: Start im Elternhaus
+        saved = null;
+        title = null;
+      } else if (Input.pressed('b')) {
+        title.phase = 'menu';
+      }
+    }
+  }
+
+  // Text mittig, optional doppelt so groß
+  function centerText(ctx, text, y, color, big) {
+    if (big) {
+      ctx.save();
+      ctx.scale(2, 2);
+      Font.draw(ctx, text, Math.floor((W / 2 - Font.width(text)) / 2), y / 2, color);
+      ctx.restore();
+      return;
+    }
+    Font.draw(ctx, text, Math.floor((W - Font.width(text)) / 2), y, color);
+  }
+
+  function drawTitle(r, now) {
+    var ctx = r.getCtx();
+    r.px(0, 0, W, H, 'rgba(10,8,16,0.78)');
+    centerText(ctx, 'Die Legende', 38, '#f0c040', true);
+    centerText(ctx, 'der Parabel', 62, '#f0c040', true);
+    // kleine Parabel als Zierde
+    for (var x = -30; x <= 30; x++) {
+      var y = Math.round(x * x / 30);
+      r.px(W / 2 + x, 112 - y, 1, 1, '#efe4c4');
+    }
+    r.px(W / 2 - 1, 111, 3, 3, '#f0c040');
+    var blinkOn = Math.floor(now / 500) % 2 === 0;
+    if (title.phase === 'menu') {
+      if (saved) {
+        centerText(ctx, 'A: Weiterspielen', 130, blinkOn ? '#f6f0e2' : '#c8c0b0');
+        centerText(ctx, 'B: Neues Spiel', 144, '#8a8496');
+      } else {
+        centerText(ctx, 'A: Spiel starten', 136, blinkOn ? '#f6f0e2' : '#c8c0b0');
+      }
+    } else {
+      centerText(ctx, 'Spielstand löschen und neu beginnen?', 130, '#f6f0e2');
+      centerText(ctx, 'A: Ja, neu beginnen   B: Nein', 144, '#8a8496');
+    }
+    centerText(ctx, 'Der Spielstand bleibt nur auf diesem Gerät.', 196, '#8a8496');
+  }
 
   // --- Abläufe: Folge von Schritten mit Dauer (Sekunden) -------------------
   // Während ein Ablauf läuft, ist die Steuerung gesperrt.
@@ -244,16 +423,22 @@
         spaeth.y = 64 + (96 - 64) * p;
       }, start: function () { spaeth.x0 = spaeth.x; } },
       { dur: 0, end: function () {
-        World.addNpc('ost', {
-          x: 192, y: 96, baseFacing: 'left',
-          sprites: function () { return People.spaeth(); },
-          talk: { name: 'Herr Späth', texts: SPAETH_STAND_TEXTS }
-        });
+        placeSpaethNpc();
         spaeth = null;
         spaethPhase = null;
         spaethDone = true;
+        saveGame();
       } }
     ]);
+  }
+
+  // Herr Späth steht nach der Szene als NPC am Dorfplatz
+  function placeSpaethNpc() {
+    World.addNpc('ost', {
+      x: 192, y: 96, baseFacing: 'left',
+      sprites: function () { return People.spaeth(); },
+      talk: { name: 'Herr Späth', texts: SPAETH_STAND_TEXTS }
+    });
   }
 
   // Rückstoß nach einem verlorenen Kampf: Figur weicht vom Gegner weg,
@@ -294,6 +479,7 @@
         // Ein getragenes Schwert geht bei null Herzen verloren
         if (Sword.has()) {
           Sword.breakSword();
+          saveGame();
           Dialog.open('', ['Du kommst an der Quelle wieder zu dir. Deine Herzen sind wieder voll. Dein Schwert ist verloren.']);
         } else {
           Dialog.open('', ['Du kommst an der Quelle wieder zu dir. Deine Herzen sind wieder voll.']);
@@ -438,6 +624,14 @@
     lastTime = now;
 
     var target = null;
+    if (title) updateTitle();
+    if (title) {
+      drawScene(now);
+      drawTitle(Render, now);
+      Input.clearPressed();
+      requestAnimationFrame(loop);
+      return;
+    }
     // Merkbuch geht jederzeit auf und zu, auch mitten in einer Aufgabe
     if (Input.pressed('book')) {
       Merkbuch.isActive() ? Merkbuch.close() : Merkbuch.open();
@@ -468,7 +662,14 @@
       // Boss des ersten Dungeons: Beruehrung startet die feste Aufgabenreihe
       if (World.getScreen() === 'dboss' && !Boss.isDefeated() && !Player.isBlinking() &&
           Math.abs(Player.getX() + 8 - 112) < 15 && Math.abs(Player.getY() + 8 - 74) < 15) {
-        startBossTask();
+        if (!bossIntroDone) {
+          // erst stellt sich der Wächter vor, danach (noch in Berührung) die Aufgabe
+          bossIntroDone = true;
+          Player.setPosition(Player.getX(), Player.getY());
+          Dialog.open(BOSS_NAME, BOSS_INTRO_TEXTS);
+        } else {
+          startBossTask();
+        }
       } else if (!spaethDone && !spaeth && World.getScreen() === 'ost' && Player.getX() >= 232) {
         startSpaeth();
       } else {
@@ -485,25 +686,34 @@
               target.npc.facing = faceToward(target.npc, Player.getX(), Player.getY());
               turnedNpc = target.npc;
             }
-            Dialog.open(target.name, target.texts);
+            Dialog.open(target.name, textsFor(target));
             // Gehoerter Merksatz landet automatisch im Merkbuch
-            if (target.merk) Merkbuch.add(target.merk);
+            if (target.merk && Merkbuch.add(target.merk)) saveGame();
           }
           target = null;
         }
         var w = World.checkWarp(Player.getX(), Player.getY(), Player.getFacing());
+        var here = World.getScreen();
+        var banned = bannActive(here);
         if (w && w.type === 'enter') enterHouse(w);
         else if (w && w.type === 'exit') leaveHouse(w);
-        else if (w && w.type === 'dungeon') enterDungeon(w.room);
-        else if (w && w.type === 'warp') roomWarp(w);
-        else {
+        else if (w && w.type === 'dungeon') {
+          if (banned) bannBlock(Player.getX(), Player.getY() + 6, 'down');
+          else enterDungeon(w.room);
+        } else if (w && w.type === 'warp') {
+          // Öffnung nach vorn ist gebannt, zurück geht es immer
+          if (banned && w.to.room === FORWARD[here]) bannBlock(Player.getX(), 2 * 16 + 4, 'down');
+          else roomWarp(w);
+        } else {
           var edge = World.checkEdge(Player.getX(), Player.getY());
-          if (edge) startSlide(edge);
+          if (edge && banned && edge.dir === 'east') bannBlock(W - 16 - 8, Player.getY(), 'left');
+          else if (edge) startSlide(edge);
         }
       }
     }
 
     drawScene(now);
+    if (!slide) drawBann(Render, now);
     Fx.draw(Render, now, World.isOutdoor());
     if (target) Dialog.drawHint(Render, target.hintX, target.hintY, now);
     Hud.draw(Render);
@@ -511,8 +721,9 @@
     Merkbuch.drawHud(Render);
     Dialog.draw(Render);
     TestPage.draw(Render);
-    TaskUi.draw(Render);
+    // Boss-Herzen unter der Aufgabenbox (sonst verdecken sie die Eingabefelder)
     if (World.getScreen() === 'dboss' && Boss.isFighting()) Boss.drawHearts(Render);
+    TaskUi.draw(Render);
     Merkbuch.draw(Render);
     if (fade > 0) Render.px(0, 0, W, H, 'rgba(0,0,0,' + fade + ')');
     Input.clearPressed();
