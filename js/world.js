@@ -4,6 +4,7 @@
 //   'S' Schulgelände   'W' Brunnen   'R' Ruinenmauer   'E' Dungeon-Eingang
 //   'i' Hinweisschild (an der Ruine)
 //   'C' R\u00e4tsel-Truhe (an der Ruine, Belohnung: Schwert)
+//   'q' Quelle vor dem Dungeon-Eingang (Raststelle)
 // Gebäude stehen in der Liste buildings und werden beim Start eingestempelt
 // ('H' Gebäude, 'D' Tür). Innenräume liegen in js/interior.js und js/rooms.js.
 var World = (function () {
@@ -14,7 +15,7 @@ var World = (function () {
   var ROWS = 14;
   var W = COLS * TILE;
   var H = ROWS * TILE;
-  var BLOCKING = 'THDFGSW~REiC';
+  var BLOCKING = 'THDFGSW~REiCq';
 
   var SCREENS = {
     start: {
@@ -165,11 +166,11 @@ var World = (function () {
         'T..RRRRRRRRRR..T',
         'T..RRRRRRRRRR..T',
         'PPPRRREERRRR...T',
-        '......i.........',
+        '.....i..........',
         'T..............T',
         'T...T..........T',
         'T...........T..T',
-        'T...T.....T....T',
+        'T..qT.....T....T',
         'T........T.C...T',
         'T..............T',
         'T....T.........T',
@@ -178,7 +179,7 @@ var World = (function () {
       buildings: [],
       signs: [
         {
-          tiles: [[6, 5]], x: 6 * 16, y: 5 * 16,
+          tiles: [[5, 5]], x: 5 * 16, y: 5 * 16,
           name: 'Schild',
           texts: ['Höhle der Parabeln. Der erste Dungeon wartet hinter dieser Mauer. Aus Scheitel und einem Punkt stellst du die Scheitelform auf.']
         },
@@ -188,8 +189,18 @@ var World = (function () {
           name: 'Truhe',
           texts: ['Die Truhe ist leer.'],
           action: 'chest'
+        },
+        {
+          // Rastquelle vor dem Dungeon-Eingang
+          tiles: [[3, 9]], x: 3 * 16, y: 9 * 16,
+          name: 'Quelle',
+          texts: ['Du trinkst vom klaren Wasser. Deine Herzen sind wieder voll.'],
+          action: 'rest',
+          spawn: { x: 3 * 16, y: 10 * 16, facing: 'up' }
         }
       ],
+      // Der dunkle Eingang ('E') f\u00fchrt in die H\u00f6hle der Parabeln
+      dungeon: 'dhalle',
       exits: { west: 'wald' }
     }
   };
@@ -266,20 +277,29 @@ var World = (function () {
 
   // --- Übergänge -----------------------------------------------------------
   // Tür berühren (nach oben gegen die Tür laufen) oder Fußmatte im Haus.
+  // 'E' ist der Dungeon-Eingang (nach oben dagegen laufen),
+  // im Dungeon führen die Öffnungen ('M') in den nächsten Raum.
   function checkWarp(px, py, facing) {
     var cx = Math.floor((px + 8) / TILE);
     if (isOutdoor()) {
       if (facing !== 'up') return null;
       var ty = Math.floor((py - 1) / TILE);
       var st = states[current];
-      if (tileOf(st, cx, ty) !== 'D') return null;
-      var b = st.def.buildings.filter(function (bb) { return bb.door === cx && bb.y + bb.h - 1 === ty; })[0];
-      if (!b || !b.room) return null;
-      return { type: 'enter', room: b.room, building: b };
+      var t = tileOf(st, cx, ty);
+      if (t === 'D') {
+        var b = st.def.buildings.filter(function (bb) { return bb.door === cx && bb.y + bb.h - 1 === ty; })[0];
+        if (!b || !b.room) return null;
+        return { type: 'enter', room: b.room, building: b };
+      }
+      if (t === 'E' && st.def.dungeon) return { type: 'dungeon', room: st.def.dungeon };
+      return null;
     }
-    if (Interior.isExit(current, cx, Math.floor((py + 8) / TILE))) {
+    var my = Math.floor((py + 8) / TILE);
+    if (Interior.isExit(current, cx, my)) {
       var home = roomHome[current];
-      return { type: 'exit', screen: home.screen, building: home.building };
+      if (home) return { type: 'exit', screen: home.screen, building: home.building };
+      var to = Interior.matWarp(current, cx, my);
+      if (to) return { type: 'warp', to: to };
     }
     return null;
   }
@@ -553,6 +573,20 @@ var World = (function () {
     r.px(x + 5, y + 9, 6, 1, '#22202e');
   }
 
+  // Kleine steinerne Quelle vor dem Dungeon-Eingang (Raststelle)
+  function drawSpring(r, tx, ty) {
+    var x = tx * TILE, y = ty * TILE;
+    r.ellipse(x + 8, y + 13, 8, 3, 'rgba(0,0,0,0.3)');
+    r.px(x + 2, y + 4, 12, 9, '#8a8f8a');
+    r.px(x + 2, y + 4, 12, 1, '#b8bcb4');
+    r.px(x + 3, y + 5, 10, 7, '#1c3a5e');
+    r.px(x + 3, y + 5, 10, 2, '#3d88d6');
+    r.px(x + 5, y + 7, 2, 1, '#dcf2fb');
+    r.px(x + 9, y + 9, 3, 1, '#78bdea');
+    r.px(x + 1, y + 12, 3, 2, '#565c56');
+    r.px(x + 12, y + 12, 3, 2, '#565c56');
+  }
+
   // Kleine Holztruhe (freiwilliges R\u00e4tsel, Belohnung: das Schwert)
   function drawChest(r, tx, ty) {
     var x = tx * TILE, y = ty * TILE;
@@ -654,7 +688,7 @@ var World = (function () {
         } else {
           c = grassColor(x, y);
           if (id === 'T') c = lerp(c, C.grassDark, 0.25);
-          if (id === 'S' || id === 'F' || id === 'G' || id === 'R' || id === 'E' || id === 'i' || id === 'C') c = lerp(c, C.dry, 0.35);
+          if (id === 'S' || id === 'F' || id === 'G' || id === 'R' || id === 'E' || id === 'i' || id === 'C' || id === 'q') c = lerp(c, C.dry, 0.35);
           if (adjacent(st.pathMask, k) || adjacent(st.waterMask, k) || adjacent(st.bankMask, k)) {
             c = lerp(c, C.grassDark, 0.55);
           }
@@ -725,6 +759,7 @@ var World = (function () {
         else if (tt === 'E') drawRuinDoor(Render, cx, cy);
         else if (tt === 'i') drawSign(Render, cx, cy);
         else if (tt === 'C') drawChest(Render, cx, cy);
+        else if (tt === 'q') drawSpring(Render, cx, cy);
       }
       if (s && cy === s.y) Buildings.school(Render, s);
       for (cx = 0; cx < COLS; cx++) {
