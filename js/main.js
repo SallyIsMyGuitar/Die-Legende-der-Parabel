@@ -76,6 +76,7 @@
     if (st.raetsel) Raetsel.setSolved();
     if (st.spiegel) Spiegel.setSolved();
     if (st.leuchtturm) World.setLighthouseLit(true);
+    if (bossesSt.lboss) World.setWaterGateOpen(true);
     // Vorstellung je Boss-Raum; aeltere Staende kennen nur die Hoehle
     bossIntroDone = st.bossIntro && typeof st.bossIntro === 'object'
       ? st.bossIntro
@@ -201,8 +202,9 @@
         'Hast du das Wasser im Osten gesehen? Es trägt sein Siegel. Erst wenn du es bannst, zeigt sich der nächste Wächter.',
         'Du erhältst das Wappen der Scheitelform. Das Licht des Turms sehnt sich nach dem Tag, an dem die Schule wieder steht.'
       ],
-      // nach dem Sieg: der Leuchtturm draussen leuchtet wieder
-      onWin: function () { World.setLighthouseLit(true); }
+      // nach dem Sieg: der Leuchtturm draussen leuchtet wieder und
+      // das Wassertor zur Lagune (Dungeon 3) oeffnet sich
+      onWin: function () { World.setLighthouseLit(true); World.setWaterGateOpen(true); }
     }
   };
   var bossAttempts = 1;    // Versuche an der aktuellen Boss-Aufgabe
@@ -870,6 +872,11 @@
             // Leuchtturm (Dungeon 2): verschlossen, bis der Dungeon gebaut ist
             Player.setPosition(Player.getX(), Player.getY(), 'down');
             Dialog.open('Tür', ['Die Tür ist fest verschlossen. Aus dem Leuchtturm dringt kein Licht.']);
+          }
+          else if (w.room === 'weingang' && !World.isWaterGateOpen()) {
+            // Wassertor der Lagune (Dungeon 3): zu, bis der Wächter des Turms besiegt ist
+            Player.setPosition(Player.getX(), Player.getY(), 'down');
+            Dialog.open('Wassertor', ['Wasser wandert in geraden Wänden – das Siegel von Graf Gerade. Erst der Wächter des Turms kann es brechen.']);
           }
           else enterDungeon(w.room);
         } else if (w && w.type === 'warp') {

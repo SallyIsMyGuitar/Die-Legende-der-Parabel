@@ -17,6 +17,7 @@ var World = (function () {
   var H = ROWS * TILE;
   var BLOCKING = 'THDFGSW~REiCqVL';
   var lighthouseLit = false;   // Leuchtturm leuchtet wieder (Sieg ueber Dungeon 2)
+  var waterGateOpen = false;  // Wassertor der Lagune offen (Sieg ueber Dungeon 2)
 
   var SCREENS = {
     start: {
@@ -188,11 +189,11 @@ var World = (function () {
         'T.~~~~~~PP...i.T',
         'T.~~~~~~PP.....T',
         'T...~~~.PP...q.T',
-        'T....~~.PP.....T',
-        'T.......PP.....T',
-        'T......LLLL....T',
-        'T......LLLL....T',
-        'T......LLEE....T',
+        'T....~~.PP......',
+        'T.......PP......',
+        'T......LLLL.....',
+        'T......LLLL.....',
+        'T......LLEE.....',
         'T..............T',
         'TTTTTTTTTTTTTTTT'
       ],
@@ -229,7 +230,42 @@ var World = (function () {
       ],
       // Der Leuchtturm ist der Dungeon 2 (Scheitelform): Turmeingang
       dungeon: 'leingang',
-      exits: { north: 'klippen' }
+      exits: { north: 'klippen', east: 'lagune' },
+      // Ostausgang: rechte Kante auf den Wegen zur Lagune oeffnen
+      openEast: [8, 9, 10, 11]
+    },
+
+    // Lagune: Zugang zum versunkenen Wasserreich (Dungeon 3, allgemeine Form).
+    // Das Wassertor in der Felswand tr\u00e4gt das Siegel von Graf Gerade und
+    // \u00f6ffnet sich erst mit dem Sieg \u00fcber den W\u00e4chter des Turms.
+    lagune: {
+      map: [
+        '~~~~~~~~~~~~~~~~',
+        '~~~~~~~~~~~~~~~~',
+        '~~~~~~~~~~~~~~~~',
+        '~~~~~~~~~~~~~~~~',
+        '~~~~TTEETT~~~~~~',
+        '~~~~T....T~~~~~~',
+        '~~~T........T~~~',
+        '~~....i.......~~',
+        '................',
+        '...............~',
+        '...............~',
+        '...............T',
+        '...............T',
+        'TTTTTTTTTTTTTTTT'
+      ],
+      buildings: [],
+      seagate: true,
+      signs: [
+        {
+          tiles: [[6, 7]], x: 6 * TILE, y: 7 * TILE,
+          name: 'Schild',
+          texts: ['Versunkenes Wasserreich. Das Siegel des Grafen verschliesst das Tor.']
+        }
+      ],
+      dungeon: 'weingang',
+      exits: { west: 'kueste' }
     },
 
     // Wiese mit kleinem Teich auf dem Weg zum ersten Dungeon
@@ -851,6 +887,40 @@ var World = (function () {
     r.px(x + w - 11, y + 10, 2, 2, '#e8c04a');
   }
 
+  // Wassertor der Lagune (Dungeon 3): linke Haelfte zeichnet beide
+  // 'E'-Kacheln gemeinsam. Zu: Waende aus Wasser mit dem Siegel des Grafen.
+  // Offen (nach dem Sieg ueber den Waechter des Turms): dunkler Durchgang.
+  function drawWasserTor(r, tx, ty) {
+    if (tileAt(tx - 1, ty) === 'E') return;   // rechte Haelfte wird mitgezeichnet
+    var x = tx * TILE, y = ty * TILE;
+    if (!waterGateOpen) {
+      // wallende Wasserwand mit Runen-Siegel
+      r.px(x, y, 32, TILE, '#1e4a6a');
+      for (var i = 0; i < 32; i += 4) {
+        r.px(x + i, y + 2, 2, 12, '#2c6a8a');
+        r.px(x + i + 1, y + 3, 1, 11, '#5aaac8');
+      }
+      r.px(x, y, 32, 1, '#8ac8e0');
+      r.px(x, y + 15, 32, 1, '#123a54');
+      // Schaumkronen
+      r.px(x + 2, y, 3, 1, '#d8f0f8');
+      r.px(x + 13, y + 1, 4, 1, '#d8f0f8');
+      r.px(x + 26, y + 4, 3, 1, '#d8f0f8');
+      // Siegel: eckige Runen
+      r.px(x + 13, y + 5, 6, 1, '#f0c040');
+      r.px(x + 13, y + 9, 6, 1, '#f0c040');
+      r.px(x + 14, y + 6, 1, 3, '#f0c040');
+      r.px(x + 17, y + 6, 1, 3, '#f0c040');
+    } else {
+      // geoeffneter Durchgang, Restwasser am Rand
+      r.px(x, y, 32, TILE, '#0e1826');
+      r.px(x, y, 2, TILE, '#2c6a8a');
+      r.px(x + 30, y, 2, TILE, '#2c6a8a');
+      r.px(x, y, 32, 1, '#5aaac8');
+      r.px(x + 2, y + 13, 28, 1, '#1e3a52');
+    }
+  }
+
   // Kleine Holztruhe (freiwilliges R\u00e4tsel, Belohnung: das Schwert)
   function drawChest(r, tx, ty) {
     var x = tx * TILE, y = ty * TILE;
@@ -1074,8 +1144,10 @@ var World = (function () {
         else if (tt === 'W' || tt === 'q') obj(cy, function () { Buildings.well(Render, x, y); });  // Quelle sieht aus wie der Dorfbrunnen
         else if (tt === 'R') obj(cy, function () { drawRuinWall(Render, x, y); });
         else if (tt === 'E') obj(cy, function () {
-          // Leuchtturm-Tür sieht anders aus als der Höhleneingang
-          if (st.def.lighthouse) drawTowerDoor(Render, x, y);
+          // Leuchtturm-Tür sieht anders aus als der Höhleneingang,
+          // das Wassertor der Lagune ist zu, bis das Siegel bricht
+          if (st.def.seagate) drawWasserTor(Render, x, y);
+          else if (st.def.lighthouse) drawTowerDoor(Render, x, y);
           else drawRuinDoor(Render, x, y);
         });
         else if (tt === 'i') obj(cy, function () { drawSign(Render, x, y); });
@@ -1273,6 +1345,8 @@ var World = (function () {
     openRockGate: openRockGate,
     setLighthouseLit: function (p) { lighthouseLit = !!p; },
     isLighthouseLit: function () { return lighthouseLit; },
+    setWaterGateOpen: function (p) { waterGateOpen = !!p; },
+    isWaterGateOpen: function () { return waterGateOpen; },
     chestPos: chestPos,
     START: START,
     WIDTH: W,
