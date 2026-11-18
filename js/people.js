@@ -139,11 +139,13 @@ var People = (function () {
 
   // Seitenansicht nach rechts; mirror = true heißt Blick nach links
   function sideSprite(p, mirror) {
+    // Zeilen 1–3 mit '.' auf 16 Zeichen aufgefüllt (vorher 15 Zeichen und
+    // Konsolen-Warnung); das letzte Pixel war schon durchsichtig, das Bild bleibt gleich
     var rows = [
       '....oooooooo....',
-      '...ohhhHHhho...',
-      '..ohhhhhHHhho..',
-      '..ohhhhhhhhhho.',
+      '...ohhhHHhho....',
+      '..ohhhhhHHhho...',
+      '..ohhhhhhhhhho..',
       '..oHhhhsssssso..',
       '..ohhhhssssweo..',
       '..oHhhsssssseo..',
