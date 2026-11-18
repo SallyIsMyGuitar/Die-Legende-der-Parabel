@@ -29,7 +29,7 @@ var Enemies = (function () {
     klippen: 'spfAusSP',        // Fischer: Scheitelform aus S und P
     kueste: 'wertemenge',        // Turmwaerter: Wertemenge am Scheitel
     leingang: 'spfAusSP',         // Tuermerin (Turm): Scheitelform aus S und P
-    lmitte: 'wertemenge'          // Alte Turmuhr: Wertemenge am Scheitel
+    lmitte: 'wertemengeAuswahl'   // Alte Turmuhr: Wertemenge als Auswahl
   };
 
   // Kurzer Kontext vor der Aufgabe (die Wesen stehen im Bann von Graf Gerade)

@@ -232,9 +232,31 @@
     ]
   };
 
-  // Spiegelraum: das Raetsel folgt in einem spaeteren Schritt
+  // Kleine Steintafel auf dem Boden (Kartenzeichen 'k'), wie in der Hoehle
+  function floorTablet(r, tx, ty) {
+    var x = tx * TILE, y = ty * TILE;
+    r.ellipse(x + 8, y + 14, 7, 2, 'rgba(40,20,10,0.3)');
+    r.px(x + 2, y + 3, 12, 11, '#8a8496');
+    r.px(x + 3, y + 4, 10, 9, '#b4aec2');
+    r.px(x + 3, y + 4, 10, 1, '#c8c2d4');
+    r.px(x + 5, y + 7, 6, 1, '#6a6458');
+    r.px(x + 5, y + 9, 5, 1, '#6a6458');
+  }
+
+  // Gitter vor der Oeffnung zum Boss (bis das Spiegel-Raetsel geloest ist)
+  function bars(r) {
+    var x = 8 * TILE, y = 1 * TILE;
+    r.px(x, y + 2, TILE, 1, '#8a8496');
+    for (var i = 1; i < 16; i += 3) {
+      r.px(x + i, y + 2, 2, 14, '#6a6478');
+      r.px(x + i, y + 2, 1, 14, '#9a94a8');
+    }
+  }
+
+  // Spiegelraum: Licht auf die Spiegel lenken, die auf der Parabel stehen
+  // (Logik in spiegel.js, Gitter zum Boss oeffnet sich erst danach)
   var SPIEGEL = {
-    map: [
+    map: Spiegel.stampMap([
       '################',
       '#WWWWWWWMWWWWWW#',
       '#W............W#',
@@ -246,16 +268,38 @@
       '#W............W#',
       '#W............W#',
       '#W............W#',
-      '#W............W#',
+      '#W........k...W#',
       '#WWWWWWWMWWWWWW#',
       '################'
-    ],
+    ]),
     mats: {
       '8,1': { room: 'lboss', x: 8 * TILE, y: 11 * TILE, facing: 'up' },
       '8,12': { room: 'lmitte', x: 8 * TILE, y: 2 * TILE, facing: 'down' }
     },
     windows: [[3, 1], [12, 1]],
-    lamps: [[5, 1], [10, 1], [5, 12], [10, 12]]
+    lamps: [[5, 1], [10, 1], [5, 12], [10, 12]],
+    bakeExtra: function (r) {
+      Spiegel.bakeGrid(r);
+      for (var ty = 0; ty < 14; ty++) {
+        for (var tx = 0; tx < 16; tx++) {
+          var c = SPIEGEL.map[ty].charAt(tx);
+          if (c === 'm') Spiegel.bakeStand(r, tx, ty);
+          else if (c === 'k') floorTablet(r, tx, ty);
+        }
+      }
+    },
+    objects: Spiegel.objects().concat([
+      {
+        tiles: [[10, 11]],
+        x: 10 * TILE, y: 11 * TILE,
+        name: 'Steintafel',
+        texts: [
+          'Lenke das Licht auf die Spiegel, die auf der Parabel ' + Spiegel.FORMEL + ' stehen. Dann \u00f6ffnet sich das Gitter.',
+          'Unten stehen die x-Werte, links die y-Werte. In jeder Spalte steht genau ein Spiegel richtig.'
+        ],
+        later: { spiegel: true, replace: true, texts: ['Alle Spiegel auf der Parabel ' + Spiegel.FORMEL + ' stehen im Licht. Das Gitter ist offen.'] }
+      }
+    ])
   };
 
   // Laternenzimmer: der Boss folgt in einem spaeteren Schritt
@@ -288,6 +332,12 @@
     R.bakeFull = function (r) { bakeTower(r, R); };
     R.overlay = vignette;
   });
+
+  // Spiegelraum: Licht im Laufbild, Gitter bis das Raetsel geloest ist
+  SPIEGEL.anim = function (r, t) {
+    Spiegel.drawLight(r, t);
+    if (!Spiegel.isSolved()) bars(r);
+  };
 
   Interior.register('leingang', EINGANG);
   Interior.register('lmitte', MASCHINEN);

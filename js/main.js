@@ -99,15 +99,23 @@
   var FORWARD = { dhalle: 'dmittel', dmittel: 'draetsel',
                   leingang: 'lmitte', lmitte: 'lraetsel' };   // Öffnung nach vorn
 
-  // --- Fackel-Rätsel vor dem Boss (Logik in raetsel.js) --------------------
+  // --- Fackel-Rätsel (Höhle) und Spiegel-Rätsel (Turm) vor dem Boss ------
+  // (Logik in raetsel.js bzw. spiegel.js)
   function lightTorch(t) {
-    var res = Raetsel.light(t.x, t.y);
+    var turm = World.getScreen() === 'lraetsel';
+    var R = turm ? Spiegel : Raetsel;
+    var res = R.light(t.x, t.y);
     if (res === 'wrong') {
-      Dialog.open('', ['Die Flamme zischt – alle Fackeln erlöschen. Der Punkt (' +
-        Tasks.fmt(t.x) + '|' + Tasks.fmt(t.y) + ') liegt nicht auf der Parabel ' + Raetsel.FORMEL + '.']);
+      Dialog.open('', [turm
+        ? 'Das Licht bricht sich – alle Spiegel verdunkeln sich. Der Punkt (' +
+          Tasks.fmt(t.x) + '|' + Tasks.fmt(t.y) + ') liegt nicht auf der Parabel ' + R.FORMEL + '.'
+        : 'Die Flamme zischt – alle Fackeln erlöschen. Der Punkt (' +
+          Tasks.fmt(t.x) + '|' + Tasks.fmt(t.y) + ') liegt nicht auf der Parabel ' + R.FORMEL + '.']);
     } else if (res === 'solved') {
       saveGame();
-      Dialog.open('', ['Alle fünf Fackeln brennen. Mit lautem Knirschen hebt sich das Gitter.']);
+      Dialog.open('', [turm
+        ? 'Alle fünf Spiegel stehen im Licht. Mit lautem Ruck hebt sich das Gitter.'
+        : 'Alle fünf Fackeln brennen. Mit lautem Knirschen hebt sich das Gitter.']);
     }
   }
 
@@ -845,6 +853,10 @@
             // Gitter zum Boss bleibt zu, bis alle Fackeln richtig brennen
             Player.setPosition(Player.getX(), 2 * 16 + 4, 'down');
             Dialog.open('Gitter', ['Ein schweres Gitter versperrt den Weg. Entzünde zuerst die richtigen Fackeln.']);
+          } else if (here === 'lraetsel' && w.to.room === 'lboss' && !Spiegel.isSolved()) {
+            // Gitter zum Boss bleibt zu, bis alle Spiegel im Licht stehen
+            Player.setPosition(Player.getX(), 2 * 16 + 4, 'down');
+            Dialog.open('Gitter', ['Ein schweres Gitter versperrt den Weg. Lenke zuerst das Licht auf die richtigen Spiegel.']);
           } else roomWarp(w);
         } else {
           var edge = World.checkEdge(Player.getX(), Player.getY());
