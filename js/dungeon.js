@@ -3,7 +3,7 @@
 // Strecke), Vorraum zum Boss (Tor verschlossen, Steintafel als Hinweis).
 // Aufbau wie Innenraeume: 16 x 14 Kacheln, angemeldet per Interior.register().
 // Zeichen: '#' ausserhalb, 'W' Hoehlenwand, '.' Boden, 'x' Felsbrocken,
-//          'Q' Wasser der Quelle, 'M' Hoehlenoeffnung (Uebergang)
+//          'Q' Quelle (Brunnen), 'M' Hoehlenoeffnung (Uebergang)
 (function () {
   'use strict';
 
@@ -98,14 +98,6 @@
     }
   }
 
-  // Quelle im Mittelraum: steinernes Becken mit klarem Wasser
-  function poolBake(r) {
-    var x = 7 * TILE, y = 4 * TILE, w = 2 * TILE, h = 4 * TILE;
-    r.px(x - 2, y - 2, w + 4, h + 4, '#4a4456');
-    r.px(x - 2, y - 2, w + 4, 1, '#5e5870');
-    r.px(x - 2, y + h + 1, w + 4, 1, '#332f40');
-  }
-
   // Alte Inschrift an der Hoehlenwand im Mittelraum (Kachel 6,1)
   function inscription(r) {
     var x = 6 * TILE, y = 1 * TILE;
@@ -122,19 +114,7 @@
     r.px(x + 11, y + 9, 1, 2, '#3e3a4a');
   }
 
-  // Wasserschimmer (animiert)
-  function poolShimmer(r, t) {
-    var x = 7 * TILE, y = 4 * TILE, w = 2 * TILE, h = 4 * TILE;
-    var ctx = r.getCtx();
-    ctx.globalAlpha = 0.5;
-    for (var i = 0; i < 6; i++) {
-      var p = (t / 900 + i / 6) % 1;
-      var wy = y + 2 + Math.floor(p * (h - 6));
-      ctx.globalAlpha = 0.35 * (1 - p);
-      r.px(x + 3 + (i % 3) * 5, wy, 4, 1, '#dcf2fb');
-    }
-    ctx.globalAlpha = 1;
-  }
+
 
   // Verschluss-Tor im Vorraum (oeffnet sich erst nach dem Boss-Sieg)
   function gate(r) {
@@ -202,7 +182,6 @@
         caveFloor(r, tx, ty);
         if (c === 'x') rock(r, tx, ty);
         else if (c === 'N') stalagmite(r, tx, ty);
-        else if (c === 'Q') r.px(tx * TILE, ty * TILE, TILE, TILE, '#1c3a5e');
         else if (c === 'M') caveOpening(r, tx, ty, ty < 7);
       }
     }
@@ -262,10 +241,10 @@
       '#WWWWWWWMWWWWWW#',
       '#W............W#',
       '#W............W#',
-      '#W.....QQ.....W#',
-      '#W.....QQ.....W#',
-      '#W.....QQ.....W#',
-      '#W.....QQ.....W#',
+      '#W............W#',
+      '#W......Q.....W#',
+      '#W............W#',
+      '#W............W#',
       '#W............W#',
       '#W............W#',
       '#W....x....x..W#',
@@ -279,8 +258,8 @@
     },
     torches: [[4, 1], [11, 1], [4, 12], [11, 12]],
     bakeExtra: function (r) {
-      poolBake(r);
       inscription(r);
+      Buildings.well(r, 8, 5);   // Quelle sieht aus wie der Dorfbrunnen
     },
     objects: [
       {
@@ -296,13 +275,12 @@
       },
       {
         // Rastquelle: heilt alle Herzen, speichert die Ruecksprung-Stelle
-        tiles: [[7, 3], [8, 3], [6, 4], [6, 5], [6, 6], [6, 7],
-               [9, 4], [9, 5], [9, 6], [9, 7], [7, 8], [8, 8]],
-        x: 8 * TILE, y: 4 * TILE,
+        tiles: [[8, 5]],
+        x: 8 * TILE, y: 5 * TILE,
         name: 'Quelle',
         texts: ['Du trinkst vom klaren Wasser. Deine Herzen sind wieder voll.'],
         action: 'rest',
-        spawn: { x: 7 * TILE, y: 9 * TILE, facing: 'up' }
+        spawn: { x: 8 * TILE, y: 6 * TILE, facing: 'up' }
       }
     ]
   };
@@ -350,7 +328,6 @@
     R.bakeFull = function (r) { bakeCave(r, R); };
     R.anim = function (r, t) {
       flames(r, t, R.torches);
-      if (R === MITTEL) poolShimmer(r, t);
     };
     R.overlay = vignette;
   });

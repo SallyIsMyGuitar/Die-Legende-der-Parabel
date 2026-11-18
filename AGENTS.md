@@ -146,8 +146,7 @@ Gebaut wird immer nur der Meilenstein, den der Nutzer freigibt, mit Test nach je
 
 ## Offene Fragen (vor der Umsetzung mit dem Nutzer klären)
 
-
-- Schriftgröße der Dialoge: Die Pixelschrift ist auf 256 × 224 ausgelegt; auf dem iPad prüfen, ob sie groß genug ist.
+- Derzeit keine.
 
 ## Getroffene Entscheidungen
 
@@ -182,4 +181,5 @@ Gebaut wird immer nur der Meilenstein, den der Nutzer freigibt, mit Test nach je
   - Truhe (Plus, freiwillig): „Verschiebung“ (y = ax² wird verschoben, Scheitelform angeben)
   - Boss: drei feste, freigegebene Aufgaben, die alles verbinden (S von y = −0,5(x + 2)² + 3 → S(−2|3); a aus S(1|−4) und P(3|4) → a = 2; Graph mit S(−1|3) und P(1|1) → y = −0,5(x + 1)² + 3); vor der ersten Aufgabe stellt sich der Wächter vor.
 - **Formeln im Text:** Der Zeilenumbruch trennt nie an Rechenzeichen (=, +, −, <, >), Formeln bleiben in einer Zeile.
-- **Rastquellen bisher:** Brunnen im Dorfplatz, steinerne Quelle vor dem Dungeon-Eingang an der Ruine, Quelle im Dungeon-Mittelraum. Alle speichern automatisch und füllen die Herzen auf.
+- **Schriftgröße:** Auf dem iPad geprüft, passt.
+- **Rastquellen bisher:** Brunnen im Dorfplatz, Quelle vor dem Dungeon-Eingang an der Ruine, Quelle im Dungeon-Mittelraum. Alle Quellen sehen aus wie der Dorfbrunnen. Alle speichern automatisch und füllen die Herzen auf.

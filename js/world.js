@@ -4,7 +4,7 @@
 //   'S' Schulgelände   'W' Brunnen   'R' Ruinenmauer   'E' Dungeon-Eingang
 //   'i' Hinweisschild (an der Ruine)
 //   'C' R\u00e4tsel-Truhe (an der Ruine, Belohnung: Schwert)
-//   'q' Quelle vor dem Dungeon-Eingang (Raststelle)
+//   'q' Quelle vor dem Dungeon-Eingang (Raststelle, gezeichnet wie der Dorfbrunnen)
 // Gebäude stehen in der Liste buildings und werden beim Start eingestempelt
 // ('H' Gebäude, 'D' Tür). Innenräume liegen in js/interior.js und js/rooms.js.
 var World = (function () {
@@ -174,7 +174,7 @@ var World = (function () {
         'T..............T',
         'T...T..........T',
         'T...........T..T',
-        'T..qT.....T....T',
+        'T.q.T.....T....T',
         'T........T.C...T',
         'T..............T',
         'T....T.........T',
@@ -210,11 +210,11 @@ var World = (function () {
         },
         {
           // Rastquelle vor dem Dungeon-Eingang
-          tiles: [[3, 9]], x: 3 * 16, y: 9 * 16,
+          tiles: [[2, 9]], x: 2 * 16, y: 9 * 16,
           name: 'Quelle',
           texts: ['Du trinkst vom klaren Wasser. Deine Herzen sind wieder voll.'],
           action: 'rest',
-          spawn: { x: 3 * 16, y: 10 * 16, facing: 'up' }
+          spawn: { x: 2 * 16, y: 10 * 16, facing: 'up' }
         }
       ],
       // Der dunkle Eingang ('E') f\u00fchrt in die H\u00f6hle der Parabeln
@@ -604,20 +604,6 @@ var World = (function () {
     r.px(x + 5, y + 9, 6, 1, '#22202e');
   }
 
-  // Kleine steinerne Quelle vor dem Dungeon-Eingang (Raststelle)
-  function drawSpring(r, tx, ty) {
-    var x = tx * TILE, y = ty * TILE;
-    r.ellipse(x + 8, y + 13, 8, 3, 'rgba(0,0,0,0.3)');
-    r.px(x + 2, y + 4, 12, 9, '#8a8f8a');
-    r.px(x + 2, y + 4, 12, 1, '#b8bcb4');
-    r.px(x + 3, y + 5, 10, 7, '#1c3a5e');
-    r.px(x + 3, y + 5, 10, 2, '#3d88d6');
-    r.px(x + 5, y + 7, 2, 1, '#dcf2fb');
-    r.px(x + 9, y + 9, 3, 1, '#78bdea');
-    r.px(x + 1, y + 12, 3, 2, '#565c56');
-    r.px(x + 12, y + 12, 3, 2, '#565c56');
-  }
-
   // Kleine Holztruhe (freiwilliges R\u00e4tsel, Belohnung: das Schwert)
   function drawChest(r, tx, ty) {
     var x = tx * TILE, y = ty * TILE;
@@ -805,7 +791,7 @@ var World = (function () {
         else if (tt === 'E') drawRuinDoor(Render, cx, cy);
         else if (tt === 'i') drawSign(Render, cx, cy);
         else if (tt === 'C') drawChest(Render, cx, cy);
-        else if (tt === 'q') drawSpring(Render, cx, cy);
+        else if (tt === 'q') Buildings.well(Render, cx, cy);   // Quelle sieht aus wie der Dorfbrunnen
       }
       if (s && cy === s.y) Buildings.school(Render, s);
       for (cx = 0; cx < COLS; cx++) {
