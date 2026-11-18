@@ -776,42 +776,91 @@ var World = (function () {
       }
     }
 
-    // 4) Überlagerung, zeilenweise von oben nach unten: Kronen, Brunnen,
-    //    Schule, Zaun, Gebäude
-    st.overlay = Render.createLayer(W, H);
-    Render.setTarget(st.overlay.ctx);
+    // 4) Überlagerung: Kronen und Objekte werden nicht hier, sondern je nach
+    //    Fußzeile der Spielfigur in zwei Ebenen gezeichnet (siehe paintOverlay).
+    st.behind = Render.createLayer(W, H);   // Objekte hinter der Figur
+    st.overlay = Render.createLayer(W, H);  // Kronen und Objekte vor der Figur
+    st.ovRow = null;                        // für welche Fußzeile die Ebenen gelten
+    Render.setTarget(null);
+  }
+
+  // --- Tiefensortierung der Objekte ----------------------------------------
+  // Jedes Objekt (Haus, Brunnen, Zaun, Schild, Truhe, Ruinenmauer) hat eine
+  // Grundzeile = Kachelzeile seiner Unterkante. Liegt sie über der Fußzeile der
+  // Spielfigur, steht das Objekt hinter ihr (Figur wird davor gezeichnet).
+  // Baumkronen liegen immer über der Figur (Effekt „unter dem Baum“).
+  // mode 'behind': nur Objekte hinter der Figur.
+  // mode 'front' : Kronen und Objekte vor der Figur; Objekte hinter der Figur
+  //                radieren dort früher gezeichnete Kronen aus, damit die
+  //                Reihenfolge wie bisher bleibt (Gebäude über Krone).
+  function paintOverlay(st, footRow, mode) {
+    var ctx = Render.getCtx();
     var s = st.def.school;
+    // Zeichnet ein Objekt der Grundzeile row je nach Modus (oder lässt es aus)
+    function obj(row, fn) {
+      var hinten = row < footRow;
+      if (mode === 'behind') { if (hinten) fn(); return; }
+      if (!hinten) { fn(); return; }
+      ctx.globalCompositeOperation = 'destination-out';
+      fn();
+      ctx.globalCompositeOperation = 'source-over';
+    }
     for (var cy = 0; cy < ROWS; cy++) {
       var cx, tt;
       for (cx = 0; cx < COLS; cx++) {
         tt = tileAt(cx, cy);
-        if (tt === 'T') drawCanopy(Render, cx, cy);
-        else if (tt === 'W') Buildings.well(Render, cx, cy);
-        else if (tt === 'R') drawRuinWall(Render, cx, cy);
-        else if (tt === 'E') drawRuinDoor(Render, cx, cy);
-        else if (tt === 'i') drawSign(Render, cx, cy);
-        else if (tt === 'C') drawChest(Render, cx, cy);
-        else if (tt === 'q') Buildings.well(Render, cx, cy);   // Quelle sieht aus wie der Dorfbrunnen
+        var x = cx, y = cy;
+        if (tt === 'T') { if (mode === 'front') drawCanopy(Render, cx, cy); }
+        else if (tt === 'W' || tt === 'q') obj(cy, function () { Buildings.well(Render, x, y); });  // Quelle sieht aus wie der Dorfbrunnen
+        else if (tt === 'R') obj(cy, function () { drawRuinWall(Render, x, y); });
+        else if (tt === 'E') obj(cy, function () { drawRuinDoor(Render, x, y); });
+        else if (tt === 'i') obj(cy, function () { drawSign(Render, x, y); });
+        else if (tt === 'C') obj(cy, function () { drawChest(Render, x, y); });
       }
-      if (s && cy === s.y) Buildings.school(Render, s);
+      if (s && cy === s.y) obj(s.y + s.h - 1, function () { Buildings.school(Render, s); });
       for (cx = 0; cx < COLS; cx++) {
         tt = tileAt(cx, cy);
+        var fx = cx, fy = cy;
         if (tt === 'F') {
           var up = tileAt(cx, cy - 1) === 'F', down = tileAt(cx, cy + 1) === 'F';
           var side = 'FG'.indexOf(tileAt(cx - 1, cy)) >= 0 || 'FG'.indexOf(tileAt(cx + 1, cy)) >= 0;
-          if (up || down) Buildings.fence(Render, cx, cy, 'v');
-          if (side) Buildings.fence(Render, cx, cy, 'h', hash(cx, cy) > 0.75);
+          obj(cy, function () {
+            if (up || down) Buildings.fence(Render, fx, fy, 'v');
+            if (side) Buildings.fence(Render, fx, fy, 'h', hash(fx, fy) > 0.75);
+          });
         } else if (tt === 'G' && tileAt(cx - 1, cy) !== 'G') {
-          Buildings.gate(Render, cx, cy);
+          obj(cy, function () { Buildings.gate(Render, fx, fy); });
         }
       }
       st.def.buildings.forEach(function (b) {
         if (b.y + b.h - 1 !== cy) return;
-        if (b.shop) Buildings.shop(Render, b);
-        else Buildings.house(Render, b);
+        obj(cy, function () {
+          if (b.shop) Buildings.shop(Render, b);
+          else Buildings.house(Render, b);
+        });
       });
     }
+  }
+
+  // Beide Ebenen für die Fußzeile neu zeichnen, wenn sie sich geändert hat
+  function updateOverlay(st, footRow) {
+    footRow = Math.max(0, Math.min(ROWS, footRow));
+    if (st.ovRow === footRow) return;
+    st.ovRow = footRow;
+    var prev = S;
+    S = st;                                  // tileAt liest aus S
+    [['behind', st.behind], ['front', st.overlay]].forEach(function (e) {
+      e[1].ctx.clearRect(0, 0, W, H);
+      Render.setTarget(e[1].ctx);
+      paintOverlay(st, footRow, e[0]);
+    });
     Render.setTarget(null);
+    S = prev;
+  }
+
+  // Fußzeile der Spielfigur aus ihrer Y-Position (Figur 16 px hoch)
+  function footRowOf(playerY) {
+    return Math.floor((playerY + 15) / TILE);
   }
 
   function stateOf(name) {
@@ -863,8 +912,9 @@ var World = (function () {
     }
   }
 
-  // Boden inkl. Animationen (unter der Spielfigur); name optional
-  function drawGround(r, time, name) {
+  // Boden inkl. Animationen (unter der Spielfigur); name optional.
+  // playerY: Y-Position der Spielfigur für die Tiefensortierung der Objekte.
+  function drawGround(r, time, name, playerY) {
     var t = time || 0;
     name = name || current;
     if (!states[name]) { Interior.drawGround(r, t, name); return; }
@@ -890,22 +940,33 @@ var World = (function () {
       var blink = dir === 'down' && (t + i * 900) % 3600 < 180 ? 1 : 0;
       r.image(arr[blink], n.x, n.y);
     }
+    // Objekte, die hinter der Spielfigur stehen (z. B. Hauswand über ihr)
+    updateOverlay(st, footRowOf(playerY || 0));
+    r.image(st.behind.canvas, 0, 0);
+    drawOpenChest(r, st, false);
+  }
+
+  // Geöffnete Rätsel-Truhe (nach gelöstem Rätsel) in der passenden Ebene:
+  // vorn = true für die Ebene vor der Figur, false für die dahinter
+  function drawOpenChest(r, st, vorn) {
+    if (!(st.chestOpen > 0)) return;
+    (st.def.signs || []).forEach(function (sg) {
+      if (sg.action !== 'chest') return;
+      if ((sg.tiles[0][1] >= st.ovRow) === vorn)
+        drawChestOpen(r, sg.tiles[0][0], sg.tiles[0][1], st.chestOpen);
+    });
   }
 
   // Kronen, Gebäude, offene Türen, Rauch (über der Spielfigur)
-  function drawOverlay(r, time, name) {
+  function drawOverlay(r, time, name, playerY) {
     var t = time || 0;
     name = name || current;
     if (!states[name]) { Interior.drawOverlay(r, t, name); return; }
     var st = stateOf(name);
+    updateOverlay(st, footRowOf(playerY || 0));
     r.image(st.overlay.canvas, 0, 0);
     var ctx = r.getCtx();
-    // geöffnete Rätsel-Truhe (nach gelöstem Rätsel)
-    if (st.chestOpen > 0) {
-      (st.def.signs || []).forEach(function (sg) {
-        if (sg.action === 'chest') drawChestOpen(r, sg.tiles[0][0], sg.tiles[0][1], st.chestOpen);
-      });
-    }
+    drawOpenChest(r, st, true);
     st.def.buildings.forEach(function (b) {
       if (st.doors[b.room] > 0) Buildings.openDoor(r, b, st.doors[b.room]);
       if (!b.chimney) return;

@@ -598,27 +598,27 @@
       var cam = slide.dir * slide.p * W;
       ctx.save();
       ctx.translate(-cam, 0);
-      World.drawGround(Render, now, slide.from);
+      World.drawGround(Render, now, slide.from, Player.getY());
       ctx.translate(slide.dir * W, 0);
-      World.drawGround(Render, now, slide.to);
+      World.drawGround(Render, now, slide.to, Player.getY());
       ctx.restore();
       Player.draw(Render, -cam, 0);
       ctx.save();
       ctx.translate(-cam, 0);
-      World.drawOverlay(Render, now, slide.from);
+      World.drawOverlay(Render, now, slide.from, Player.getY());
       ctx.translate(slide.dir * W, 0);
-      World.drawOverlay(Render, now, slide.to);
+      World.drawOverlay(Render, now, slide.to, Player.getY());
       ctx.restore();
       return;
     }
-    World.drawGround(Render, now);
+    World.drawGround(Render, now, null, Player.getY());
     Player.draw(Render);
     // Gegner zeichnen: draußen und in den Dungeon-Räumen
     if (World.isOutdoor() || Enemies.hasScreen(World.getScreen()))
       Enemies.draw(Render, now, World.getScreen());
     if (World.getScreen() === 'dboss') Boss.draw(Render, now);
     if (spaeth) drawSpaeth(Render, now);
-    World.drawOverlay(Render, now);
+    World.drawOverlay(Render, now, null, Player.getY());
     if (chestSword) drawChestSword(Render, now);
     if (doorClip) {
       // Figur in der Türöffnung sichtbar halten (vor dem dunklen Flur)
