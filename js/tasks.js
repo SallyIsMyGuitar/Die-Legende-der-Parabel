@@ -323,7 +323,12 @@ var Tasks = (function () {
     }
   ];
 
-  function bossTasks() { return BOSS_HOEHLE.slice(); }
+  // Feste Boss-Aufgaben je Dungeon (Schluessel = Boss-Raum)
+  var BOSS_FEST = { dboss: BOSS_HOEHLE };
+
+  function bossTasks(room) {
+    return (BOSS_FEST[room] || []).slice();
+  }
 
   return { TYPES: TYPES, make: make, fmt: fmt, spfText: spfText, bossTasks: bossTasks };
 })();

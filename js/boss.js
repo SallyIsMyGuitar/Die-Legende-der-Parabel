@@ -1,24 +1,13 @@
-// boss.js: Waechter der Hoehle der Parabeln - Boss des ersten Dungeons
-// Er stellt mehrere feste, von der Lehrkraft gepruefte Aufgaben nacheinander
-// (tasks.js, bossTasks). Jede richtige Antwort kostet ihn ein Herz, das
-// Schwert wirkt bei ihm nicht. Nach dem Sieg oeffnet sich das Boss-Tor.
+// boss.js: Bosse der Dungeons - je Boss-Raum eine feste Instanz
+// Boss.register(raum, def) meldet einen Boss mit Herzpunkten, Position und
+// Zeichnung an (raum = Boss-Raum, z. B. 'dboss'). Boss.of(raum) liefert die
+// Instanz mit den bekannten Methoden (startFight, damage, die, draw ...).
+// Jede richtige Antwort kostet den Boss ein Herz, das Schwert wirkt bei
+// Bossen nicht. Nach dem Sieg oeffnet sich das Tor.
 var Boss = (function () {
   'use strict';
 
-  var MAX_HP = 3;          // eine feste Aufgabe = ein Herz
-  var X = 102, Y = 60;     // linke obere Ecke; Bildmitte (112, 72)
-
-  var hp = MAX_HP;
-  var defeated = false;
-  var fighting = false;
-  var dieT = 0;            // Start der Besiegt-Animation
-
-  function startFight() { fighting = true; }
-  // Richtige Antwort: ein Herz weg, Restherz zurueck
-  function damage() { hp = Math.max(0, hp - 1); fighting = hp > 0; return hp; }
-  // Wievielte Aufgabe ist dran (0 bis 2)
-  function index() { return MAX_HP - hp; }
-  function die() { fighting = false; defeated = true; dieT = performance.now(); }
+  var byRoom = {};   // Raum -> Instanz
 
   // Kleines Herz: gefuellt oder leer (Form, nicht nur Farbe)
   function heart(r, cx, cy, full) {
@@ -30,17 +19,87 @@ var Boss = (function () {
     r.px(cx, cy + 4, 1, 1, col);
   }
 
-  // Herzleiste unter dem schwebenden Waechter
-  function drawHearts(r, alpha) {
-    var ctx = r.getCtx();
-    if (alpha !== undefined) ctx.globalAlpha = alpha;
-    for (var i = 0; i < MAX_HP; i++) heart(r, 100 + i * 7, 94, i < hp);
-    if (alpha !== undefined) ctx.globalAlpha = 1;
+  // Eine Instanz: Herzpunkte, Besiegt-Animation und Zeichnung aus def.
+  // def = { maxHp, x, y, cx, cy, hearts: {x, y}, drawLiving(r, def, inst, now, alpha),
+  //         drawDying(r, def, inst, now) }
+  //   x, y   = linke obere Ecke der Zeichnung
+  //   cx, cy = Mittelpunkt fuer Beruehrung und Rueckstoss
+  function create(def) {
+    var hp = def.maxHp;
+    var defeated = false;
+    var fighting = false;
+    var dieT = 0;            // Startzeit der Besiegt-Animation
+
+    var inst = {
+      def: def,
+
+      startFight: function () { fighting = true; },
+      // Richtige Antwort: ein Herz weg, Restherz bleibt
+      damage: function () { hp = Math.max(0, hp - 1); fighting = hp > 0; return hp; },
+      // Wievielte Aufgabe ist dran (0 bis maxHp - 1)
+      index: function () { return def.maxHp - hp; },
+      die: function () { fighting = false; defeated = true; dieT = performance.now(); },
+      isFighting: function () { return fighting; },
+      isDefeated: function () { return defeated; },
+      // Startzeit der Besiegt-Animation (fuer die Zeichnung der Instanz)
+      dieStart: function () { return dieT; },
+      // Spielstand laden: Boss ist schon besiegt (ohne Animation)
+      setDefeated: function () { hp = 0; defeated = true; fighting = false; dieT = 0; },
+
+      // Herzleiste unter dem Boss (Position aus def.hearts)
+      drawHearts: function (r, alpha) {
+        var ctx = r.getCtx();
+        if (alpha !== undefined) ctx.globalAlpha = alpha;
+        for (var i = 0; i < def.maxHp; i++) {
+          heart(r, def.hearts.x + i * 7, def.hearts.y, i < hp);
+        }
+        if (alpha !== undefined) ctx.globalAlpha = 1;
+      },
+
+      // Alles zusammen: lebend, im Kampf mit Herzen, oder beim Zerfallen
+      draw: function (r, now) {
+        if (defeated) {
+          if (now - dieT < 1500) def.drawDying(r, def, inst, now);
+          return;
+        }
+        def.drawLiving(r, def, inst, now, undefined);
+        inst.drawHearts(r);
+      }
+    };
+    return inst;
   }
 
-  // Schwebe-Statue: dunkler Stein, leuchtende Augen, Parabel auf der Brust
-  function drawLiving(r, now, alpha) {
+  function register(room, def) {
+    byRoom[room] = create(def);
+    return byRoom[room];
+  }
+
+  // Instanz im Boss-Raum (null, wenn der Raum keinen Boss hat)
+  function of(room) {
+    return byRoom[room] || null;
+  }
+
+  // Alle Instanzen durchgehen (fuer das Speichern)
+  function each(fn) {
+    var rooms = Object.keys(byRoom);
+    for (var i = 0; i < rooms.length; i++) fn(rooms[i], byRoom[rooms[i]]);
+  }
+
+  return { register: register, of: of, each: each };
+})();
+
+// --- Waechter der Hoehle der Parabeln (Dungeon 1, Raum 'dboss') ------------
+// Schwebende Statue: dunkler Stein, leuchtende Augen, Parabel auf der Brust.
+// Zeichnung und Werte entsprechen dem urspruenglichen Boss der Hoehle.
+(function () {
+  'use strict';
+
+  var X = 102, Y = 60;     // linke obere Ecke; Bildmitte (112, 72), Mitte (112, 74)
+
+  // Schwebe-Statue (hp = restliche Herzen, alpha = Abblenden beim Zerfallen)
+  function drawLiving(r, def, inst, now, alpha) {
     var ctx = r.getCtx();
+    var hp = def.maxHp - inst.index();
     var bob = Math.round(Math.sin(now / 500) * 2);
     var x = X, y = Y + bob;
     if (alpha !== undefined) ctx.globalAlpha = alpha;
@@ -96,12 +155,12 @@ var Boss = (function () {
   }
 
   // Besiegt-Animation: Statue sackt ab und zerfaellt in Staub und Stein
-  function drawDying(r, now) {
-    var t = (now - dieT) / 1000;
+  function drawDying(r, def, inst, now) {
+    var t = (now - inst.dieStart()) / 1000;
     if (t > 1.4) return;
     var ctx = r.getCtx();
     var p = Math.min(1, t / 1.2);
-    drawLiving(r, dieT + 1, Math.max(0, 1 - p) );   // einfrieren, abblenden
+    drawLiving(r, def, inst, inst.dieStart() + 1, Math.max(0, 1 - p));   // einfrieren, abblenden
     // Staubwolke, die nach oben zieht
     ctx.globalAlpha = Math.max(0, 0.7 - p * 0.7);
     for (var i = 0; i < 5; i++) {
@@ -112,26 +171,12 @@ var Boss = (function () {
     ctx.globalAlpha = 1;
   }
 
-  // Alles together: lebend, im Kampf mit Herzen, oder beim Zerfallen
-  function draw(r, now) {
-    if (defeated) {
-      if (now - dieT < 1500) drawDying(r, now);
-      return;
-    }
-    drawLiving(r, now);
-    drawHearts(r);
-  }
-
-  return {
-    startFight: startFight,
-    damage: damage,
-    index: index,
-    die: die,
-    draw: draw,
-    drawHearts: drawHearts,
-    isFighting: function () { return fighting; },
-    isDefeated: function () { return defeated; },
-    // Spielstand laden: Boss ist schon besiegt (ohne Animation)
-    setDefeated: function () { hp = 0; defeated = true; fighting = false; dieT = 0; }
-  };
+  Boss.register('dboss', {
+    maxHp: 3,          // eine feste Aufgabe = ein Herz
+    x: X, y: Y,        // linke obere Ecke der Zeichnung (Rueckstoss)
+    cx: 112, cy: 74,   // Bildmitte fuer die Beruehrung
+    hearts: { x: 100, y: 94 },
+    drawLiving: drawLiving,
+    drawDying: drawDying
+  });
 })();

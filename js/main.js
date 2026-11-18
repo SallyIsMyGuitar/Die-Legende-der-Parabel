@@ -24,7 +24,17 @@
 
   // --- Spielstand: Fortschritt sammeln, speichern und laden ----------------
   var stats = { right: 0, wrong: 0 };   // Fehlerstatistik (fuer Abspann/Code)
-  var bossIntroDone = false;            // Wächter hat sich schon vorgestellt
+
+  // --- Bosse der Dungeons: Vorstellung und Sieg je Boss-Raum ------------
+  // (Instanz mit Herzen und Zeichnung liegt in boss.js, Aufgaben in tasks.js)
+  var bossIntroDone = {};               // Raum -> Wächter hat sich schon vorgestellt
+
+  // Spielstand je Boss-Raum: true = besiegt
+  function bossState() {
+    var st = {};
+    Boss.each(function (room, inst) { st[room] = inst.isDefeated(); });
+    return st;
+  }
 
   function collectState() {
     return {
@@ -35,7 +45,8 @@
       chests: chestDone,
       sword: Sword.has(),
       merk: Merkbuch.all(),
-      boss: Boss.isDefeated(),
+      boss: !!Boss.of('dboss') && Boss.of('dboss').isDefeated(),   // alter Schluessel (Dungeon 1)
+      bosses: bossState(),                                          // besiegt je Boss-Raum
       raetsel: Raetsel.isSolved(),
       bossIntro: bossIntroDone,
       wappen: wappens,
@@ -55,9 +66,13 @@
     if (chestDone.klippen) World.setChestOpen(1, 'klippen');
     if (st.sword) Sword.give();
     Merkbuch.load(st.merk);
-    if (st.boss) { Boss.setDefeated(); World.openRockGate('ost'); }
+    var bossesSt = st.bosses || (st.boss ? { dboss: true } : {});   // alte Staende nur mit 'boss'
+    if (bossesSt.dboss) { Boss.of('dboss').setDefeated(); World.openRockGate('ost'); }
     if (st.raetsel) Raetsel.setSolved();
-    bossIntroDone = !!st.bossIntro || !!st.boss;
+    // Vorstellung je Boss-Raum; aeltere Staende kennen nur die Hoehle
+    bossIntroDone = st.bossIntro && typeof st.bossIntro === 'object'
+      ? st.bossIntro
+      : ((st.bossIntro || st.boss) ? { dboss: true } : {});
     wappens = st.wappen || 0;
     if (st.spaeth) { spaethDone = true; placeSpaethNpc(); }
     if (st.stats) stats = { right: st.stats.right || 0, wrong: st.stats.wrong || 0 };
@@ -135,29 +150,38 @@
     return !!BANN[screen] && Enemies.remaining(screen) === 0;
   }
 
-  // --- Boss des ersten Dungeons: feste Aufgaben nacheinander ---------------
-  var BOSS_NAME = 'Wächter der Höhle';
-  var BOSS_CONTEXT = 'Der Wächter fragt:';
-  // Vorstellung beim ersten Kontakt (danach startet die erste Aufgabe)
-  var BOSS_INTRO_TEXTS = [
-    'Halt! Graf Gerade hat befohlen: Hier kommt keine Kurve durch!',
-    'Beantworte meine drei Fragen. Für jede richtige Antwort verliere ich ein Herz. Dein Schwert nützt dir bei mir nichts.'
-  ];
-  var BOSS_VICTORY_TEXTS = [
-    'Der Bann zerbricht in tausend gerade Splitter. Der Wächter atmet auf, und das Tor öffnet sich.',
-    'Danke! Graf Gerade hat mich verzaubert. Er hasst alles, was sich krümmt – und Parabeln am allermeisten.',
-    'Darum ließ er eure Schule zerstören: Dort lernt man, wie Parabeln funktionieren. Er hat noch weitere Wächter … und ein Schloss.',
-    'Du erhältst das erste Wappen: das Wappen der Normalparabel. Kehre ins Dorf zurück und erzähle, was du erfahren hast.'
-  ];
+  // --- Bosse der Dungeons: Texte und Ablauf je Boss-Raum ------------------
+  // Aufgaben je Boss liegen in tasks.js (bossTasks), Instanz in boss.js.
+  // Die Texte des Wächters der Höhle sind freigegeben und bleiben unverändert.
+  var BOSSES = {
+    dboss: {
+      name: 'Wächter der Höhle',
+      kontext: 'Der Wächter fragt:',
+      // Vorstellung beim ersten Kontakt (danach startet die erste Aufgabe)
+      intro: [
+        'Halt! Graf Gerade hat befohlen: Hier kommt keine Kurve durch!',
+        'Beantworte meine drei Fragen. Für jede richtige Antwort verliere ich ein Herz. Dein Schwert nützt dir bei mir nichts.'
+      ],
+      victory: [
+        'Der Bann zerbricht in tausend gerade Splitter. Der Wächter atmet auf, und das Tor öffnet sich.',
+        'Danke! Graf Gerade hat mich verzaubert. Er hasst alles, was sich krümmt – und Parabeln am allermeisten.',
+        'Darum ließ er eure Schule zerstören: Dort lernt man, wie Parabeln funktionieren. Er hat noch weitere Wächter … und ein Schloss.',
+        'Du erhältst das erste Wappen: das Wappen der Normalparabel. Kehre ins Dorf zurück und erzähle, was du erfahren hast.'
+      ]
+    }
+  };
   var bossAttempts = 1;    // Versuche an der aktuellen Boss-Aufgabe
   var wappens = 0;         // gesammelte Wappen (fuer den Abspann)
 
   function startBossTask() {
-    Boss.startFight();
-    var def = Tasks.bossTasks()[Boss.index()];
+    var room = World.getScreen();            // Boss-Raum bestimmt den Boss
+    var boss = Boss.of(room);
+    var name = BOSSES[room].name;
+    boss.startFight();
+    var def = Tasks.bossTasks(room)[boss.index()];
     // Feste Aufgabe mit Kontext uebernehmen
     var task = {
-      frage: BOSS_CONTEXT + ' ' + def.frage,
+      frage: BOSSES[room].kontext + ' ' + def.frage,
       felder: def.felder,
       loesung: def.loesung,
       loesungstext: def.loesungstext,
@@ -169,24 +193,24 @@
       if (solved) stats.right++; else stats.wrong++;
       if (solved) {
         bossAttempts = 1;
-        if (Boss.damage() > 0) {
+        if (boss.damage() > 0) {
           // naechste feste Aufgabe nach kurzem Durchatmen
           run([{ dur: 0.5 }, { dur: 0, end: function () { startBossTask(); } }]);
         } else {
-          Boss.die();
+          boss.die();
           wappens++;
           saveGame();   // nach dem Dungeon automatisch speichern
           World.openRockGate('ost');   // der Felsen am Südausgang löst sich auf
           run([
             { dur: 1.3 },
             { dur: 0, end: function () {
-              Dialog.open(BOSS_NAME, BOSS_VICTORY_TEXTS);
+              Dialog.open(name, BOSSES[room].victory);
             } }
           ]);
         }
       } else {
         bossAttempts++;                     // gleiche Aufgabe kommt wieder
-        hurt({ x: 102, y: 60 });   // Rueckstoss vom Boss weg
+        hurt({ x: boss.def.x, y: boss.def.y });   // Rueckstoss vom Boss weg
       }
     }, { boss: true, attempt: bossAttempts });
   }
@@ -641,7 +665,8 @@
     var actors = [{ y: Player.getY(), draw: function () { Player.draw(Render); } }];
     if (World.isOutdoor() || Enemies.hasScreen(here))
       actors = actors.concat(Enemies.actors(Render, now, here));
-    if (here === 'dboss') actors.push({ y: -999, draw: function () { Boss.draw(Render, now); } });
+    var bossDraw = Boss.of(here);
+    if (bossDraw && here in BOSSES) actors.push({ y: -999, draw: function () { bossDraw.draw(Render, now); } });
     if (spaeth) actors.push({ y: spaeth.y, draw: function () { drawSpaeth(Render, now); } });
     World.drawSorted(Render, null, actors);
     World.drawOverlay(Render, now);
@@ -762,14 +787,16 @@
       Enemies.update(World, dt, Player.getX(), Player.getY(),
         Player.isBlinking() ? null : startBattle);
       // Szene auslösen, bevor die Spielfigur das Dorf Richtung Osten verlässt
-      // Boss des ersten Dungeons: Beruehrung startet die feste Aufgabenreihe
-      if (World.getScreen() === 'dboss' && !Boss.isDefeated() && !Player.isBlinking() &&
-          Math.abs(Player.getX() + 8 - 112) < 15 && Math.abs(Player.getY() + 8 - 74) < 15) {
-        if (!bossIntroDone) {
+      // Boss im aktuellen Raum: Beruehrung startet die feste Aufgabenreihe
+      var bossHere = BOSSES[World.getScreen()] ? World.getScreen() : null;
+      var bossInst = bossHere ? Boss.of(bossHere) : null;
+      if (bossInst && !bossInst.isDefeated() && !Player.isBlinking() &&
+          Math.abs(Player.getX() + 8 - bossInst.def.cx) < 15 && Math.abs(Player.getY() + 8 - bossInst.def.cy) < 15) {
+        if (!bossIntroDone[bossHere]) {
           // erst stellt sich der Wächter vor, danach (noch in Berührung) die Aufgabe
-          bossIntroDone = true;
+          bossIntroDone[bossHere] = true;
           Player.setPosition(Player.getX(), Player.getY());
-          Dialog.open(BOSS_NAME, BOSS_INTRO_TEXTS);
+          Dialog.open(BOSSES[bossHere].name, BOSSES[bossHere].intro);
         } else {
           startBossTask();
         }
@@ -842,7 +869,8 @@
     Dialog.draw(Render);
     TestPage.draw(Render);
     // Boss-Herzen unter der Aufgabenbox (sonst verdecken sie die Eingabefelder)
-    if (World.getScreen() === 'dboss' && Boss.isFighting()) Boss.drawHearts(Render);
+    var bossFight = Boss.of(World.getScreen());
+    if (bossFight && bossFight.isFighting()) bossFight.drawHearts(Render);
     TaskUi.draw(Render);
     Merkbuch.draw(Render);
     if (fade > 0) Render.px(0, 0, W, H, 'rgba(0,0,0,' + fade + ')');

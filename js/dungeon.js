@@ -405,7 +405,7 @@
   // Vorraum: oeffnet das Tor im Laufbild, sobald der Boss besiegt ist
   BOSS.anim = function (r, t) {
     flames(r, t, BOSS.torches);
-    if (typeof Boss !== 'undefined' && Boss.isDefeated()) drawGateOpen(r);
+    if (typeof Boss !== 'undefined' && Boss.of('dboss').isDefeated()) drawGateOpen(r);
   };
 
   Interior.register('dhalle', HALLE);
