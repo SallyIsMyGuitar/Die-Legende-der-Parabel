@@ -262,3 +262,82 @@ var Boss = (function () {
     drawDying: drawDying
   });
 })();
+
+// --- Waechter des Wasserreichs, die Perle in der Muschel (Dungeon 3, 'wboss')
+// Schwebende Riesenmuschel mit leuchtender Perle. Nach dem Sieg kehrt die
+// Perle in die Bildtafel zurueck und das Wasser fliesst wieder in Kurven.
+(function () {
+  'use strict';
+
+  var X = 102, Y = 60;     // linke obere Ecke; Bildmitte (112, 72), Punkte (112, 74)
+
+  function drawLiving(r, def, inst, now, alpha) {
+    var ctx = r.getCtx();
+    var hp = def.maxHp - inst.index();
+    var bob = Math.round(Math.sin(now / 500) * 2);
+    var x = X, y = Y + bob;
+    if (alpha !== undefined) ctx.globalAlpha = alpha;
+
+    // welliger Lichtschein auf dem Boden
+    ctx.globalAlpha = (alpha === undefined ? 1 : alpha) * (0.2 + 0.05 * (Math.floor(now / 250) % 2));
+    r.ellipse(112, 92, 16, 5, '#8ad8e8');
+    ctx.globalAlpha = alpha === undefined ? 1 : alpha;
+
+    // Rueckenschale der Muschel
+    r.px(x + 4, y + 2, 16, 14, '#7a6a8a');
+    r.px(x + 5, y + 3, 14, 12, '#9a8aaa');
+    r.px(x + 7, y + 4, 10, 1, '#b8aabc');
+    // Riffkanten an der Schale (mehr Risse bei Schaden)
+    r.px(x + 6, y + 7, 12, 1, '#6a5a7a');
+    r.px(x + 7, y + 11, 10, 1, '#6a5a7a');
+    if (hp <= 2) r.px(x + 9, y + 8, 1, 4, '#4a3a5a');
+    if (hp === 1) {
+      r.px(x + 14, y + 5, 1, 5, '#4a3a5a');
+      r.px(x + 11, y + 12, 4, 1, '#4a3a5a');
+    }
+
+    // Innenseite und leuchtende Perle (wird bei Schaden dunkler)
+    r.px(x + 6, y + 8, 12, 8, '#e8dce8');
+    var perl = hp > 1 ? '#f4f0f4' : '#c8b4c4';
+    r.ellipse(x + 12, y + 11, 4, 3, perl);
+    r.ellipse(x + 11, y + 10, 1, 1, '#ffffff');
+    // Perle leuchtet im Takt
+    ctx.globalAlpha = (alpha === undefined ? 1 : alpha) * (0.15 + 0.08 * (Math.floor(now / 300 + hp) % 2));
+    r.ellipse(x + 12, y + 11, 7, 5, '#f0e4f0');
+    ctx.globalAlpha = alpha === undefined ? 1 : alpha;
+
+    // Augen in der Schalenkante
+    var eye = hp > 1 ? '#6ae0f0' : '#e8443a';
+    r.px(x + 6, y + 5, 2, 2, eye);
+    r.px(x + 16, y + 5, 2, 2, eye);
+
+    ctx.globalAlpha = 1;
+  }
+
+  // Besiegt-Animation: Die Muschel oeffnet sich ganz, die Perle loest sich
+  // und zerrinnt in Wasser, das in Kurven davonrieselt
+  function drawDying(r, def, inst, now) {
+    var t = (now - inst.dieStart()) / 1000;
+    if (t > 1.4) return;
+    var ctx = r.getCtx();
+    var p = Math.min(1, t / 1.2);
+    drawLiving(r, def, inst, inst.dieStart() + 1, Math.max(0, 1 - p));   // einfrieren, abblenden
+    // Wassertropfen ziehen in Kurven davon
+    ctx.globalAlpha = Math.max(0, 0.8 - p * 0.8);
+    for (var i = 0; i < 6; i++) {
+      var cx = 104 + i * 4;
+      var cy = 70 + p * 26 + Math.sin(i + p * 5) * 4 * p;
+      r.ellipse(cx, cy, 2, 2, '#b8e0f0');
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  Boss.register('wboss', {
+    maxHp: 3,          // eine feste Aufgabe = ein Herz
+    x: X, y: Y,        // linke obere Ecke der Zeichnung (Rueckstoss)
+    cx: 112, cy: 74,   // Bildmitte fuer die Beruehrung
+    hearts: { x: 100, y: 94 },
+    drawLiving: drawLiving,
+    drawDying: drawDying
+  });
+})();

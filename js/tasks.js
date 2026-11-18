@@ -425,8 +425,37 @@ var Tasks = (function () {
     }
   ];
 
+  // --- Boss des Wasserreichs: feste, von der Lehrkraft gepruefte Aufgaben ---
+  // Thema des Dungeons: Allgemeine Form. Die drei Aufgaben verbinden das
+  // Umformen, den Streckfaktor und das Aufstellen aus drei Punkten.
+  var BOSS_WASSER = [
+    {
+      frage: 'Gib den Scheitelpunkt der Parabel y = x\u00b2 \u2212 6x + 8 an.',
+      felder: [{ key: 'xs', label: 'xs' }, { key: 'ys', label: 'ys' }],
+      loesung: [3, -1],
+      loesungstext: 'y = (x \u2212 3)\u00b2 \u2212 1, also S(3|\u22121)',
+      hinweis: 'Forme um: y = (x \u2212 3)\u00b2 \u2212 1.'
+    },
+    {
+      frage: 'Die Parabel hat den Scheitel S(\u22122|5) und geht durch P(2|\u22123). Gib den Streckfaktor a an.',
+      felder: [{ key: 'a', label: 'a' }],
+      loesung: [-0.5],
+      loesungstext: '\u22123 = a(2 + 2)\u00b2 + 5, also \u22128 = 16a, a = \u22120,5',
+      hinweis: 'Setze P ein: \u22123 = a(2 + 2)\u00b2 + 5.'
+    },
+    {
+      frage: 'Eine Parabel geht durch P1(0|3), P2(\u22121|2) und P3(2|\u22121). Stelle sie in der Scheitelform auf.',
+      felder: [{ key: 'a', label: 'a' }, { key: 'xs', label: 'xs' }, { key: 'ys', label: 'ys' }],
+      loesung: [-1, 0, 3],
+      loesungstext: 'y = \u2212x\u00b2 + 3 = \u2212(x \u2212 0)\u00b2 + 3',
+      hinweis: 'Der Scheitel liegt auf der y-Achse: xs = 0, ys = 3. Setze P3 ein: \u22121 = a \u00b7 2\u00b2 + 3.',
+      graph: true,
+      graphFix: { xp: 2, yp: -1 }
+    }
+  ];
+
   // Feste Boss-Aufgaben je Dungeon (Schluessel = Boss-Raum)
-  var BOSS_FEST = { dboss: BOSS_HOEHLE, lboss: BOSS_TURM };
+  var BOSS_FEST = { dboss: BOSS_HOEHLE, lboss: BOSS_TURM, wboss: BOSS_WASSER };
 
   function bossTasks(room) {
     return (BOSS_FEST[room] || []).slice();

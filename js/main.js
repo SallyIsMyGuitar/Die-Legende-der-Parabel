@@ -218,6 +218,21 @@
       // nach dem Sieg: der Leuchtturm draussen leuchtet wieder und
       // das Wassertor zur Lagune (Dungeon 3) oeffnet sich
       onWin: function () { World.setLighthouseLit(true); World.setWaterGateOpen(true); }
+    },
+    wboss: {
+      name: 'Wächter des Wasserreichs',
+      kontext: 'Der Wächter fragt:',
+      intro: [
+        'Halt! Graf Gerade hat mir befohlen: Das Wasserreich bleibt gerade, starr und stumm!',
+        'Beantworte meine drei Fragen. Für jede richtige Antwort verliere ich ein Herz. Dein Schwert hilft dir hier nicht.'
+      ],
+      victory: [
+        'Die starren Wasserwände zerfließen in sanfte Wellen. Der Bann über dem Wasserreich zerbricht.',
+        'Ich bin die Perle des Reichs, verzaubert vom Grafen. In meiner Schale spiegelt sich jede Parabel – das konnte er nicht dulden.',
+        'Habt ihr vom Sandsturm im Süden gehört? Er trägt sein Siegel. Erst wenn ihr ihn bannet, öffnet sich der Weg zum letzten Wächter.',
+        'Du erhältst das Wappen der allgemeinen Form. Die Gezeiten sagen voraus: Eure Schule wird wieder erstehen.'
+      ]
+      // Das Tor zum Sandsturm (Dungeon 4) oeffnet sich in einem spaeteren Schritt
     }
   };
   var bossAttempts = 1;    // Versuche an der aktuellen Boss-Aufgabe

@@ -331,6 +331,21 @@
     if (!Gezeiten.isSolved()) bars(r);
   };
 
+  // Vorraum zum Boss: nach dem Sieg liegt die Perle leuchtend in der
+  // Bildtafel-Nische (der Waechter selbst ist verschwunden)
+  BOSSRAUM.anim = function (r, t) {
+    bubbles(r, t, 3);
+    if (typeof Boss === 'undefined' || !Boss.of('wboss') || !Boss.of('wboss').isDefeated()) return;
+    var ctx = r.getCtx();
+    ctx.globalAlpha = 0.15 + 0.05 * (Math.floor(t / 260) % 2);
+    r.ellipse(112, 74, 22, 26, '#8ad8e8');
+    ctx.globalAlpha = 1;
+    // leuchtende Perle auf einem Muschelpodest
+    r.px(106, 78, 12, 6, '#9a8aaa');
+    r.ellipse(112, 76, 4, 3, '#f4f0f4');
+    r.ellipse(111, 75, 1, 1, '#ffffff');
+  };
+
   Interior.register('weingang', EINGANG);
   Interior.register('wmitte', PUMPE);
   Interior.register('wraetsel', RAETSEL);
