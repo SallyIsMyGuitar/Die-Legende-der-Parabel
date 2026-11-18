@@ -5,6 +5,16 @@ var Player = (function () {
   var TILE = 16;
   var SPEED = 60; // Pixel pro Sekunde
 
+  // --- Kollisionsbox für Wandkollision (nur fürs Laufen, nicht für Treffer) ---
+  // Die Box ist deutlich kleiner als das 16x16-Sprite und sitzt im Fußbereich,
+  // damit die Figur an Ecken, Türen und Durchgängen nicht hängen bleibt
+  // (wie bei Top-Down-Zelda-Spielen). Zum Nachjustieren nur diese Werte ändern.
+  var HITBOX_WIDTH = 10;    // Breite der Kollisionsbox in Pixeln (ca. 60 % der Sprite-Breite)
+  var HITBOX_HEIGHT = 7;     // Höhe der Kollisionsbox in Pixeln (nur der Fußbereich)
+  var HITBOX_OFFSET_X = 3;   // horizontal am Sprite zentriert
+  var HITBOX_OFFSET_Y = 8;   // Box sitzt in der unteren Sprite-Hälfte, unten bündig
+  var CORNER_ASSIST = 4;     // maximales automatisches Anschieben an Ecken in Pixeln (25 % Kachel)
+
   // Position in Pixeln (logische Auflösung), Figur ist 16x16
   var x = 9 * TILE;
   var y = 5 * TILE;
@@ -16,12 +26,14 @@ var Player = (function () {
   function getY() { return y; }
   function getFacing() { return facing; }
 
-  // Prüft, ob das 16x16-Feld der Figur an Position (px, py) frei ist
+  // Prüft, ob die kleine Kollisionsbox (unterer Fußbereich) an Position (px, py) frei ist
   function canBeAt(world, px, py) {
-    var tx1 = Math.floor(px / TILE);
-    var ty1 = Math.floor(py / TILE);
-    var tx2 = Math.floor((px + TILE - 1) / TILE);
-    var ty2 = Math.floor((py + TILE - 1) / TILE);
+    var bx = px + HITBOX_OFFSET_X;
+    var by = py + HITBOX_OFFSET_Y;
+    var tx1 = Math.floor(bx / TILE);
+    var ty1 = Math.floor(by / TILE);
+    var tx2 = Math.floor((bx + HITBOX_WIDTH - 1) / TILE);
+    var ty2 = Math.floor((by + HITBOX_HEIGHT - 1) / TILE);
     for (var ty = ty1; ty <= ty2; ty++) {
       for (var tx = tx1; tx <= tx2; tx++) {
         if (world.isBlocked(tx, ty)) return false;
@@ -30,10 +42,67 @@ var Player = (function () {
     return true;
   }
 
-  // Bewegung mit Kollision, Achsen getrennt, damit man an Wänden entlanggleiten kann
+  // Sucht eine seitliche Verschiebung um höchstens CORNER_ASSIST Pixel, nach der
+  // die Kollisionsbox an der Zielposition frei wäre (Eck-Assist für Türen und
+  // Durchgänge). axis 'x': Bewegung in X, Anschieben in Y; axis 'y' umgekehrt.
+  function cornerNudge(world, nx, ny, axis) {
+    for (var n = 1; n <= CORNER_ASSIST; n++) {
+      var minusFrei = axis === 'x' ? canBeAt(world, nx, ny - n) : canBeAt(world, nx - n, ny);
+      var plusFrei = axis === 'x' ? canBeAt(world, nx, ny + n) : canBeAt(world, nx + n, ny);
+      if (minusFrei || plusFrei) {
+        if (minusFrei && plusFrei) {
+          // beide Seiten frei: zur Seite schieben, auf der die Ecke überlappt
+          return kanteOben(world, nx, ny, axis) ? n : -n;
+        }
+        return minusFrei ? -n : n;
+      }
+    }
+    return 0;
+  }
+
+  // Liegt die blockierte Kachel eher am oberen/linken Rand der Box?
+  function kanteOben(world, nx, ny, axis) {
+    var bx = nx + HITBOX_OFFSET_X;
+    var by = ny + HITBOX_OFFSET_Y;
+    var tx1 = Math.floor(bx / TILE);
+    var ty1 = Math.floor(by / TILE);
+    var tx2 = Math.floor((bx + HITBOX_WIDTH - 1) / TILE);
+    var ty2 = Math.floor((by + HITBOX_HEIGHT - 1) / TILE);
+    var mitte = axis === 'x' ? (ty1 + ty2) / 2 : (tx1 + tx2) / 2;
+    for (var ty = ty1; ty <= ty2; ty++) {
+      for (var tx = tx1; tx <= tx2; tx++) {
+        if (world.isBlocked(tx, ty)) {
+          if (axis === 'x') { if (ty <= mitte) return true; }
+          else if (tx <= mitte) return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  // Bewegung mit Kollision, Achsen getrennt, damit man an Wänden entlanggleiten
+  // kann. Blockiert eine Achse nur an einer Ecke, schiebt der Eck-Assist die
+  // Figur automatisch seitlich um die Ecke (höchstens CORNER_ASSIST Pixel).
   function move(world, dx, dy) {
-    if (dx !== 0 && canBeAt(world, x + dx, y)) x += dx;
-    if (dy !== 0 && canBeAt(world, x, y + dy)) y += dy;
+    var movedX = dx === 0 || canBeAt(world, x + dx, y);
+    if (dx !== 0 && movedX) x += dx;
+    var movedY = dy === 0 || canBeAt(world, x, y + dy);
+    if (dy !== 0 && movedY) y += dy;
+
+    if (dx !== 0 && !movedX) {
+      if (canBeAt(world, x + dx, y)) x += dx;
+      else {
+        var n = cornerNudge(world, x + dx, y, 'x');
+        if (n !== 0) { y += n; x += dx; }
+      }
+    }
+    if (dy !== 0 && !movedY) {
+      if (canBeAt(world, x, y + dy)) y += dy;
+      else {
+        var m = cornerNudge(world, x, y + dy, 'y');
+        if (m !== 0) { x += m; y += dy; }
+      }
+    }
   }
 
   // Zeitunabhängige Aktualisierung
