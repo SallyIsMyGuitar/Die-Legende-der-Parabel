@@ -25,7 +25,7 @@ Ein Mathe-Übungsspiel als Top-Down-Abenteuer im Stil eines modernen 2D-Zelda (O
 - Wer oder was dahintersteckt, erfährt man nach und nach durch die besiegten Bosse in den Dungeons.
 - **Gegenspieler (vorläufig): Graf Gerade.** Er duldet nichts, was sich krümmt, und hasst Parabeln am meisten. Deshalb ließ er die Schule zerstören und die Lehrkräfte ins Schloss bringen. Sein Bann aus starren, geraden Linien verzaubert die Wesen der Oberwelt und die Dungeon-Wächter; eine richtige Antwort erlöst sie. Der Name kann später noch geändert werden.
 - Erzählbogen bisher: Mama (Schule zerstört, Lehrkräfte im Schloss) → Wanderin (Bann über dem Land) → Förster (ein Graf mit einem Heer aus Linealen) → Einsiedler (Wächter im Bann des Grafen) → Forscherin → Wächter (stellt sich im Namen von Graf Gerade vor; nach dem Sieg: der Graf hasst Parabeln, hat weitere Wächter und ein Schloss) → Dorfbewohner reagieren nach dem ersten Wappen mit einer Zusatzseite.
-- Wer alle Dungeons löst und das Schloss befreit, befreit die Lehrkräfte. Danach wird die Schule wieder aufgebaut (sichtbar im Dorf, Teil des Finales bzw. Abspanns).
+- Wer alle Dungeons löst, betritt im Finale die zerstörte Schule und befreit dort die Lehrkräfte: drei Räume lösen, dann den Endboss besiegen. Danach wird die Schule wieder aufgebaut (sichtbar im Dorf, Teil des Finales bzw. Abspanns). Einzelne Lehrkräfte können auch woanders versteckt oder auf der Flucht sein (z. B. Herr Späth am Dorfplatz, Herr Dietl im Versteck an der Ruine).
 - Die Spielfigur ist ein Schüler ohne Namen und wird immer nur mit „du“ angesprochen.
 
 ## Plattform und Technik
@@ -100,7 +100,7 @@ Ein Mathe-Übungsspiel als Top-Down-Abenteuer im Stil eines modernen 2D-Zelda (O
 - Auf dem Weg zu jedem Dungeon stehen Erklär-NPCs mit kurzen Dialogen, je ein Gedanke pro Dialog. Dort gibt es Pflicht-Rätsel, leicht und direkt an die Erklärung gekoppelt, als Verständnis-Check.
 - Alles Gehörte (Merksätze der Erklär-NPCs) landet automatisch in einem Merkbuch, das jederzeit geöffnet werden kann, auch mitten in einer Aufgabe.
 - Die Dungeons sind strikt linear. Der Sieg über den Dungeon-Boss öffnet das nächste Tor (Felsen, Wasser, Sandsturm, Schultor), gibt ein Wappen als reine Trophäe ohne Funktion und enthüllt einen weiteren Teil der Geschichte.
-- Der letzte Dungeon ist kein Ort, sondern die Schule selbst: Man kann die Schule betreten, dort drei Räume lösen und dann gegen den Endboss kämpfen. Nach seinem Sieg werden die Lehrkräfte befreit und die Schule wird wieder aufgebaut.
+- Der letzte Dungeon ist kein Ort, sondern die zerstörte Schule selbst: Nach Dungeon 4 öffnet sich das Schultor. Man betritt das zerstörte Schulgebäude, löst dort drei Räume und kämpft dann gegen den Endboss, um die Lehrkräfte zu befreien. Nach seinem Sieg wird die Schule wieder aufgebaut.
 - Nach dem Finale gibt es einen kurzen Abspann mit Wappen-Übersicht und Fehlerstatistik. Danach ist die Welt frei begehbar, alle Dungeons lassen sich mit neu generierten Aufgaben wiederholen. Die Boss-Aufgaben bleiben fest.
 - Die Struktur muss so offen sein, dass sich später ein Bonus-Dungeon 6 (Trägergraph der Scheitelpunkte, Parameterverfahren) ohne Umbau anhängen lässt.
 
