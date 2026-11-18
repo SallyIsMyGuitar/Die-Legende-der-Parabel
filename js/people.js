@@ -206,6 +206,33 @@ var People = (function () {
     }));
   }
 
+  // Gaertnerin (Felder): dunkle Haare mit Tuch, gruene Arbeitsschuerze
+  function gartnerin() {
+    return dirs(pal({
+      h: '#4a3020', H: '#a87848',
+      t: '#f4f4f4', T: '#dfe4dc', D: '#a8a89a',
+      p: '#5a6a4a', B: '#6a4a2e'
+    }));
+  }
+
+  // Fischer (Klippenweg): gelber Oelpelz, blaue Muetze, dunkle Hose
+  function fischer() {
+    return dirs(pal({
+      h: '#3a3028', H: '#3e64a8',
+      t: '#e0b83a', T: '#f0d070', D: '#b89420',
+      p: '#3a3a4a', B: '#2a3a52'
+    }));
+  }
+
+  // Turmwaerter (Kueste): graue Haare, dunkelblaue Uniform, braune Stiefel
+  function turmwaerter() {
+    return dirs(pal({
+      h: '#8a8a8a', H: '#b0b0b0',
+      t: '#3a4a6a', T: '#5a6a8a', D: '#2a3450',
+      p: '#2e2a3e', B: '#3a2a20'
+    }));
+  }
+
   return {
     researcher: researcher,
     hermit: hermit,
@@ -215,6 +242,9 @@ var People = (function () {
     shopkeeper: shopkeeper,
     wanderer: wanderer,
     forester: forester,
-    spaeth: spaeth
+    spaeth: spaeth,
+    gartnerin: gartnerin,
+    fischer: fischer,
+    turmwaerter: turmwaerter
   };
 })();

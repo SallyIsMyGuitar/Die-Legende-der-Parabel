@@ -15,7 +15,7 @@ var World = (function () {
   var ROWS = 14;
   var W = COLS * TILE;
   var H = ROWS * TILE;
-  var BLOCKING = 'THDFGSW~REiCq';
+  var BLOCKING = 'THDFGSW~REiCqVL';
 
   var SCREENS = {
     start: {
@@ -62,8 +62,8 @@ var World = (function () {
         'T.......iP..T..T',
         'T........P.....T',
         'T........P.....T',
-        'T...PPPPPP.....T',
-        'TTTTTTTTTTTTTTTT'
+        'T...PPPPPPi....T',
+        'TTTTTTTTVVTTTTTT'
       ],
       buildings: [
         { x: 2, y: 2, w: 4, h: 2, door: 3, room: 'nachbarin', style: 'blue', windows: [0, 3], lantern: true },
@@ -85,9 +85,141 @@ var World = (function () {
           name: 'Schild',
           texts: ['Testseite für die Lehrkraft: Beispielaufgaben mit Lösungen.'],
           action: 'testpage'
+        },
+        {
+          // Schild am Felsen: Weg nach Süden (erster Felsen aus „Felsen, Wasser, Sandsturm, Burgtor“)
+          tiles: [[10, 12]], x: 10 * 16, y: 12 * 16,
+          name: 'Schild',
+          texts: ['Der Weg nach Süden ist durch einen Felsen versperrt. Vielleicht löst er sich, sobald der Wächter der Höhle besiegt ist.']
         }
       ],
-      exits: { west: 'start', east: 'wiese' }
+      exits: { west: 'start', east: 'wiese', south: 'felder' }
+    },
+
+    // Felder am Dorfrand: erster Abschnitt nach Süden (Dungeon 2: Scheitelform)
+    felder: {
+      map: [
+        'TTTTTTTTPPTTTTTT',
+        'T.......PP.....T',
+        'T.FFFF..PP.FFFFT',
+        'T.FFFF..PP.FFFFT',
+        'T.......PP.....T',
+        'T.......PP.....T',
+        'T.FFFF..PP.FFFFT',
+        'T.FFFF..PP.FFFFT',
+        'T.......PP.....T',
+        'T...T...PP...T.T',
+        'T.......PP.....T',
+        'T.......PP.....T',
+        'T.......PP.....T',
+        'TTTTTTTTPPTTTTTT'
+      ],
+      buildings: [],
+      npcs: [
+        {
+          x: 6 * TILE, y: 10 * TILE, sprites: function () { return People.gartnerin(); },
+          talk: {
+            name: 'Gärtnerin',
+            texts: [
+              'Hallo! Die Strohgolems auf meinen Feldern stehen unter dem Bann des Grafen. Sie lassen nur nach Süden, wer die Scheitelform kennt.',
+              'In y = a(x − xs)² + ys ist S(xs|ys) der Scheitel – der tiefste oder höchste Punkt der Parabel.',
+              'Zum Beispiel: y = 2(x − 3)² + 1 hat den Scheitel S(3|1). Und bei y = −0,5(x + 2)² − 4 ist der Scheitel S(−2|−4).'
+            ],
+            merk: { id: 'spfAusS', name: 'Scheitelform aus S und a', text: 'y = a(x − xs)² + ys hat den Scheitel S(xs|ys). Beispiel: y = −0,5(x + 2)² − 4 hat S(−2|−4).' }
+          }
+        }
+      ],
+      exits: { north: 'ost', south: 'klippen' }
+    },
+
+    // Klippenweg: zweiter Abschnitt, felsiger Pfad nach Süden
+    klippen: {
+      map: [
+        'TTTTTTTTPPTTTTTT',
+        'T.TT....PP...T.T',
+        'T..T....PP..TT.T',
+        'T.T.....PP.T...T',
+        'T..T....PPPT...T',
+        'T.T.....PP..T..T',
+        'T..T....PP.....T',
+        'T.TT....PP.TT..T',
+        'T.T.....PP...T.T',
+        'T.......PP.....T',
+        'T.T.....PP.TT..T',
+        'T..T....PP.....T',
+        'T.T.....PP...T.T',
+        'TTTTTTTTPPTTTTTT'
+      ],
+      buildings: [],
+      npcs: [
+        {
+          x: 5 * TILE, y: 8 * TILE, sprites: function () { return People.fischer(); },
+          talk: {
+            name: 'Fischer',
+            texts: [
+              'Vorsicht an der Kante! Die Klippengeister treiben hier ihren Spuk und sperren den Weg nach Süden.',
+              'Kennst du die Scheitelform? Sie hilft beim Rechnen: y = a(x − xs)² + ys. Streckfaktor und Verschiebung zusammen bestimmen die Parabel.',
+              'Ist der Scheitel S(1|−2) gegeben und die Parabel geht durch P(3|6), dann setze ein: 6 = a(3 − 1)² − 2. Das gibt 8 = 4a, also a = 2 und y = 2(x − 1)² − 2.'
+            ],
+            merk: { id: 'spfAusSP', name: 'Scheitelform aus S und P', text: 'P in y = a(x − xs)² + ys einsetzen und nach a auflösen. Beispiel: S(1|−2) und P(3|6) geben a = 2, also y = 2(x − 1)² − 2.' }
+          }
+        }
+      ],
+      exits: { north: 'felder', south: 'kueste' }
+    },
+
+    // Küste mit dem Leuchtturm: der Weg zum zweiten Dungeon (Scheitelform)
+    kueste: {
+      map: [
+        'TTTTTTTTPPTTTTTT',
+        'T.......PP.....T',
+        'T.~~~~~~PP.....T',
+        'T.~~~~~~PP.....T',
+        'T.~~~~~~PP...i.T',
+        'T.~~~~~~PP.....T',
+        'T...~~~.PP...q.T',
+        'T....~~.PP.....T',
+        'T.......PP.....T',
+        'T......LLLL....T',
+        'T......LLLL....T',
+        'T......LLEE....T',
+        'T..............T',
+        'TTTTTTTTTTTTTTTT'
+      ],
+      buildings: [],
+      lighthouse: { x: 7, y: 9, w: 4, h: 3 },
+      npcs: [
+        {
+          x: 13 * TILE, y: 8 * TILE, sprites: function () { return People.turmwaerter(); },
+          talk: {
+            name: 'Turmwärter',
+            texts: [
+              'Siehst du den dunklen Leuchtturm? Sein Licht entsteht in einem parabolischen Spiegel – einem gekrümmten Spiegel, der die Strahlen bündelt.',
+              'Graf Gerade hasst genau diese Krümmung. Seit seinem Bann ist das Licht erloschen, und die Krabbengeister bewachen die Tür.',
+              'Die Parabel y = 0,5(x − 2)² + 3 hat den Scheitel S(2|3). Weil sie nach oben geöffnet ist, ist der Scheitel der tiefste Punkt: Alle y-Werte ab 3 kommen vor. Der kleinste y-Wert ist also ys.'
+            ],
+            merk: { id: 'wertemenge', name: 'Wertemenge am Scheitel', text: 'Der Scheitel S(xs|ys) grenzt die Wertemenge ein: Bei a > 0 ist ys der kleinste y-Wert, bei a < 0 der größte.' }
+          }
+        }
+      ],
+      signs: [
+        {
+          tiles: [[13, 4]], x: 13 * 16, y: 4 * 16,
+          name: 'Schild',
+          texts: ['Leuchtturm. Ohne die Krümmung des Spiegels kein Licht.']
+        },
+        {
+          // Rastquelle vor dem Leuchtturm
+          tiles: [[13, 6]], x: 13 * 16, y: 6 * 16,
+          name: 'Quelle',
+          texts: ['Du trinkst vom klaren Wasser. Deine Herzen sind wieder voll.'],
+          action: 'rest',
+          spawn: { x: 13 * 16, y: 7 * 16, facing: 'up' }
+        }
+      ],
+      // Der Leuchtturm ist der Dungeon 2; er öffnet sich erst in einem späteren Schritt
+      dungeon: null,
+      exits: { north: 'klippen' }
     },
 
     // Wiese mit kleinem Teich auf dem Weg zum ersten Dungeon
@@ -263,12 +395,18 @@ var World = (function () {
 
   // Kachel im Bildschirm st; außerhalb wird beim Nachbarbildschirm nachgesehen
   function tileOf(st, tx, ty) {
-    if (ty < 0 || ty >= ROWS) return '#';
+    if ((tx < 0 || tx >= COLS) && (ty < 0 || ty >= ROWS)) return '#';   // Ecke
     if (tx < 0 || tx >= COLS) {
       var dir = tx < 0 ? 'west' : 'east';
       var next = st.def.exits && st.def.exits[dir];
       if (!next) return '#';
       return states[next].tiles[ty][tx < 0 ? tx + COLS : tx - COLS];
+    }
+    if (ty < 0 || ty >= ROWS) {
+      var vdir = ty < 0 ? 'north' : 'south';
+      var vnext = st.def.exits && st.def.exits[vdir];
+      if (!vnext) return '#';
+      return states[vnext].tiles[ty < 0 ? ty + ROWS : ty - ROWS][tx];
     }
     return st.tiles[ty][tx];
   }
@@ -309,7 +447,7 @@ var World = (function () {
         if (!b || !b.room) return null;
         return { type: 'enter', room: b.room, building: b };
       }
-      if (t === 'E' && st.def.dungeon) return { type: 'dungeon', room: st.def.dungeon };
+      if (t === 'E') return { type: 'dungeon', room: st.def.dungeon || null };
       return null;
     }
     var my = Math.floor((py + 8) / TILE);
@@ -323,11 +461,13 @@ var World = (function () {
   }
 
   // Bildschirmrand überschritten? Liefert Richtung und Ziel.
-  function checkEdge(px) {
+  function checkEdge(px, py) {
     if (!isOutdoor()) return null;
     var ex = states[current].def.exits || {};
     if (px + 8 >= W && ex.east) return { dir: 'east', to: ex.east };
     if (px + 8 < 0 && ex.west) return { dir: 'west', to: ex.west };
+    if (py + 8 >= H && ex.south) return { dir: 'south', to: ex.south };
+    if (py + 8 < 0 && ex.north) return { dir: 'north', to: ex.north };
     return null;
   }
 
@@ -381,6 +521,20 @@ var World = (function () {
   function setChestOpen(p, screen) {
     var st = states[screen || current];
     if (st) st.chestOpen = p;
+  }
+
+  // Felsen lösen (nach dem Sieg über den Wächter des ersten Dungeons):
+  // Alle 'V'-Kacheln werden zu Weg, der Bildschirm wird neu vorberechnet.
+  function openRockGate(screen) {
+    var st = states[screen || current];
+    if (!st || st.rockOpen) return;
+    st.rockOpen = true;
+    for (var ty = 0; ty < ROWS; ty++) {
+      for (var tx = 0; tx < COLS; tx++) {
+        if (st.tiles[ty][tx] === 'V') st.tiles[ty][tx] = 'P';
+      }
+    }
+    if (st.ground) bake(st);   // schon gezeichnet: Pixel neu vorberechnen
   }
 
   // Pixelposition der Truhe auf dem aktuellen Bildschirm (oder null)
@@ -604,6 +758,75 @@ var World = (function () {
     r.px(x + 5, y + 9, 6, 1, '#22202e');
   }
 
+  // Felsbrocken (versperrt den Südausgang des Dorfplatzes, bis der
+  // Wächter des ersten Dungeons besiegt ist)
+  function drawRock(r, tx, ty) {
+    var x = tx * TILE, y = ty * TILE;
+    var left = tileAt(tx - 1, ty) === 'V';
+    r.px(x, y + 1, 16, 14, '#7c8280');
+    r.px(x, y + 1, 16, 2, '#9aa09e');
+    r.px(x, y + 12, 16, 3, '#4c524e');
+    if (!left) {
+      r.px(x, y + 1, 2, 14, '#9aa09e');
+      r.px(x, y + 1, 1, 13, '#b4bab8');
+    }
+    r.px(x + 6, y + 3, 1, 8, '#666c6a');   // Riss
+    r.px(x + 6, y + 10, 4, 1, '#666c6a');
+    r.px(x + 10, y + 5, 3, 1, '#b4bab8');
+    r.px(x + 3, y + 10, 4, 1, '#5c6260');
+  }
+
+  // Leuchtturm (Dungeon 2): weißer Turm mit roten Bändern, Galerie und
+  // dunklem Lampenraum – das Licht ist seit dem Bann erloschen
+  function drawLighthouse(r, l) {
+    var x = l.x * TILE, base = (l.y + l.h) * TILE;
+    // Sockel aus Stein
+    r.px(x + 6, base - 12, 52, 12, '#8a8f96');
+    r.px(x + 6, base - 12, 52, 2, '#b4bac2');
+    r.px(x + 6, base - 2, 52, 2, '#3a3a44');
+    // Turmschaft, nach oben schmaler werdend
+    r.px(x + 10, base - 76, 44, 64, '#f2ede2');
+    r.px(x + 14, base - 92, 36, 16, '#f2ede2');
+    r.px(x + 12, base - 76, 2, 4, '#f2ede2');   // Übergang
+    r.px(x + 50, base - 76, 2, 4, '#f2ede2');
+    // rote Bänder
+    r.px(x + 10, base - 58, 44, 8, '#d8443c');
+    r.px(x + 10, base - 30, 44, 8, '#d8443c');
+    // Umrisse
+    r.px(x + 10, base - 76, 1, 64, '#b8b2a6');
+    r.px(x + 53, base - 76, 1, 64, '#b8b2a6');
+    r.px(x + 14, base - 92, 1, 16, '#b8b2a6');
+    r.px(x + 49, base - 92, 1, 16, '#b8b2a6');
+    // Galerie mit Geländer
+    r.px(x + 8, base - 96, 48, 4, '#5a5468');
+    r.px(x + 8, base - 96, 48, 1, '#7a7490');
+    r.px(x + 8, base - 102, 2, 10, '#5a5468');
+    r.px(x + 54, base - 102, 2, 10, '#5a5468');
+    r.px(x + 8, base - 103, 48, 2, '#5a5468');
+    // Lampenraum: dunkel, kein Licht seit dem Bann
+    r.px(x + 18, base - 114, 28, 11, '#20232c');
+    r.px(x + 18, base - 114, 28, 1, '#3a3e4c');
+    r.px(x + 22, base - 111, 7, 5, '#0e1018');
+    r.px(x + 35, base - 111, 7, 5, '#0e1018');
+    // Kuppel und Spitze
+    r.px(x + 20, base - 120, 24, 6, '#d8443c');
+    r.px(x + 24, base - 123, 16, 3, '#a02c34');
+    r.px(x + 31, base - 129, 2, 6, '#5a5468');
+  }
+
+  // Tür des Leuchtturms: dunkler Rahmen, hölzerne Tür mit Griff
+  // (rechte Hälfte der doppelt breiten Tür zeichnet die linke Kachel mit)
+  function drawTowerDoor(r, tx, ty) {
+    if (tileAt(tx - 1, ty) === 'E') return;
+    var x = tx * TILE, y = ty * TILE;
+    var w = tileAt(tx + 1, ty) === 'E' ? 32 : 16;
+    r.px(x + 3, y + 2, w - 6, 14, '#20232c');
+    r.px(x + 4, y + 4, w - 8, 12, '#5a3a22');
+    r.px(x + 4, y + 4, w - 8, 2, '#7a5230');
+    for (var i = 1; i < w - 8; i += 3) r.px(x + 4 + i, y + 6, 1, 10, '#3a2416');
+    r.px(x + w - 11, y + 10, 2, 2, '#e8c04a');
+  }
+
   // Kleine Holztruhe (freiwilliges R\u00e4tsel, Belohnung: das Schwert)
   function drawChest(r, tx, ty) {
     var x = tx * TILE, y = ty * TILE;
@@ -720,7 +943,7 @@ var World = (function () {
         } else {
           c = grassColor(x, y);
           if (id === 'T') c = lerp(c, C.grassDark, 0.25);
-          if (id === 'S' || id === 'F' || id === 'G' || id === 'R' || id === 'E' || id === 'i' || id === 'C' || id === 'q') c = lerp(c, C.dry, 0.35);
+          if (id === 'S' || id === 'F' || id === 'G' || id === 'R' || id === 'E' || id === 'i' || id === 'C' || id === 'q' || id === 'V' || id === 'L') c = lerp(c, C.dry, 0.35);
           if (adjacent(st.pathMask, k) || adjacent(st.waterMask, k) || adjacent(st.bankMask, k)) {
             c = lerp(c, C.grassDark, 0.55);
           }
@@ -826,11 +1049,18 @@ var World = (function () {
         if (tt === 'T') { if (mode === 'canopy') drawCanopy(Render, cx, cy); }
         else if (tt === 'W' || tt === 'q') obj(cy, function () { Buildings.well(Render, x, y); });  // Quelle sieht aus wie der Dorfbrunnen
         else if (tt === 'R') obj(cy, function () { drawRuinWall(Render, x, y); });
-        else if (tt === 'E') obj(cy, function () { drawRuinDoor(Render, x, y); });
+        else if (tt === 'E') obj(cy, function () {
+          // Leuchtturm-Tür sieht anders aus als der Höhleneingang
+          if (st.def.lighthouse) drawTowerDoor(Render, x, y);
+          else drawRuinDoor(Render, x, y);
+        });
         else if (tt === 'i') obj(cy, function () { drawSign(Render, x, y); });
         else if (tt === 'C') obj(cy, function () { drawChest(Render, x, y); });
+        else if (tt === 'V') obj(cy, function () { drawRock(Render, x, y); });
       }
       if (s && cy === s.y) obj(s.y + s.h - 1, function () { Buildings.school(Render, s); });
+      var lt = st.def.lighthouse;
+      if (lt && cy === lt.y + lt.h - 1) obj(lt.y + lt.h - 1, function () { drawLighthouse(Render, lt); });
       for (cx = 0; cx < COLS; cx++) {
         tt = tileAt(cx, cy);
         var fx = cx, fy = cy;
@@ -858,10 +1088,12 @@ var World = (function () {
   // Hat die Grundzeile row mindestens ein Objekt?
   function rowHasObjects(st, row) {
     for (var cx = 0; cx < COLS; cx++) {
-      if ('WqREiCFG'.indexOf(tileAt(cx, row)) >= 0) return true;
+      if ('WqREiVCFG'.indexOf(tileAt(cx, row)) >= 0) return true;
     }
     var s = st.def.school;
     if (s && s.y + s.h - 1 === row) return true;
+    var lt = st.def.lighthouse;
+    if (lt && lt.y + lt.h - 1 === row) return true;
     return st.def.buildings.some(function (b) { return b.y + b.h - 1 === row; });
   }
 
@@ -1014,6 +1246,7 @@ var World = (function () {
     setDoorOpen: setDoorOpen,
     doorRect: doorRect,
     setChestOpen: setChestOpen,
+    openRockGate: openRockGate,
     chestPos: chestPos,
     START: START,
     WIDTH: W,

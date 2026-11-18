@@ -52,7 +52,7 @@
     if (st.chest) { chestDone = true; World.setChestOpen(1, 'ruine'); }
     if (st.sword) Sword.give();
     Merkbuch.load(st.merk);
-    if (st.boss) Boss.setDefeated();
+    if (st.boss) { Boss.setDefeated(); World.openRockGate('ost'); }
     if (st.raetsel) Raetsel.setSolved();
     bossIntroDone = !!st.bossIntro || !!st.boss;
     wappens = st.wappen || 0;
@@ -74,8 +74,12 @@
   }
 
   // --- Bann von Graf Gerade: Ausgang gesperrt, bis alle Wesen erlöst sind ---
-  // 'edge' = Ostrand, 'dungeon' = Höhleneingang, 'warp' = Öffnung nach oben
-  var BANN = { wiese: 'edge', wald: 'edge', ruine: 'dungeon', dhalle: 'warp', dmittel: 'warp' };
+  // 'edge' = Ostrand, 'sedge' = Südrand, 'dungeon' = Höhleneingang bzw.
+  // Leuchtturm-Tür, 'warp' = Öffnung nach oben
+  var BANN = { wiese: 'edge', wald: 'edge', ruine: 'dungeon', dhalle: 'warp', dmittel: 'warp',
+               felder: 'sedge', klippen: 'sedge', kueste: 'dungeon' };
+  // Fläche des gebannten Eingangs je Dungeon-Bildschirm (vor der Tür)
+  var DOOR_BANN = { ruine: [[6 * 16, 4 * 16, 32, 16]], kueste: [[9 * 16, 11 * 16, 32, 16]] };
   var FORWARD = { dhalle: 'dmittel', dmittel: 'draetsel' };   // Öffnung nach vorn
 
   // --- Fackel-Rätsel vor dem Boss (Logik in raetsel.js) --------------------
@@ -111,7 +115,14 @@
       }
       return list;
     }
-    if (kind === 'dungeon') return [[6 * 16, 4 * 16, 32, 16]];
+    if (kind === 'sedge') {
+      var slist = [];
+      for (var tx = 0; tx < 16; tx++) {
+        if (!World.isBlocked(tx, 13)) slist.push([tx * 16, 13 * 16 + 6, 16, 10]);
+      }
+      return slist;
+    }
+    if (kind === 'dungeon') return DOOR_BANN[screen] || [];
     return [[8 * 16, 1 * 16, 16, 16]];
   }
 
@@ -179,6 +190,7 @@
           Boss.die();
           wappens++;
           saveGame();   // nach dem Dungeon automatisch speichern
+          World.openRockGate('ost');   // der Felsen am Südausgang löst sich auf
           run([
             { dur: 1.3 },
             { dur: 0, end: function () {
@@ -570,22 +582,30 @@
     ]);
   }
 
-  // Bildschirm seitlich weiterschieben (wie in klassischen 2D-Abenteuern)
+  // Bildschirm weiterschieben (wie in klassischen 2D-Abenteuern),
+  // seitlich (Ost/West) oder nach Süden/Norden
   function startSlide(edge) {
-    var dir = edge.dir === 'east' ? 1 : -1;
-    var fromX = Player.getX(), y = Player.getY();
-    var toX = dir > 0 ? 0 : W - 16;
-    slide = { from: World.getScreen(), to: edge.to, dir: dir, p: 0 };
+    var horiz = edge.dir === 'east' || edge.dir === 'west';
+    var dir = (edge.dir === 'east' || edge.dir === 'south') ? 1 : -1;
+    var fromX = Player.getX(), fromY = Player.getY();
+    var toX = horiz ? (dir > 0 ? 0 : W - 16) : fromX;
+    var toY = horiz ? fromY : (dir > 0 ? 0 : H - 16);
+    slide = { from: World.getScreen(), to: edge.to, horiz: horiz, dir: dir, p: 0 };
     run([
       { dur: 0.6, tick: function (p, dt) {
         slide.p = p;
         // Position im gemeinsamen Koordinatensystem beider Bildschirme
-        var combined = fromX + ((toX + dir * W) - fromX) * p;
-        Player.scriptMove(combined - Player.getX(), y - Player.getY(), dt, dir > 0 ? 'right' : 'left');
+        if (horiz) {
+          var combined = fromX + ((toX + dir * W) - fromX) * p;
+          Player.scriptMove(combined - Player.getX(), fromY - Player.getY(), dt, dir > 0 ? 'right' : 'left');
+        } else {
+          var combinedY = fromY + ((toY + dir * H) - fromY) * p;
+          Player.scriptMove(fromX - Player.getX(), combinedY - Player.getY(), dt, dir > 0 ? 'down' : 'up');
+        }
       } },
       { dur: 0, end: function () {
         World.setScreen(slide.to);
-        Player.setPosition(toX, y, dir > 0 ? 'right' : 'left');
+        Player.setPosition(toX, toY, dir > 0 ? (horiz ? 'right' : 'down') : (horiz ? 'left' : 'up'));
         slide = null;
       } }
     ]);
@@ -597,27 +617,31 @@
     var here = World.getScreen();
     if (slide) {
       // Die Spielfigur wird mit dem Bildschirm sortiert, in dem ihre Mitte liegt
-      var cam = slide.dir * slide.p * W;
-      var px = Player.getX() + 8;
-      var inTo = slide.dir > 0 ? px >= W : px < 0;
+      var ax = slide.horiz;
+      var size = ax ? W : H;
+      var cam = slide.dir * slide.p * size;
+      var mid = ax ? Player.getX() + 8 : Player.getY() + 8;
+      var inTo = slide.dir > 0 ? mid >= size : mid < 0;
       ctx.save();
-      ctx.translate(-cam, 0);
+      if (ax) ctx.translate(-cam, 0); else ctx.translate(0, -cam);
       World.drawGround(Render, now, slide.from);
-      ctx.translate(slide.dir * W, 0);
+      if (ax) ctx.translate(slide.dir * W, 0); else ctx.translate(0, slide.dir * H);
       World.drawGround(Render, now, slide.to);
       ctx.restore();
       ctx.save();
-      ctx.translate(-cam, 0);
+      if (ax) ctx.translate(-cam, 0); else ctx.translate(0, -cam);
       World.drawSorted(Render, slide.from, inTo ? [] :
         [{ y: Player.getY(), draw: function () { Player.draw(Render); } }]);
-      ctx.translate(slide.dir * W, 0);
+      if (ax) ctx.translate(slide.dir * W, 0); else ctx.translate(0, slide.dir * H);
       World.drawSorted(Render, slide.to, !inTo ? [] :
-        [{ y: Player.getY(), draw: function () { Player.draw(Render, -slide.dir * W, 0); } }]);
+        [{ y: Player.getY(), draw: function () {
+          Player.draw(Render, ax ? -slide.dir * W : 0, ax ? 0 : -slide.dir * H);
+        } }]);
       ctx.restore();
       ctx.save();
-      ctx.translate(-cam, 0);
+      if (ax) ctx.translate(-cam, 0); else ctx.translate(0, -cam);
       World.drawOverlay(Render, now, slide.from);
-      ctx.translate(slide.dir * W, 0);
+      if (ax) ctx.translate(slide.dir * W, 0); else ctx.translate(0, slide.dir * H);
       World.drawOverlay(Render, now, slide.to);
       ctx.restore();
       return;
@@ -788,6 +812,11 @@
         else if (w && w.type === 'exit') leaveHouse(w);
         else if (w && w.type === 'dungeon') {
           if (banned) bannBlock(Player.getX(), Player.getY() + 6, 'down');
+          else if (!w.room) {
+            // Leuchtturm (Dungeon 2): verschlossen, bis der Dungeon gebaut ist
+            Player.setPosition(Player.getX(), Player.getY(), 'down');
+            Dialog.open('Tür', ['Die Tür ist fest verschlossen. Aus dem Leuchtturm dringt kein Licht.']);
+          }
           else enterDungeon(w.room);
         } else if (w && w.type === 'warp') {
           // Öffnung nach vorn ist gebannt, zurück geht es immer
@@ -800,6 +829,7 @@
         } else {
           var edge = World.checkEdge(Player.getX(), Player.getY());
           if (edge && banned && edge.dir === 'east') bannBlock(W - 16 - 8, Player.getY(), 'left');
+          else if (edge && banned && edge.dir === 'south') bannBlock(Player.getX(), H - 16 - 8, 'up');
           else if (edge) startSlide(edge);
         }
       }

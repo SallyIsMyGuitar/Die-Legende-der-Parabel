@@ -206,8 +206,68 @@ var Tasks = (function () {
     };
   }
 
+  // --- Typ 8 (Felder, leicht): Scheitelform aus Streckfaktor und Scheitel ---
+  // Passt zum Tipp der Gaertnerin: aus S(xs|ys) und a die Klammer bzw.
+  // die Verschiebung richtig lesen (Vorzeichen!).
+  function spfAusS(rng) {
+    var a = pick(rng, [0.5, 1, 2, -0.5, -1, -2]);
+    var xs, ys;
+    do {
+      xs = randInt(rng, -5, 5);
+      ys = randInt(rng, -5, 5);
+    } while (xs === 0 && ys === 0);
+    return {
+      frage: 'Die Parabel y = a(x \u2212 xs)\u00b2 + ys hat den Streckfaktor a = ' + fmt(a) +
+        ' und den Scheitel S(' + fmt(xs) + '|' + fmt(ys) + '). Gib xs und ys der Scheitelform an.',
+      felder: [{ key: 'xs', label: 'xs' }, { key: 'ys', label: 'ys' }],
+      loesung: [xs, ys],
+      loesungstext: spfText(a, xs, ys) + ', also xs = ' + fmt(xs) + ' und ys = ' + fmt(ys),
+      hinweis: 'Bei S(xs|ys) steht in der Klammer (x \u2212 xs). Achtung Vorzeichen: S(\u22122|3) hei\u00dft (x + 2)\u00b2 + 3.'
+    };
+  }
+
+  // --- Typ 9 (Klippen, mittel): Scheitelform aus Scheitel und Punkt ---
+  // Rechnen statt Einstellen: a aus S und P bestimmen, dann die Form angeben.
+  function spfAusSP(rng) {
+    var a = pick(rng, [0.5, 1, 2, -0.5, -1, -2]);
+    var xs = randInt(rng, -4, 4);
+    var ys = randInt(rng, -4, 4);
+    var abstand = pick(rng, [-3, -2, 2, 3]);
+    var xp = xs + abstand;
+    var yp = a * abstand * abstand + ys;
+    return {
+      frage: 'Die Parabel geht durch S(' + fmt(xs) + '|' + fmt(ys) + ') und P(' + fmt(xp) + '|' + fmt(yp) +
+        '). Stelle die Scheitelform auf: Gib a, xs und ys an.',
+      felder: [{ key: 'a', label: 'a' }, { key: 'xs', label: 'xs' }, { key: 'ys', label: 'ys' }],
+      loesung: [a, xs, ys],
+      loesungstext: 'a = ' + fmt(a) + ', also ' + spfText(a, xs, ys),
+      hinweis: 'Setze P in y = a(x \u2212 xs)\u00b2 + ys ein und l\u00f6se nach a auf.'
+    };
+  }
+
+  // --- Typ 10 (Kueste, schwer): Wertemenge am Scheitel ablesen ---
+  // Passt zum Tipp des Turmwaerters: Der Scheitel ist der tiefste bzw.
+  // hoechste Punkt, sein y-Wert grenzt die Wertemenge ein.
+  function wertemenge(rng) {
+    var a = pick(rng, [0.5, 1, 2, -0.5, -1, -2]);
+    var xs = randInt(rng, -4, 4);
+    var ys = randInt(rng, -4, 4);
+    var auf = a > 0;
+    var grenze = auf ? 'kleinste' : 'gr\u00f6\u00dfte';
+    return {
+      frage: 'Die Parabel ' + spfText(a, xs, ys) + ' ist nach ' + (auf ? 'oben' : 'unten') +
+        ' ge\u00f6ffnet. Gib die ' + grenze + ' y-Koordinate der Wertemenge an und dazu die zugeh\u00f6rige x-Koordinate.',
+      felder: [{ key: 'y', label: 'y' }, { key: 'x', label: 'x' }],
+      loesung: [ys, xs],
+      loesungstext: 'Der Scheitel S(' + fmt(xs) + '|' + fmt(ys) + ') gibt die ' +
+        (auf ? 'kleinste' : 'gr\u00f6\u00dfte') + ' y-Koordinate: ' + fmt(ys) + ' bei x = ' + fmt(xs) + '.',
+      hinweis: 'Der y-Wert des Scheitels grenzt die Wertemenge ein: Bei a > 0 gibt es nichts darunter, bei a < 0 nichts dar\u00fcber.'
+    };
+  }
+
   // --- Liste aller Aufgabentypen (sp\u00e4ter kommen weitere Abschnitte dazu) ---
-  // Reihenfolge wie im Spiel: Wiese, Wald, Ruine, Hoehle (Halle, Mitte), Truhe
+  // Reihenfolge wie im Spiel: Wiese, Wald, Ruine, Hoehle (Halle, Mitte),
+  // Truhe, Felder, Klippen, Kueste (Weg zum zweiten Dungeon)
   var TYPES = [
     { id: 'normalPunkt', name: 'Punkt auf der Normalparabel', make: normalPunkt },
     { id: 'aBeschreibung', name: 'a aus der Beschreibung', make: aBeschreibung },
@@ -215,7 +275,10 @@ var Tasks = (function () {
     { id: 'scheitelAllgemein', name: 'Scheitel (allg. Form)', make: scheitelAllgemein },
     { id: 'aBestimmen', name: 'Streckfaktor a bestimmen', make: aBestimmen },
     { id: 'spfAufstellen', name: 'Scheitelform aufstellen', make: spfAufstellen },
-    { id: 'verschiebung', name: 'Verschiebung (Truhe)', make: verschiebung }
+    { id: 'verschiebung', name: 'Verschiebung (Truhe)', make: verschiebung },
+    { id: 'spfAusS', name: 'Scheitelform aus S und a', make: spfAusS },
+    { id: 'spfAusSP', name: 'Scheitelform aus S und P', make: spfAusSP },
+    { id: 'wertemenge', name: 'Wertemenge am Scheitel', make: wertemenge }
   ];
 
   // Eine Aufgabe erzeugen; gleicher Typ + gleicher Samen = gleiche Aufgabe.

@@ -24,7 +24,10 @@ var Enemies = (function () {
     wald: 'aBeschreibung',      // Foerster: a streckt/staucht, Oeffnung
     ruine: 'scheitelAblesen',   // Einsiedler: Scheitelform, S(xs|ys)
     dhalle: 'aBestimmen',       // Forscherin: P einsetzen, a berechnen
-    dmittel: 'spfAufstellen'    // Alte Inschrift: Scheitelform aufstellen
+    dmittel: 'spfAufstellen',   // Alte Inschrift: Scheitelform aufstellen
+    felder: 'spfAusS',          // Gaertnerin: Scheitelform aus S und a
+    klippen: 'spfAusSP',        // Fischer: Scheitelform aus S und P
+    kueste: 'wertemenge'        // Turmwaerter: Wertemenge am Scheitel
   };
 
   // Kurzer Kontext vor der Aufgabe (die Wesen stehen im Bann von Graf Gerade)
@@ -33,7 +36,10 @@ var Enemies = (function () {
     wald: 'Ein verhexter Moosgeist fragt:',
     ruine: 'Ein Steingolem knirscht:',
     dhalle: 'Eine Fledermaus kreischt:',
-    dmittel: 'Ein Kristallgeist summt:'
+    dmittel: 'Ein Kristallgeist summt:',
+    felder: 'Ein Strohgolem raschelt:',
+    klippen: 'Ein Klippengeist heult:',
+    kueste: 'Ein Krabbengeist scharrt:'
   };
 
   // --- Sprites (16x16, ein Frame; Bewegung ueber Wippen) ---------------------
@@ -152,12 +158,84 @@ var Enemies = (function () {
   ];
   var CRYSTAL_COLORS = { c: '#2a6a7a', w: '#8ed8e8', e: '#1c2a3a' };
 
+  // Strohgolem (Felder): Ballen aus Stroh mit krummer Naht
+  var STRAW = [
+    '................',
+    '....oooooooo....',
+    '...ossssssoo....',
+    '..oshsssshso....',
+    '.osssssssssso...',
+    '.osecssecsso....',
+    '.osssssssssso...',
+    '.osddssddsso....',
+    '..osssssssso....',
+    '.oshssssssho....',
+    '.osssshssssso...',
+    '..osddddsso.....',
+    '..osssssssso....',
+    '...oo...oo......',
+    '................',
+    '................'
+  ];
+  var STRAW_COLORS = {
+    o: '#6a4a18', s: '#e8c458', h: '#d8a838', d: '#b8902c',
+    e: '#2a1420', c: '#7ad86a'
+  };
+
+  // Klippengeist (Klippenweg): felsiger Geist mit dunklen Augen
+  var CLIFF = [
+    '................',
+    '.....oooooo.....',
+    '...ooggggggoo...',
+    '..oggggggggggo..',
+    '..ogweggweggo...',
+    '.oggggggggggo...',
+    '.oghhgggggho....',
+    '.ogggdddggggo...',
+    '..oggggggggo....',
+    '..oghgggggho....',
+    '...oggggggo.....',
+    '...og.gg.go.....',
+    '....o..o..o.....',
+    '................',
+    '................',
+    '................'
+  ];
+  var CLIFF_COLORS = {
+    o: '#2e3a44', g: '#8a96a2', h: '#b4c0ca', d: '#5a666e',
+    w: '#f0f4f8', e: '#101c2c'
+  };
+
+  // Krabbengeist (Kueste): rote Krabbe mit Scheren und Stielaugen
+  var CRAB = [
+    '................',
+    '..c..........c..',
+    '..cc........cc..',
+    '...c..cccc..c...',
+    '....ccccccccc...',
+    '...cccccccccc...',
+    '..ccecc..ccecc..',
+    '..ccccccccccc...',
+    '..cccccccccc....',
+    '...cccccccc.....',
+    '...c.c..c.c.....',
+    '..c..c..c..c....',
+    '................',
+    '................',
+    '................',
+    '................'
+  ];
+  var CRAB_COLORS = { c: '#d8443c', e: '#f6d64a' };
+
   var SPRITES = {
     wiese: { rows: MUSHROOM, colors: MUSHROOM_COLORS },
     wald: { rows: MOSS, colors: MOSS_COLORS },
     ruine: { rows: GOLEM, colors: GOLEM_COLORS },
     dhalle: { rows: BAT, colors: BAT_COLORS },
-    dmittel: { rows: CRYSTAL, colors: CRYSTAL_COLORS }
+    dmittel: { rows: CRYSTAL, colors: CRYSTAL_COLORS },
+    felder: { rows: STRAW, colors: STRAW_COLORS },
+    klippen: { rows: CLIFF, colors: CLIFF_COLORS },
+    kueste: { rows: CRAB, colors: CRAB_COLORS }
   };
   var spriteCache = {};
   var flashCache = {};   // weisse Silhouette fuer das Aufblitzen
@@ -209,6 +287,21 @@ var Enemies = (function () {
     dmittel: [
       { x: 4, y: 9 },
       { x: 12, y: 5 }
+    ],
+    felder: [
+      { x: 5, y: 5 },
+      { x: 12, y: 9 },
+      { x: 4, y: 11 }
+    ],
+    klippen: [
+      { x: 4, y: 3 },
+      { x: 12, y: 6 },
+      { x: 5, y: 10 }
+    ],
+    kueste: [
+      { x: 4, y: 8 },
+      { x: 13, y: 7 },
+      { x: 12, y: 10 }
     ]
   };
 
@@ -310,7 +403,7 @@ var Enemies = (function () {
 
   // Samen fuer die Aufgabe: Gegner + Versuchzaehler => neue Zahlen pro Versuch
   function seedOf(e) {
-    var screenNo = { wiese: 1, wald: 2, ruine: 3, dhalle: 4, dmittel: 5 }[e.screen] || 1;
+    var screenNo = { wiese: 1, wald: 2, ruine: 3, dhalle: 4, dmittel: 5, felder: 6, klippen: 7, kueste: 8 }[e.screen] || 1;
     return screenNo * 100 + e.index * 10 + e.attempts;
   }
 
