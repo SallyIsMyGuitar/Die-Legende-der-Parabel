@@ -232,6 +232,8 @@ var TaskUi = (function () {
   // --- Tastatur (Ziffern direkt, A = pruefen, B = abbrechen) ---------------
   function onKeyDown(e) {
     if (!active || phase !== 'input' || task.graph) return;
+    // Liegt das Merkbuch über der Aufgabe, gehen Ziffern nicht in die verdeckte Box
+    if (Merkbuch.isActive()) return;
     if (e.key >= '0' && e.key <= '9') { typeChar(e.key); e.preventDefault(); }
     else if (e.key === ',' || e.key === '.') { typeChar(','); e.preventDefault(); }
     else if (e.key === '-') { typeChar('-'); e.preventDefault(); }
@@ -240,6 +242,9 @@ var TaskUi = (function () {
   // Tippen/klicken in die Box: Felder, Zahlenblock und Graph-Tasten treffen
   function onPointerDown(e) {
     if (!active || phase !== 'input') return;
+    // Liegt das Merkbuch über der Aufgabe, trifft Tippen nicht die verdeckten
+    // Tasten (sonst würde z. B. OK ungesehen eine Antwort prüfen)
+    if (Merkbuch.isActive()) return;
     var rect = Render.getCanvas().getBoundingClientRect();
     var lx = (e.clientX - rect.left) / rect.width * Render.WIDTH;
     var ly = (e.clientY - rect.top) / rect.height * Render.HEIGHT;
