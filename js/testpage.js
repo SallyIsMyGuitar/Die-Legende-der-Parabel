@@ -143,6 +143,8 @@ var TestPage = (function () {
     close: close,
     update: update,
     draw: draw,
-    isActive: function () { return active; }
+    isActive: function () { return active; },
+    // Beispielansicht offen? (A = neue Zahlen statt Öffnen)
+    isExamples: function () { return active && view === 'examples'; }
   };
 })();

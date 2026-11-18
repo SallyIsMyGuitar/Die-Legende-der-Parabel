@@ -767,7 +767,7 @@
     }
     if (Merkbuch.isActive()) return { a: 'Schließen', b: 'Schließen', dpad: false };
     if (TaskUi.isActive()) return { a: 'Prüfen', b: TaskUi.isAbortable() ? 'Abbrechen' : '', dpad: false };
-    if (TestPage.isActive()) return { a: 'Öffnen', b: 'Zurück', dpad: false };
+    if (TestPage.isActive()) return { a: TestPage.isExamples() ? 'Neue Zahlen' : 'Öffnen', b: TestPage.isExamples() ? 'Zurück' : 'Schließen', dpad: false };
     if (Dialog.isActive()) return { a: 'Weiter', b: 'Schließen', dpad: false };
     return { a: actionWord(target), b: '', dpad: true };
   }
