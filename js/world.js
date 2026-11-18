@@ -121,7 +121,7 @@ var World = (function () {
           talk: {
             name: 'Gärtnerin',
             texts: [
-              'Hallo! Die Strohgolems auf meinen Feldern stehen unter dem Bann des Grafen. Sie lassen nur nach Süden, wer die Scheitelform kennt.',
+              'Hallo! Die Strohgolems auf meinen Feldern stehen unter dem Bann des Grafen. Sie fragen nach der Scheitelform – deine Übung für den Leuchtturm.',
               'In y = a(x − xs)² + ys ist S(xs|ys) der Scheitel – der tiefste oder höchste Punkt der Parabel.',
               'Zum Beispiel: y = 2(x − 3)² + 1 hat den Scheitel S(3|1). Und bei y = −0,5(x + 2)² − 4 ist der Scheitel S(−2|−4).'
             ],
@@ -157,7 +157,7 @@ var World = (function () {
           talk: {
             name: 'Fischer',
             texts: [
-              'Vorsicht an der Kante! Die Klippengeister treiben hier ihren Spuk und sperren den Weg nach Süden.',
+              'Vorsicht an der Kante! Die Klippengeister treiben hier ihren Spuk. Ihre Fragen üben dich für den Leuchtturm.',
               'Kennst du die Scheitelform? Sie hilft beim Rechnen: y = a(x − xs)² + ys. Streckfaktor und Verschiebung zusammen bestimmen die Parabel.',
               'Ist der Scheitel S(1|−2) gegeben und die Parabel geht durch P(3|6), dann setze ein: 6 = a(3 − 1)² − 2. Das gibt 8 = 4a, also a = 2 und y = 2(x − 1)² − 2.'
             ],
@@ -340,7 +340,7 @@ var World = (function () {
         {
           tiles: [[5, 5]], x: 5 * 16, y: 5 * 16,
           name: 'Schild',
-          texts: ['Höhle der Parabeln. Wer eintreten will, muss erst die verzauberten Wesen vor dem Eingang erlösen.']
+          texts: ['Höhle der Parabeln. Die verzauberten Wesen davor sind deine Übung für den Wächter.']
         },
         {
           // Freiwillige R\u00e4tsel-Truhe mit dem Schwert als Belohnung

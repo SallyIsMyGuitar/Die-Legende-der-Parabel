@@ -77,12 +77,10 @@
   }
 
   // --- Bann von Graf Gerade: Ausgang gesperrt, bis alle Wesen erlöst sind ---
-  // 'edge' = Ostrand, 'sedge' = Südrand, 'dungeon' = Höhleneingang bzw.
-  // Leuchtturm-Tür, 'warp' = Öffnung nach oben
-  var BANN = { wiese: 'edge', wald: 'edge', ruine: 'dungeon', dhalle: 'warp', dmittel: 'warp',
-               felder: 'sedge', klippen: 'sedge', kueste: 'dungeon' };
-  // Fläche des gebannten Eingangs je Dungeon-Bildschirm (vor der Tür)
-  var DOOR_BANN = { ruine: [[6 * 16, 4 * 16, 32, 16]], kueste: [[9 * 16, 11 * 16, 32, 16]] };
+  // Auf den Wegen zu den Dungeons gibt es keine Hindernisse: Die Gegner sind
+  // freiwillige Übung. Der Bann gilt nur noch INNERHALB der Dungeons
+  // ('warp' = Öffnung nach vorn ist gesperrt, bis alle Wesen des Raums erlöst sind).
+  var BANN = { dhalle: 'warp', dmittel: 'warp' };
   var FORWARD = { dhalle: 'dmittel', dmittel: 'draetsel' };   // Öffnung nach vorn
 
   // --- Fackel-Rätsel vor dem Boss (Logik in raetsel.js) --------------------
@@ -108,24 +106,9 @@
     Dialog.open('Bann', ['Ein Bann aus starren, geraden Linien versperrt den Weg. Er löst sich erst, wenn alle verzauberten Wesen hier erlöst sind. Noch übrig: ' + n + '.']);
   }
 
-  // Flächen, auf denen der Bann sichtbar flimmert
+  // Flächen, auf denen der Bann sichtbar flimmert (nur noch im Dungeon:
+  // die Öffnung nach oben, bis alle Wesen des Raums erlöst sind)
   function bannRects(screen) {
-    var kind = BANN[screen];
-    if (kind === 'edge') {
-      var list = [];
-      for (var ty = 0; ty < 14; ty++) {
-        if (!World.isBlocked(15, ty)) list.push([15 * 16 + 6, ty * 16, 10, 16]);
-      }
-      return list;
-    }
-    if (kind === 'sedge') {
-      var slist = [];
-      for (var tx = 0; tx < 16; tx++) {
-        if (!World.isBlocked(tx, 13)) slist.push([tx * 16, 13 * 16 + 6, 16, 10]);
-      }
-      return slist;
-    }
-    if (kind === 'dungeon') return DOOR_BANN[screen] || [];
     return [[8 * 16, 1 * 16, 16, 16]];
   }
 
