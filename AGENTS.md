@@ -51,7 +51,7 @@ Ein Mathe-Übungsspiel als Top-Down-Abenteuer im Stil eines modernen 2D-Zelda (O
   - `dungeon.js`: Höhle der Parabeln (vier Räume, Höhlen-Optik, Quelle)
   - `raetsel.js`: Fackel-Rätsel vor dem Boss (Zustand, Prüfung, Zeichnen)
   - `input.js`: Tastatur und Touch (Multitouch), einmalige Tastendrücke für A/B
-  - `player.js`: Spielfigur, Bewegung, Laufanimation
+  - `player.js`: Spielfigur, Bewegung, Laufanimation; Wand-Kollisionsbox als Konstanten (`HITBOX_*`, `CORNER_ASSIST`), getrennt von Treffer-/Interaktions-Checks
   - `dialog.js`: Textbox und Sprechblasen-Hinweis
   - `fx.js`: Atmosphäre (Wolkenschatten, Schmetterlinge, Vignette)
   - `hud.js`: Herzen (mit Animation beim Herzverlust) und Gegenstandsplätze
