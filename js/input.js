@@ -139,6 +139,12 @@ var Input = (function () {
     updateDpadVisuals();
   }
 
+  function releaseAll() {
+    activeTouches = {};
+    refreshDirs();
+    updateDpadVisuals();
+  }
+
   // Steuerkreuz-Tasten visuell hervorheben, solange sie gedrückt sind
   function updateDpadVisuals() {
     var btns = document.querySelectorAll('.dpad-btn');
@@ -162,6 +168,13 @@ var Input = (function () {
   function init() {
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
+    // Fenster verliert den Fokus (z. B. Alt+Tab, App-Wechsel auf dem iPad):
+    // Es kommt kein keyup/touchend mehr, also alle Richtungen loslassen,
+    // sonst läuft die Figur endlos weiter.
+    window.addEventListener('blur', releaseAll);
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) releaseAll();
+    });
 
     // Touch-Steuerung nur auf Touch-Geräten anzeigen
     var isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
