@@ -1,9 +1,11 @@
 // dungeon.js: Die Hoehle der Parabeln - Dungeon 1 (Normalparabel und Parameter)
-// Drei Raeume: Eingangshalle, Mittelraum mit Quelle (Rastquelle auf halber
-// Strecke), Vorraum zum Boss (Tor verschlossen, Steintafel als Hinweis).
+// Vier Raeume: Eingangshalle, Mittelraum mit Quelle (Rastquelle auf halber
+// Strecke), Raetselraum (Fackeln in Form einer Parabel, siehe raetsel.js),
+// Vorraum zum Boss (Tor verschlossen, Steintafel als Hinweis).
 // Aufbau wie Innenraeume: 16 x 14 Kacheln, angemeldet per Interior.register().
 // Zeichen: '#' ausserhalb, 'W' Hoehlenwand, '.' Boden, 'x' Felsbrocken,
-//          'Q' Quelle (Brunnen), 'M' Hoehlenoeffnung (Uebergang)
+//          'Q' Quelle (Brunnen), 'M' Hoehlenoeffnung (Uebergang),
+//          'f' Fackelstaender (Raetsel), 'k' Steintafel auf dem Boden
 (function () {
   'use strict';
 
@@ -253,7 +255,7 @@
       '################'
     ],
     mats: {
-      '8,1': { room: 'dboss', x: 8 * TILE, y: 11 * TILE, facing: 'up' },
+      '8,1': { room: 'draetsel', x: 8 * TILE, y: 11 * TILE, facing: 'up' },
       '8,12': { room: 'dhalle', x: 8 * TILE, y: 2 * TILE, facing: 'down' }
     },
     torches: [[4, 1], [11, 1], [4, 12], [11, 12]],
@@ -304,7 +306,7 @@
       '################'
     ],
     mats: {
-      '8,12': { room: 'dmittel', x: 8 * TILE, y: 2 * TILE, facing: 'down' }
+      '8,12': { room: 'draetsel', x: 8 * TILE, y: 2 * TILE, facing: 'down' }
     },
     torches: [[3, 1], [12, 1], [3, 12], [12, 12]],
     bakeExtra: function (r) {
@@ -323,8 +325,76 @@
     ]
   };
 
+  // Kleine Steintafel auf dem Boden (Kartenzeichen 'k')
+  function floorTablet(r, tx, ty) {
+    var x = tx * TILE, y = ty * TILE;
+    r.ellipse(x + 8, y + 14, 7, 2, 'rgba(0,0,0,0.35)');
+    r.px(x + 2, y + 3, 12, 11, '#5e5870');
+    r.px(x + 3, y + 4, 10, 9, '#8a8496');
+    r.px(x + 3, y + 4, 10, 1, '#a8a2b4');
+    r.px(x + 5, y + 7, 6, 1, '#3e3a4a');
+    r.px(x + 5, y + 9, 5, 1, '#3e3a4a');
+  }
+
+  // Gitter vor der Öffnung zum Boss (bis das Fackel-Rätsel gelöst ist)
+  function bars(r) {
+    var x = 8 * TILE, y = 1 * TILE;
+    r.px(x, y + 2, TILE, 1, '#8a8496');
+    for (var i = 1; i < 16; i += 3) {
+      r.px(x + i, y + 2, 2, 14, '#6a6478');
+      r.px(x + i, y + 2, 1, 14, '#9a94a8');
+    }
+  }
+
+  // Rätselraum: Fackeln in Form der Parabel entzünden (Logik in raetsel.js)
+  var RAETSEL = {
+    map: Raetsel.stampMap([
+      '################',
+      '#WWWWWWWMWWWWWW#',
+      '#W............W#',
+      '#W............W#',
+      '#W............W#',
+      '#W............W#',
+      '#W............W#',
+      '#W............W#',
+      '#W............W#',
+      '#W............W#',
+      '#W............W#',
+      '#W........k...W#',
+      '#WWWWWWWMWWWWWW#',
+      '################'
+    ]),
+    mats: {
+      '8,1': { room: 'dboss', x: 8 * TILE, y: 11 * TILE, facing: 'up' },
+      '8,12': { room: 'dmittel', x: 8 * TILE, y: 2 * TILE, facing: 'down' }
+    },
+    torches: [[3, 1], [12, 1], [3, 12], [12, 12]],
+    bakeExtra: function (r) {
+      Raetsel.bakeGrid(r);
+      for (var ty = 0; ty < 14; ty++) {
+        for (var tx = 0; tx < 16; tx++) {
+          var c = RAETSEL.map[ty].charAt(tx);
+          if (c === 'f') Raetsel.bakeStand(r, tx, ty);
+          else if (c === 'k') floorTablet(r, tx, ty);
+        }
+      }
+    },
+    objects: Raetsel.objects().concat([
+      {
+        tiles: [[10, 11]],
+        x: 10 * TILE, y: 11 * TILE,
+        name: 'Steintafel',
+        texts: [
+          'Entzünde die Fackeln, die auf der Parabel ' + Raetsel.FORMEL + ' liegen. Dann öffnet sich das Gitter.',
+          'Unten stehen die x-Werte, links die y-Werte. In jeder Spalte brennt genau eine Fackel richtig.'
+        ],
+        later: { solved: true, replace: true, texts: ['Alle Fackeln auf der Parabel ' + Raetsel.FORMEL + ' brennen. Das Gitter ist offen.'] }
+      }
+    ])
+  };
+
   // Raumdefinitionen fertigstellen (Bake, Animation, Vignette)
-  [HALLE, MITTEL, BOSS].forEach(function (R) {
+  [HALLE, MITTEL, RAETSEL, BOSS].forEach(function (R) {
     R.bakeFull = function (r) { bakeCave(r, R); };
     R.anim = function (r, t) {
       flames(r, t, R.torches);
@@ -341,4 +411,12 @@
   Interior.register('dhalle', HALLE);
   Interior.register('dmittel', MITTEL);
   Interior.register('dboss', BOSS);
+
+  // Rätselraum: Flammen und Gitter im Laufbild
+  RAETSEL.anim = function (r, t) {
+    flames(r, t, RAETSEL.torches);
+    Raetsel.drawFlames(r, t);
+    if (!Raetsel.isSolved()) bars(r);
+  };
+  Interior.register('draetsel', RAETSEL);
 })();

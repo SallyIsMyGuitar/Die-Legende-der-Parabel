@@ -568,6 +568,8 @@ var TaskUi = (function () {
     openFixed: openFixed,
     update: update,
     draw: draw,
-    isActive: function () { return active; }
+    isActive: function () { return active; },
+    // mit B abbrechbar? (nur freiwillige Rätsel und die Probeaufgabe)
+    isAbortable: function () { return active && (abortable || !onResult); }
   };
 })();

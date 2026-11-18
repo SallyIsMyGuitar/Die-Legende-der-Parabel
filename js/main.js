@@ -35,6 +35,7 @@
       sword: Sword.has(),
       merk: Merkbuch.all(),
       boss: Boss.isDefeated(),
+      raetsel: Raetsel.isSolved(),
       bossIntro: bossIntroDone,
       wappen: wappens,
       spaeth: spaethDone,
@@ -52,6 +53,7 @@
     if (st.sword) Sword.give();
     Merkbuch.load(st.merk);
     if (st.boss) Boss.setDefeated();
+    if (st.raetsel) Raetsel.setSolved();
     bossIntroDone = !!st.bossIntro || !!st.boss;
     wappens = st.wappen || 0;
     if (st.spaeth) { spaethDone = true; placeSpaethNpc(); }
@@ -65,14 +67,28 @@
   // (later.replace = true ersetzt die bisherigen Seiten)
   function textsFor(target) {
     var l = target.later;
-    if (!l || wappens < l.wappen) return target.texts;
+    if (!l) return target.texts;
+    if (l.wappen && wappens < l.wappen) return target.texts;
+    if (l.solved && !Raetsel.isSolved()) return target.texts;
     return l.replace ? l.texts : target.texts.concat(l.texts);
   }
 
   // --- Bann von Graf Gerade: Ausgang gesperrt, bis alle Wesen erlöst sind ---
   // 'edge' = Ostrand, 'dungeon' = Höhleneingang, 'warp' = Öffnung nach oben
   var BANN = { wiese: 'edge', wald: 'edge', ruine: 'dungeon', dhalle: 'warp', dmittel: 'warp' };
-  var FORWARD = { dhalle: 'dmittel', dmittel: 'dboss' };   // Öffnung nach vorn
+  var FORWARD = { dhalle: 'dmittel', dmittel: 'draetsel' };   // Öffnung nach vorn
+
+  // --- Fackel-Rätsel vor dem Boss (Logik in raetsel.js) --------------------
+  function lightTorch(t) {
+    var res = Raetsel.light(t.x, t.y);
+    if (res === 'wrong') {
+      Dialog.open('', ['Die Flamme zischt – alle Fackeln erlöschen. Der Punkt (' +
+        Tasks.fmt(t.x) + '|' + Tasks.fmt(t.y) + ') liegt nicht auf der Parabel ' + Raetsel.FORMEL + '.']);
+    } else if (res === 'solved') {
+      saveGame();
+      Dialog.open('', ['Alle fünf Fackeln brennen. Mit lautem Knirschen hebt sich das Gitter.']);
+    }
+  }
 
   function bannActive(screen) {
     return !!BANN[screen] && Enemies.remaining(screen) > 0;
@@ -615,6 +631,61 @@
     }
   }
 
+  // --- Aktionen von A und B: im HUD (Tastatur) und unter den Touch-Tasten ---
+  // Wort für A, wenn die Figur vor etwas steht
+  function actionWord(t) {
+    if (!t) return '';
+    if (t.action === 'rest') return 'Trinken';
+    if (t.action === 'chest') return 'Öffnen';
+    if (t.action === 'torch') return 'Entzünden';
+    if (t.action === 'testpage') return 'Lesen';
+    if (/Schild|Steintafel|Inschrift/.test(t.name)) return 'Lesen';
+    return 'Reden';
+  }
+
+  // Aktuelle Belegung { a, b, dpad } je nach Spielzustand
+  function currentActions(target) {
+    if (title) {
+      if (title.phase === 'confirm') return { a: 'Ja', b: 'Nein', dpad: false };
+      return { a: saved ? 'Weiter' : 'Start', b: saved ? 'Neu' : '', dpad: false };
+    }
+    if (Merkbuch.isActive()) return { a: 'Schließen', b: 'Schließen', dpad: false };
+    if (TaskUi.isActive()) return { a: 'Prüfen', b: TaskUi.isAbortable() ? 'Abbrechen' : '', dpad: false };
+    if (TestPage.isActive()) return { a: 'Öffnen', b: 'Zurück', dpad: false };
+    if (Dialog.isActive()) return { a: 'Weiter', b: 'Schließen', dpad: false };
+    return { a: actionWord(target), b: '', dpad: true };
+  }
+
+  // Tastenbelegung im HUD (nur am PC): kleine Schilder an Buch und Schwert,
+  // darunter rechts die aktuelle Aktion von A und B
+  function drawKeyHints(r, act) {
+    var ctx = r.getCtx();
+    var touch = Input.isTouch();
+    if (!touch) {
+      keyBadge(r, ctx, Render.WIDTH - 84, 'M');
+      keyBadge(r, ctx, Render.WIDTH - 64, 'E');
+    }
+    // auf dem iPad stehen die Aktionen schon unter den Touch-Tasten
+    if (touch) return;
+    var parts = [];
+    if (act.a) parts.push('Enter: ' + act.a);
+    if (act.b) parts.push('Esc: ' + act.b);
+    if (!parts.length) return;
+    var text = parts.join('   ');
+    var w = Font.width(text);
+    var x = Render.WIDTH - 6 - w, y = 25;
+    r.px(x - 3, y - 2, w + 6, 11, 'rgba(14,18,32,0.6)');
+    Font.draw(ctx, text, x, y, '#f6f0e2');
+  }
+
+  // Tastenbuchstabe unten links an einem 16-px-Platz im HUD
+  function keyBadge(r, ctx, slotX, letter) {
+    var x = slotX - 3, y = 14;
+    r.px(x, y, 9, 10, '#efe4c4');
+    r.px(x + 1, y + 1, 7, 8, '#2e2a3e');
+    Font.draw(ctx, letter, x + 5 - Math.ceil(Font.width(letter) / 2), y + 2, '#f6f0e2');
+  }
+
   // --- Spielschleife mit zeitunabhängiger Bewegung -----------------------------
   var lastTime = null;
 
@@ -626,6 +697,9 @@
     var target = null;
     if (title) updateTitle();
     if (title) {
+      var tact = currentActions(null);
+      Input.setDpadVisible(false);
+      Input.setLabels(tact.a, tact.b);
       drawScene(now);
       drawTitle(Render, now);
       Input.clearPressed();
@@ -680,6 +754,8 @@
             TestPage.open();   // Schild der Testseite für die Lehrkraft
           } else if (target.action === 'chest') {
             openChest();       // Rätsel-Truhe mit dem Schwert
+          } else if (target.action === 'torch') {
+            lightTorch(target.torch);   // Fackel-Rätsel vor dem Boss
           } else {
             if (target.action === 'rest') useRest(target);   // Rastquelle
             if (target.npc) {
@@ -703,7 +779,11 @@
         } else if (w && w.type === 'warp') {
           // Öffnung nach vorn ist gebannt, zurück geht es immer
           if (banned && w.to.room === FORWARD[here]) bannBlock(Player.getX(), 2 * 16 + 4, 'down');
-          else roomWarp(w);
+          else if (here === 'draetsel' && w.to.room === 'dboss' && !Raetsel.isSolved()) {
+            // Gitter zum Boss bleibt zu, bis alle Fackeln richtig brennen
+            Player.setPosition(Player.getX(), 2 * 16 + 4, 'down');
+            Dialog.open('Gitter', ['Ein schweres Gitter versperrt den Weg. Entzünde zuerst die richtigen Fackeln.']);
+          } else roomWarp(w);
         } else {
           var edge = World.checkEdge(Player.getX(), Player.getY());
           if (edge && banned && edge.dir === 'east') bannBlock(W - 16 - 8, Player.getY(), 'left');
@@ -719,6 +799,11 @@
     Hud.draw(Render);
     Sword.draw(Render);
     Merkbuch.drawHud(Render);
+    // Belegung von A/B: im HUD (PC) und unter den Touch-Tasten (iPad)
+    var act = currentActions(target);
+    Input.setDpadVisible(act.dpad);
+    Input.setLabels(act.a, act.b);
+    if (!TaskUi.isActive() && !Merkbuch.isActive() && !TestPage.isActive()) drawKeyHints(Render, act);
     Dialog.draw(Render);
     TestPage.draw(Render);
     // Boss-Herzen unter der Aufgabenbox (sonst verdecken sie die Eingabefelder)

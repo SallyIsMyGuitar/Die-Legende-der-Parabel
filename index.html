@@ -23,8 +23,15 @@
       <button class="dpad-btn down" data-dir="down" aria-label="Unten"></button>
     </div>
     <div id="action-buttons">
-      <button class="action-btn" data-btn="b" aria-label="Aktion B">B</button>
-      <button class="action-btn" data-btn="a" aria-label="Aktion A">A</button>
+      <!-- kleine Tasten für Merkbuch und Schwert über A/B -->
+      <button class="item-btn" data-btn="book" aria-label="Merkbuch">
+        <span class="icon-book"></span><span class="item-label">Buch</span>
+      </button>
+      <button class="item-btn" data-btn="sword" aria-label="Schwert">
+        <span class="icon-sword"></span><span class="item-label">Schwert</span>
+      </button>
+      <button class="action-btn" data-btn="b" aria-label="Aktion B">B<span class="btn-label" id="label-b"></span></button>
+      <button class="action-btn" data-btn="a" aria-label="Aktion A">A<span class="btn-label" id="label-a"></span></button>
     </div>
   </div>
   <script src="js/config.js"></script>
@@ -35,6 +42,7 @@
   <script src="js/buildings.js"></script>
   <script src="js/interior.js"></script>
   <script src="js/rooms.js"></script>
+  <script src="js/raetsel.js"></script>
   <script src="js/dungeon.js"></script>
   <script src="js/merkbuch.js"></script>
   <script src="js/boss.js"></script>

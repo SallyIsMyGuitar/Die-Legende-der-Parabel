@@ -18,10 +18,13 @@ var Input = (function () {
       e.preventDefault();
       return;
     }
-    // A = Enter, B = Rücktaste
-    if (e.code === 'Enter' || e.code === 'NumpadEnter') {
+    // A = Enter oder Leertaste, B = Esc oder Rücktaste
+    if (e.code === 'Enter' || e.code === 'NumpadEnter' || e.code === 'Space') {
       e.preventDefault();
       if (!e.repeat) lightButton('a');
+    } else if (e.code === 'Escape') {
+      e.preventDefault();
+      if (!e.repeat) lightButton('b');
     } else if (e.code === 'Backspace') {
       e.preventDefault();
       // Rücktaste = B; zusätzlich 'del', damit die Aufgabenbox eine Ziffer löschen kann
@@ -46,22 +49,28 @@ var Input = (function () {
   // Touch: gedrückte Punkte verfolgen, damit Multitouch (Steuerkreuz + Aktionstaste) geht
   var activeTouches = {};
 
+  // Richtung(en) aus der Daumenposition im Steuerkreuz: in den Ecken
+  // zwei Richtungen gleichzeitig (schräg laufen), in der Mitte keine
   function dirFromPoint(x, y, el) {
     var rect = el.getBoundingClientRect();
-    var lx = (x - rect.left) / rect.width;
-    var ly = (y - rect.top) / rect.height;
-    if (ly < 0.4) return 'up';
-    if (ly > 0.6) return 'down';
-    if (lx < 0.4) return 'left';
-    if (lx > 0.6) return 'right';
-    return null;
+    var lx = (x - rect.left) / rect.width - 0.5;
+    var ly = (y - rect.top) / rect.height - 0.5;
+    var dirs = [];
+    if (Math.abs(lx) < 0.1 && Math.abs(ly) < 0.1) return dirs;   // tote Mitte
+    // Winkel in Achtel teilen: gerade Richtungen bekommen je 45°, Diagonalen 45°
+    var ang = Math.atan2(ly, lx) * 180 / Math.PI;   // 0 = rechts, 90 = unten
+    if (ang > -67.5 && ang < 67.5) dirs.push('right');
+    if (ang > 112.5 || ang < -112.5) dirs.push('left');
+    if (ang > 22.5 && ang < 157.5) dirs.push('down');
+    if (ang < -22.5 && ang > -157.5) dirs.push('up');
+    return dirs;
   }
 
   function refreshDirs() {
     held.up = false; held.down = false; held.left = false; held.right = false;
     for (var id in activeTouches) {
       var t = activeTouches[id];
-      if (t.dir) held[t.dir] = true;
+      if (t.dir) t.dir.forEach(function (d) { held[d] = true; });
     }
   }
 
@@ -113,7 +122,7 @@ var Input = (function () {
             touch.clientY <= dpadRect.bottom) {
           t.dir = dirFromPoint(touch.clientX, touch.clientY, dpad);
         } else {
-          t.dir = null;
+          t.dir = [];
         }
       }
     }
@@ -143,7 +152,7 @@ var Input = (function () {
   function lightButton(name) {
     litButtons[name] = true;
     pressedOnce[name] = true;
-    var el = document.querySelector('.action-btn[data-btn="' + name + '"]');
+    var el = document.querySelector('[data-btn="' + name + '"]');
     if (el) {
       el.classList.add('lit');
       setTimeout(function () { el.classList.remove('lit'); }, 150);
@@ -167,8 +176,35 @@ var Input = (function () {
     }
   }
 
+  // Steuerkreuz aus- bzw. einblenden (z. B. während Aufgaben und Dialogen).
+  // Beim Ausblenden werden gehaltene Richtungen losgelassen.
+  var dpadOff = false;
+  function setDpadVisible(on) {
+    if (dpadOff === !on) return;
+    dpadOff = !on;
+    document.body.classList.toggle('dpad-off', dpadOff);
+    if (dpadOff) {
+      for (var id in activeTouches) if (activeTouches[id].type === 'dir') delete activeTouches[id];
+      refreshDirs();
+      updateDpadVisuals();
+    }
+  }
+
+  // Beschriftung unter den Touch-Tasten A und B (aktuelle Aktion)
+  var labels = { a: null, b: null };
+  function setLabels(a, b) {
+    if (labels.a === a && labels.b === b) return;
+    labels.a = a; labels.b = b;
+    var la = document.getElementById('label-a'), lb = document.getElementById('label-b');
+    if (la) la.textContent = a || '';
+    if (lb) lb.textContent = b || '';
+  }
+
   return {
     init: init,
+    isTouch: function () { return document.body.classList.contains('touch'); },
+    setDpadVisible: setDpadVisible,
+    setLabels: setLabels,
     isDown: function (dir) { return !!held[dir]; },
     // true genau einmal pro Tastendruck (A/B)
     pressed: function (name) {

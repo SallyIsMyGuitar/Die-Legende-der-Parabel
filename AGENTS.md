@@ -48,7 +48,8 @@ Ein Mathe-Übungsspiel als Top-Down-Abenteuer im Stil eines modernen 2D-Zelda (O
   - `taskui.js`: Aufgabenbox (Zahlenblock, Graph-Modus mit live gezeichneter Parabel, Fehlerstufen)
   - `testpage.js`: Testseite für die Lehrkraft
   - `enemies.js`: Gegner auf dem Weg zum Dungeon und im Dungeon
-  - `dungeon.js`: Höhle der Parabeln (drei Räume, Höhlen-Optik, Quelle)
+  - `dungeon.js`: Höhle der Parabeln (vier Räume, Höhlen-Optik, Quelle)
+  - `raetsel.js`: Fackel-Rätsel vor dem Boss (Zustand, Prüfung, Zeichnen)
   - `input.js`: Tastatur und Touch (Multitouch), einmalige Tastendrücke für A/B
   - `player.js`: Spielfigur, Bewegung, Laufanimation
   - `dialog.js`: Textbox und Sprechblasen-Hinweis
@@ -68,8 +69,11 @@ Ein Mathe-Übungsspiel als Top-Down-Abenteuer im Stil eines modernen 2D-Zelda (O
 ## Steuerung
 
 - **Bewegen:** Pfeiltasten oder WASD; auf dem iPad halbtransparentes Steuerkreuz links unten.
-- **A = Enter**, auf dem iPad rote runde Taste (links unten in der Tastengruppe rechts). A spricht Figuren an, blättert im Dialog weiter und dient später zum Bestätigen.
-- **B = Rücktaste**, auf dem iPad blaue runde Taste (rechts oben in der Tastengruppe). B bricht ab bzw. schließt.
+- **A = Enter oder Leertaste**, auf dem iPad rote runde Taste (links unten in der Tastengruppe rechts). A spricht Figuren an, blättert im Dialog weiter und bestätigt.
+- **B = Esc oder Rücktaste**, auf dem iPad blaue runde Taste (rechts oben in der Tastengruppe). B bricht ab bzw. schließt. Die Rücktaste löscht in Aufgaben zusätzlich eine Ziffer.
+- **M = Merkbuch, E = Schwert**; auf dem iPad eigene runde Tasten „Buch“ und „Schwert“ über A/B (zusätzlich lassen sich die HUD-Plätze antippen).
+- **Tastenbelegung sichtbar:** Am PC tragen Buch- und Schwert-Platz im HUD die Schilder „M“ und „E“, darunter steht rechts die aktuelle Aktion („Enter: Reden“, „Esc: Schließen“ …). Auf dem iPad steht die aktuelle Aktion unter den Tasten A und B.
+- **Steuerkreuz (iPad):** Ecken = schräg laufen. Während Aufgabe, Dialog, Merkbuch, Testseite und Titelbild ist es ausgeblendet.
 - Touch-Tasten großzügig und touchfreundlich, Safe-Area beachten. Gegenstandsplätze oben rechts im HUD in derselben Anordnung (A rot, B blau).
 
 ## Spielwelt und Ablauf
@@ -172,7 +176,7 @@ Gebaut wird immer nur der Meilenstein, den der Nutzer freigibt, mit Test nach je
 - **Titelbild:** „A: Spiel starten“ bzw. mit Spielstand „A: Weiterspielen / B: Neues Spiel“ (mit Rückfrage, löscht den Spielstand). Hinweis: Der Spielstand bleibt nur auf diesem Gerät.
 - **Balance:** 4 Herzen, Herz-Drop bei jedem 2. Sieg im ersten Versuch (`config.js`).
 - **Pflicht-Gegner (Bann):** Ein Bann aus geraden Lichtlinien sperrt den Weg nach vorn (Ostrand von Wiese und Wald, Höhleneingang an der Ruine, Öffnung nach oben in Halle und Mittelraum), bis alle Gegner dieses Bildschirms erlöst sind. Zurück geht es immer. Beim letzten Gegner erscheint „Der Bann löst sich auf“.
-- **Lernpfad Dungeon 1** (Merksatz und Aufgabe passen zusammen, von leicht nach schwer):
+- **Lernpfad Dungeon 1** (Merksatz und Aufgabe passen zusammen, von leicht nach schwer; vor dem Boss das Fackel-Rätsel):
   - Wiese – Wanderin: Normalparabel, Punkt auf y = x² → Typ „Punkt auf der Normalparabel“ (y oder x gesucht)
   - Wald – Förster: Streckfaktor und Öffnung → Typ „a aus der Beschreibung“ (z. B. mit dem Faktor 2 gestreckt, nach unten geöffnet)
   - Ruine – Einsiedler: Scheitelform, S(xs|ys), Vorzeichen → „Scheitel ablesen“
@@ -180,6 +184,7 @@ Gebaut wird immer nur der Meilenstein, den der Nutzer freigibt, mit Test nach je
   - Höhle, Mittelraum – Alte Inschrift an der Wand: Scheitelform aufstellen → „Scheitelform aufstellen“ (Graph)
   - Truhe (Plus, freiwillig): „Verschiebung“ (y = ax² wird verschoben, Scheitelform angeben)
   - Boss: drei feste, freigegebene Aufgaben, die alles verbinden (S von y = −0,5(x + 2)² + 3 → S(−2|3); a aus S(1|−4) und P(3|4) → a = 2; Graph mit S(−1|3) und P(1|1) → y = −0,5(x + 1)² + 3); vor der ersten Aufgabe stellt sich der Wächter vor.
+- **Rätselraum vor dem Boss:** Zwischen Mittelraum und Boss-Vorraum. Koordinatensystem im Boden (x = −1 … 3, y = −2 … 2), 5 × 5 Fackelständer. Die Steintafel nennt die feste Parabel y = (x − 1)² − 2. Richtig sind (−1|2), (0|−1), (1|−2), (2|−1), (3|2). Eine falsche Fackel löscht alle (kein Herzverlust). Sind alle fünf entzündet, hebt sich das Gitter zum Boss (wird gespeichert).
 - **Formeln im Text:** Der Zeilenumbruch trennt nie an Rechenzeichen (=, +, −, <, >), Formeln bleiben in einer Zeile.
 - **Schriftgröße:** Auf dem iPad geprüft, passt.
 - **Rastquellen bisher:** Brunnen im Dorfplatz, Quelle vor dem Dungeon-Eingang an der Ruine, Quelle im Dungeon-Mittelraum. Alle Quellen sehen aus wie der Dorfbrunnen. Alle speichern automatisch und füllen die Herzen auf.
