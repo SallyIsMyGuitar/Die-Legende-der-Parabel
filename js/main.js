@@ -594,31 +594,44 @@
   // --- Zeichnen ---------------------------------------------------------------
   function drawScene(now) {
     var ctx = Render.getCtx();
+    var here = World.getScreen();
     if (slide) {
+      // Die Spielfigur wird mit dem Bildschirm sortiert, in dem ihre Mitte liegt
       var cam = slide.dir * slide.p * W;
+      var px = Player.getX() + 8;
+      var inTo = slide.dir > 0 ? px >= W : px < 0;
       ctx.save();
       ctx.translate(-cam, 0);
-      World.drawGround(Render, now, slide.from, Player.getY());
+      World.drawGround(Render, now, slide.from);
       ctx.translate(slide.dir * W, 0);
-      World.drawGround(Render, now, slide.to, Player.getY());
+      World.drawGround(Render, now, slide.to);
       ctx.restore();
-      Player.draw(Render, -cam, 0);
       ctx.save();
       ctx.translate(-cam, 0);
-      World.drawOverlay(Render, now, slide.from, Player.getY());
+      World.drawSorted(Render, slide.from, inTo ? [] :
+        [{ y: Player.getY(), draw: function () { Player.draw(Render); } }]);
       ctx.translate(slide.dir * W, 0);
-      World.drawOverlay(Render, now, slide.to, Player.getY());
+      World.drawSorted(Render, slide.to, !inTo ? [] :
+        [{ y: Player.getY(), draw: function () { Player.draw(Render, -slide.dir * W, 0); } }]);
+      ctx.restore();
+      ctx.save();
+      ctx.translate(-cam, 0);
+      World.drawOverlay(Render, now, slide.from);
+      ctx.translate(slide.dir * W, 0);
+      World.drawOverlay(Render, now, slide.to);
       ctx.restore();
       return;
     }
-    World.drawGround(Render, now, null, Player.getY());
-    Player.draw(Render);
-    // Gegner zeichnen: draußen und in den Dungeon-Räumen
-    if (World.isOutdoor() || Enemies.hasScreen(World.getScreen()))
-      Enemies.draw(Render, now, World.getScreen());
-    if (World.getScreen() === 'dboss') Boss.draw(Render, now);
-    if (spaeth) drawSpaeth(Render, now);
-    World.drawOverlay(Render, now, null, Player.getY());
+    World.drawGround(Render, now);
+    // Spielfigur, Gegner, Wächter und Herr Späth nach Tiefe mit den Objekten
+    // (Häuser, Brunnen, Zaun …) zeichnen; Reihenfolge wie bisher bei gleicher Höhe
+    var actors = [{ y: Player.getY(), draw: function () { Player.draw(Render); } }];
+    if (World.isOutdoor() || Enemies.hasScreen(here))
+      actors = actors.concat(Enemies.actors(Render, now, here));
+    if (here === 'dboss') actors.push({ y: -999, draw: function () { Boss.draw(Render, now); } });
+    if (spaeth) actors.push({ y: spaeth.y, draw: function () { drawSpaeth(Render, now); } });
+    World.drawSorted(Render, null, actors);
+    World.drawOverlay(Render, now);
     if (chestSword) drawChestSword(Render, now);
     if (doorClip) {
       // Figur in der Türöffnung sichtbar halten (vor dem dunklen Flur)

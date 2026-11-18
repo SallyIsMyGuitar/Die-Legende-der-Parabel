@@ -776,31 +776,44 @@ var World = (function () {
       }
     }
 
-    // 4) Überlagerung: Kronen und Objekte werden nicht hier, sondern je nach
-    //    Fußzeile der Spielfigur in zwei Ebenen gezeichnet (siehe paintOverlay).
-    st.behind = Render.createLayer(W, H);   // Objekte hinter der Figur
-    st.overlay = Render.createLayer(W, H);  // Kronen und Objekte vor der Figur
-    st.ovRow = null;                        // für welche Fußzeile die Ebenen gelten
+    // 4) Objekte zeilenweise (je Grundzeile eine Ebene) und Baumkronen
+    //    (eigene Ebene ganz oben), siehe Tiefensortierung unten
+    st.rows = [];
+    for (var row = 0; row < ROWS; row++) {
+      if (!rowHasObjects(st, row)) continue;
+      var y0 = Math.max(0, (row - ROW_UP) * TILE);
+      var y1 = Math.min(H, (row + ROW_DOWN + 1) * TILE);
+      var lay = Render.createLayer(W, y1 - y0);
+      lay.ctx.translate(0, -y0);
+      Render.setTarget(lay.ctx);
+      paintObjects(st, 'row', row);
+      st.rows[row] = { canvas: lay.canvas, y: y0 };
+    }
+    st.overlay = Render.createLayer(W, H);
+    Render.setTarget(st.overlay.ctx);
+    paintObjects(st, 'canopy');
     Render.setTarget(null);
   }
 
   // --- Tiefensortierung der Objekte ----------------------------------------
-  // Jedes Objekt (Haus, Brunnen, Zaun, Schild, Truhe, Ruinenmauer) hat eine
-  // Grundzeile = Kachelzeile seiner Unterkante. Liegt sie über der Fußzeile der
-  // Spielfigur, steht das Objekt hinter ihr (Figur wird davor gezeichnet).
-  // Baumkronen liegen immer über der Figur (Effekt „unter dem Baum“).
-  // mode 'behind': nur Objekte hinter der Figur.
-  // mode 'front' : Kronen und Objekte vor der Figur; Objekte hinter der Figur
-  //                radieren dort früher gezeichnete Kronen aus, damit die
-  //                Reihenfolge wie bisher bleibt (Gebäude über Krone).
-  function paintOverlay(st, footRow, mode) {
+  // Jedes Objekt (Haus, Laden, Schule, Brunnen, Zaun, Tor, Schild, Truhe,
+  // Ruinenmauer) hat eine Grundzeile = Kachelzeile seiner Unterkante. Die
+  // Objekte jeder Grundzeile liegen in einer eigenen Ebene. Gezeichnet wird
+  // Zeile für Zeile von oben nach unten: erst die Figuren, deren Füße in dieser
+  // Zeile stehen, dann die Objekte der Zeile. So steht eine Figur vor allem,
+  // was weiter oben steht, und hinter allem ab ihrer eigenen Zeile.
+  // Baumkronen liegen immer ganz oben (Effekt „unter dem Baum“).
+  var ROW_UP = 7;     // so viele Kachelzeilen ragt ein Objekt höchstens nach oben
+  var ROW_DOWN = 1;   // ... und höchstens nach unten über seine Grundzeile
+
+  // Zeichnet Objekte. mode 'row': nur die Objekte der Grundzeile onlyRow.
+  // mode 'canopy': nur Baumkronen; Objekte, die im Original über einer Krone
+  // lagen, radieren sie dort aus (Reihenfolge Krone/Gebäude bleibt wie bisher).
+  function paintObjects(st, mode, onlyRow) {
     var ctx = Render.getCtx();
     var s = st.def.school;
-    // Zeichnet ein Objekt der Grundzeile row je nach Modus (oder lässt es aus)
     function obj(row, fn) {
-      var hinten = row < footRow;
-      if (mode === 'behind') { if (hinten) fn(); return; }
-      if (!hinten) { fn(); return; }
+      if (mode === 'row') { if (row === onlyRow) fn(); return; }
       ctx.globalCompositeOperation = 'destination-out';
       fn();
       ctx.globalCompositeOperation = 'source-over';
@@ -810,7 +823,7 @@ var World = (function () {
       for (cx = 0; cx < COLS; cx++) {
         tt = tileAt(cx, cy);
         var x = cx, y = cy;
-        if (tt === 'T') { if (mode === 'front') drawCanopy(Render, cx, cy); }
+        if (tt === 'T') { if (mode === 'canopy') drawCanopy(Render, cx, cy); }
         else if (tt === 'W' || tt === 'q') obj(cy, function () { Buildings.well(Render, x, y); });  // Quelle sieht aus wie der Dorfbrunnen
         else if (tt === 'R') obj(cy, function () { drawRuinWall(Render, x, y); });
         else if (tt === 'E') obj(cy, function () { drawRuinDoor(Render, x, y); });
@@ -842,25 +855,49 @@ var World = (function () {
     }
   }
 
-  // Beide Ebenen für die Fußzeile neu zeichnen, wenn sie sich geändert hat
-  function updateOverlay(st, footRow) {
-    footRow = Math.max(0, Math.min(ROWS, footRow));
-    if (st.ovRow === footRow) return;
-    st.ovRow = footRow;
-    var prev = S;
-    S = st;                                  // tileAt liest aus S
-    [['behind', st.behind], ['front', st.overlay]].forEach(function (e) {
-      e[1].ctx.clearRect(0, 0, W, H);
-      Render.setTarget(e[1].ctx);
-      paintOverlay(st, footRow, e[0]);
-    });
-    Render.setTarget(null);
-    S = prev;
+  // Hat die Grundzeile row mindestens ein Objekt?
+  function rowHasObjects(st, row) {
+    for (var cx = 0; cx < COLS; cx++) {
+      if ('WqREiCFG'.indexOf(tileAt(cx, row)) >= 0) return true;
+    }
+    var s = st.def.school;
+    if (s && s.y + s.h - 1 === row) return true;
+    return st.def.buildings.some(function (b) { return b.y + b.h - 1 === row; });
   }
 
-  // Fußzeile der Spielfigur aus ihrer Y-Position (Figur 16 px hoch)
-  function footRowOf(playerY) {
-    return Math.floor((playerY + 15) / TILE);
+  // Kachelzeile, in der die Füße einer 16x16-Figur mit Oberkante y stehen
+  function footRowOf(y) {
+    return Math.max(0, Math.min(ROWS - 1, Math.floor((y + 15) / TILE)));
+  }
+
+  // Objekte und Figuren nach Tiefe zeichnen (zwischen drawGround und
+  // drawOverlay). actors: Liste { y, draw } mit y = Oberkante der 16x16-Figur.
+  // In Innenräumen und Dungeon-Räumen werden die Figuren einfach der Reihe
+  // nach gezeichnet (dort liegen keine Objekte über den Figuren).
+  function drawSorted(r, name, actors) {
+    name = name || current;
+    if (!states[name]) { actors.forEach(function (a) { a.draw(); }); return; }
+    var st = stateOf(name);
+    // Figuren nach Fußzeile einsortieren, innerhalb der Zeile von oben nach unten
+    var list = actors.slice().sort(function (a, b) { return a.y - b.y; });
+    var k = 0;
+    for (var row = 0; row < ROWS; row++) {
+      while (k < list.length && footRowOf(list[k].y) <= row) list[k++].draw();
+      var L = st.rows[row];
+      if (L) r.image(L.canvas, 0, L.y);
+      drawOpenChest(r, st, row);
+    }
+    while (k < list.length) list[k++].draw();
+  }
+
+  // Geöffnete Rätsel-Truhe (nach gelöstem Rätsel) über der geschlossenen,
+  // in der Grundzeile der Truhe
+  function drawOpenChest(r, st, row) {
+    if (!(st.chestOpen > 0)) return;
+    (st.def.signs || []).forEach(function (sg) {
+      if (sg.action === 'chest' && sg.tiles[0][1] === row)
+        drawChestOpen(r, sg.tiles[0][0], sg.tiles[0][1], st.chestOpen);
+    });
   }
 
   function stateOf(name) {
@@ -912,9 +949,8 @@ var World = (function () {
     }
   }
 
-  // Boden inkl. Animationen (unter der Spielfigur); name optional.
-  // playerY: Y-Position der Spielfigur für die Tiefensortierung der Objekte.
-  function drawGround(r, time, name, playerY) {
+  // Boden inkl. Animationen (unter der Spielfigur); name optional
+  function drawGround(r, time, name) {
     var t = time || 0;
     name = name || current;
     if (!states[name]) { Interior.drawGround(r, t, name); return; }
@@ -940,33 +976,16 @@ var World = (function () {
       var blink = dir === 'down' && (t + i * 900) % 3600 < 180 ? 1 : 0;
       r.image(arr[blink], n.x, n.y);
     }
-    // Objekte, die hinter der Spielfigur stehen (z. B. Hauswand über ihr)
-    updateOverlay(st, footRowOf(playerY || 0));
-    r.image(st.behind.canvas, 0, 0);
-    drawOpenChest(r, st, false);
   }
 
-  // Geöffnete Rätsel-Truhe (nach gelöstem Rätsel) in der passenden Ebene:
-  // vorn = true für die Ebene vor der Figur, false für die dahinter
-  function drawOpenChest(r, st, vorn) {
-    if (!(st.chestOpen > 0)) return;
-    (st.def.signs || []).forEach(function (sg) {
-      if (sg.action !== 'chest') return;
-      if ((sg.tiles[0][1] >= st.ovRow) === vorn)
-        drawChestOpen(r, sg.tiles[0][0], sg.tiles[0][1], st.chestOpen);
-    });
-  }
-
-  // Kronen, Gebäude, offene Türen, Rauch (über der Spielfigur)
-  function drawOverlay(r, time, name, playerY) {
+  // Baumkronen, offene Türen, Rauch (über der Spielfigur)
+  function drawOverlay(r, time, name) {
     var t = time || 0;
     name = name || current;
     if (!states[name]) { Interior.drawOverlay(r, t, name); return; }
     var st = stateOf(name);
-    updateOverlay(st, footRowOf(playerY || 0));
     r.image(st.overlay.canvas, 0, 0);
     var ctx = r.getCtx();
-    drawOpenChest(r, st, true);
     st.def.buildings.forEach(function (b) {
       if (st.doors[b.room] > 0) Buildings.openDoor(r, b, st.doors[b.room]);
       if (!b.chimney) return;
@@ -982,6 +1001,7 @@ var World = (function () {
 
   return {
     drawGround: drawGround,
+    drawSorted: drawSorted,
     drawOverlay: drawOverlay,
     isBlocked: isBlocked,
     checkWarp: checkWarp,

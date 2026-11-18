@@ -43,7 +43,7 @@ Ein Mathe-Übungsspiel als Top-Down-Abenteuer im Stil eines modernen 2D-Zelda (O
   - `buildings.js`: Häuser, Laden, Schule, Zaun, Tor, Brunnen, Tür-Animation
   - `interior.js`: Raum-Rahmen für Innenräume, gemeinsame Möbel, Elternhaus
   - `rooms.js`: weitere Innenräume (Nachbarin, Freund, Laden)
-  - `world.js`: Bildschirme der Oberwelt, Kollision, Übergänge, Gesprächsziele (inkl. Rätsel-Truhe und Quelle an der Ruine)
+  - `world.js`: Bildschirme der Oberwelt, Kollision, Übergänge, Gesprächsziele (inkl. Rätsel-Truhe und Quelle an der Ruine, Tiefensortierung von Objekten und Figuren)
   - `tasks.js`: Aufgabenvorlagen und feste Boss-Aufgaben
   - `taskui.js`: Aufgabenbox (Zahlenblock, Graph-Modus mit live gezeichneter Parabel, Fehlerstufen)
   - `testpage.js`: Testseite für die Lehrkraft
@@ -187,4 +187,5 @@ Gebaut wird immer nur der Meilenstein, den der Nutzer freigibt, mit Test nach je
 - **Rätselraum vor dem Boss:** Zwischen Mittelraum und Boss-Vorraum. Koordinatensystem im Boden (x = −1 … 3, y = −2 … 2), 5 × 5 Fackelständer. Die Steintafel nennt die feste Parabel y = (x − 1)² − 2. Richtig sind (−1|2), (0|−1), (1|−2), (2|−1), (3|2). Eine falsche Fackel löscht alle (kein Herzverlust). Sind alle fünf entzündet, hebt sich das Gitter zum Boss (wird gespeichert).
 - **Formeln im Text:** Der Zeilenumbruch trennt nie an Rechenzeichen (=, +, −, <, >), Formeln bleiben in einer Zeile.
 - **Schriftgröße:** Auf dem iPad geprüft, passt.
+- **Tiefensortierung (Oberwelt):** Häuser, Laden, Schule, Brunnen/Quellen, Zaun, Tor, Schild, Truhe und Ruinenmauer werden nach ihrer Unterkante (Grundzeile) sortiert, zusammen mit Spielfigur, Gegnern und Herrn Späth: Eine Figur steht vor allem, was weiter oben endet, und hinter allem ab ihrer eigenen Kachelzeile. Baumkronen liegen immer über allen Figuren (Effekt „unter dem Baum“). Umsetzung in `world.js` (`drawSorted`), Aufruf in `main.js` (`drawScene`).
 - **Rastquellen bisher:** Brunnen im Dorfplatz, Quelle vor dem Dungeon-Eingang an der Ruine, Quelle im Dungeon-Mittelraum. Alle Quellen sehen aus wie der Dorfbrunnen. Alle speichern automatisch und füllen die Herzen auf.

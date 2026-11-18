@@ -396,41 +396,57 @@ var Enemies = (function () {
 
   // --- Zeichnen ----------------------------------------------------------------
 
-  function draw(r, time, screen) {
+  // Alle sichtbaren Figuren dieses Bildschirms (Herz-Drops, Besiegt-Animationen,
+  // Gegner) als Liste { x, y, draw }: x/y = linke obere Ecke (16x16), draw()
+  // zeichnet die Figur. So kann World sie nach Tiefe vor/hinter Objekte setzen.
+  function actors(r, time, screen) {
+    var list = [];
     var ctx = r.getCtx();
     var now = performance.now();
     // fallen gelassene Herzen: springen aus der Wolke, dann leicht wippend
-    for (var d = 0; d < drops.length; d++) {
-      if (drops[d].screen !== screen) continue;
-      var dt = now - drops[d].t0;
-      if (dt < 0) continue;
-      var hb = Math.floor(time / 250) % 2;
-      if (dt < DROP_HOP_MS) {
-        var q = dt / DROP_HOP_MS;
-        hb = Math.round(Math.sin(q * Math.PI) * 8);   // Bogen nach oben
-      }
-      Hud.drawHeart(r, Math.round(drops[d].x) + 4, Math.round(drops[d].y) + 5 - hb);
-    }
+    drops.forEach(function (dr) {
+      if (dr.screen !== screen) return;
+      var dt = now - dr.t0;
+      if (dt < 0) return;
+      list.push({ x: dr.x, y: dr.y, draw: function () {
+        var hb = Math.floor(time / 250) % 2;
+        if (dt < DROP_HOP_MS) {
+          var q = dt / DROP_HOP_MS;
+          hb = Math.round(Math.sin(q * Math.PI) * 8);   // Bogen nach oben
+        }
+        Hud.drawHeart(r, Math.round(dr.x) + 4, Math.round(dr.y) + 5 - hb);
+      } });
+    });
     // laufende Besiegt-Animationen; fertige werden entfernt
     for (var a = dying.length - 1; a >= 0; a--) {
       if (now - dying[a].t0 > FLASH_MS + POOF_MS) { dying.splice(a, 1); continue; }
-      if (dying[a].e.screen === screen) drawDying(r, now, dying[a]);
+      if (dying[a].e.screen !== screen) continue;
+      (function (dd) {
+        list.push({ x: dd.e.x, y: dd.e.y, draw: function () { drawDying(r, now, dd); } });
+      })(dying[a]);
     }
-    for (var i = 0; i < enemies.length; i++) {
-      var e = enemies[i];
-      if (e.screen !== screen) continue;
-      if (defeated[e.screen + ':' + e.index]) continue;
-      var bob = Math.floor(time / 300 + e.index) % 2;
-      ctx.globalAlpha = 0.3;
-      r.ellipse(e.x + 8, e.y + 15, 6, 2, '#2a140a');
-      ctx.globalAlpha = 1;
-      r.image(spriteOf(e.screen), Math.round(e.x), Math.round(e.y - bob));
-    }
+    enemies.forEach(function (e) {
+      if (e.screen !== screen) return;
+      if (defeated[e.screen + ':' + e.index]) return;
+      list.push({ x: e.x, y: e.y, draw: function () {
+        var bob = Math.floor(time / 300 + e.index) % 2;
+        ctx.globalAlpha = 0.3;
+        r.ellipse(e.x + 8, e.y + 15, 6, 2, '#2a140a');
+        ctx.globalAlpha = 1;
+        r.image(spriteOf(e.screen), Math.round(e.x), Math.round(e.y - bob));
+      } });
+    });
+    return list;
+  }
+
+  function draw(r, time, screen) {
+    actors(r, time, screen).forEach(function (ac) { ac.draw(); });
   }
 
   return {
     update: update,
     draw: draw,
+    actors: actors,
     defeat: defeat,
     DEFEAT_TIME: DEFEAT_TIME,
     attemptOf: attemptOf,
