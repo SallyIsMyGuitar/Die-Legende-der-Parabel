@@ -145,6 +145,9 @@ var TaskUi = (function () {
     active = false;
     task = null;
     closing = null;
+    // Probeaufgabe (ohne Kampf): Sind danach alle Herzen weg, wie an einer
+    // Rastquelle auffuellen – sonst liefe das Spiel mit 0 Herzen weiter
+    if (!onResult && Hud.getHearts() === 0) Hud.fill();
     if (onResult) onResult(solved, errors, !!joker);
   }
 
