@@ -333,6 +333,23 @@
     R.overlay = vignette;
   });
 
+  // Laternenzimmer: nach dem Sieg des Bosses haengt die Laterne leuchtend
+  // ueber der Raummitte (der Waechter selbst ist verschwunden)
+  LATERNE.anim = function (r, t) {
+    if (typeof Boss === 'undefined' || !Boss.of('lboss') || !Boss.of('lboss').isDefeated()) return;
+    var ctx = r.getCtx();
+    ctx.globalAlpha = 0.16 + 0.04 * (Math.floor(t / 260) % 2);
+    r.ellipse(112, 74, 22, 26, '#f8e88a');
+    ctx.globalAlpha = 1;
+    // kleine leuchtende Laterne an der Decke
+    r.px(111, 40, 1, 8, '#3a3644');
+    r.px(107, 48, 12, 16, '#f0c048');
+    r.px(109, 50, 8, 12, '#f8e88a');
+    r.px(107, 48, 12, 1, '#4a4456');
+    r.px(107, 64, 12, 1, '#4a4456');
+    r.px(107, 55, 12, 1, '#3a3644');
+  };
+
   // Spiegelraum: Licht im Laufbild, Gitter bis das Raetsel geloest ist
   SPIEGEL.anim = function (r, t) {
     Spiegel.drawLight(r, t);

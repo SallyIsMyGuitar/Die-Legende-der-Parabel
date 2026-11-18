@@ -48,6 +48,8 @@
       boss: !!Boss.of('dboss') && Boss.of('dboss').isDefeated(),   // alter Schluessel (Dungeon 1)
       bosses: bossState(),                                          // besiegt je Boss-Raum
       raetsel: Raetsel.isSolved(),
+      spiegel: Spiegel.isSolved(),
+      leuchtturm: World.isLighthouseLit(),
       bossIntro: bossIntroDone,
       wappen: wappens,
       spaeth: spaethDone,
@@ -67,8 +69,13 @@
     if (st.sword) Sword.give();
     Merkbuch.load(st.merk);
     var bossesSt = st.bosses || (st.boss ? { dboss: true } : {});   // alte Staende nur mit 'boss'
-    if (bossesSt.dboss) { Boss.of('dboss').setDefeated(); World.openRockGate('ost'); }
+    Object.keys(bossesSt).forEach(function (k) {
+      if (bossesSt[k] && Boss.of(k)) Boss.of(k).setDefeated();
+    });
+    if (bossesSt.dboss) World.openRockGate('ost');
     if (st.raetsel) Raetsel.setSolved();
+    if (st.spiegel) Spiegel.setSolved();
+    if (st.leuchtturm) World.setLighthouseLit(true);
     // Vorstellung je Boss-Raum; aeltere Staende kennen nur die Hoehle
     bossIntroDone = st.bossIntro && typeof st.bossIntro === 'object'
       ? st.bossIntro
@@ -88,6 +95,7 @@
     if (!l) return target.texts;
     if (l.wappen && wappens < l.wappen) return target.texts;
     if (l.solved && !Raetsel.isSolved()) return target.texts;
+    if (l.spiegel && !Spiegel.isSolved()) return target.texts;
     return l.replace ? l.texts : target.texts.concat(l.texts);
   }
 
@@ -176,7 +184,25 @@
         'Danke! Graf Gerade hat mich verzaubert. Er hasst alles, was sich krümmt – und Parabeln am allermeisten.',
         'Darum ließ er eure Schule zerstören: Dort lernt man, wie Parabeln funktionieren. Er hat noch weitere Wächter … und ein Schloss.',
         'Du erhältst das erste Wappen: das Wappen der Normalparabel. Kehre ins Dorf zurück und erzähle, was du erfahren hast.'
-      ]
+      ],
+      // nach dem Sieg: der Felsen am Suedausgang loest sich auf
+      onWin: function () { World.openRockGate('ost'); }
+    },
+    lboss: {
+      name: 'Wächter des Turms',
+      kontext: 'Der Wächter fragt:',
+      intro: [
+        'Halt! Graf Gerade hat diesen Turm verzaubert: Kein Licht, keine Kurve – nur gerade Finsternis!',
+        'Beantworte meine drei Fragen. Für jede richtige Antwort verliere ich ein Herz. Dein Schwert hilft dir hier nicht.'
+      ],
+      victory: [
+        'Mit einem heißen Aufblitzen kehrt das Licht in den Spiegel zurück. Der Bann über dem Turm zerbricht.',
+        'Ich war die Laterne des Turms, verzaubert vom Grafen. Er fürchtet nichts mehr als einen leuchtenden Scheitelpunkt.',
+        'Hast du das Wasser im Osten gesehen? Es trägt sein Siegel. Erst wenn du es bannst, zeigt sich der nächste Wächter.',
+        'Du erhältst das Wappen der Scheitelform. Das Licht des Turms sehnt sich nach dem Tag, an dem die Schule wieder steht.'
+      ],
+      // nach dem Sieg: der Leuchtturm draussen leuchtet wieder
+      onWin: function () { World.setLighthouseLit(true); }
     }
   };
   var bossAttempts = 1;    // Versuche an der aktuellen Boss-Aufgabe
@@ -208,8 +234,8 @@
         } else {
           boss.die();
           wappens++;
+          if (BOSSES[room].onWin) BOSSES[room].onWin();
           saveGame();   // nach dem Dungeon automatisch speichern
-          World.openRockGate('ost');   // der Felsen am Südausgang löst sich auf
           run([
             { dur: 1.3 },
             { dur: 0, end: function () {

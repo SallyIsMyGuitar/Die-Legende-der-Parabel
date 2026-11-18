@@ -180,3 +180,85 @@ var Boss = (function () {
     drawDying: drawDying
   });
 })();
+
+// --- Waechter des Turms, die Laterne des Leuchtturms (Dungeon 2, 'lboss') ---
+// Schwebende Laterne: dunkles Gestell, warmes Glas, im Kern die Flamme,
+// die nach dem Sieg in den Spiegel zurueckkehrt und den Turm wieder entzuendet.
+(function () {
+  'use strict';
+
+  var X = 102, Y = 60;     // linke obere Ecke; Bildmitte (112, 72), Punkte (112, 74)
+
+  function drawLiving(r, def, inst, now, alpha) {
+    var ctx = r.getCtx();
+    var hp = def.maxHp - inst.index();
+    var bob = Math.round(Math.sin(now / 500) * 2);
+    var x = X, y = Y + bob;
+    if (alpha !== undefined) ctx.globalAlpha = alpha;
+
+    // warmer Lichtschein auf den Boden unter der Laterne
+    ctx.globalAlpha = (alpha === undefined ? 1 : alpha) * (0.16 + 0.04 * (Math.floor(now / 200) % 2));
+    r.ellipse(112, 92, 16, 5, '#f0b050');
+    ctx.globalAlpha = alpha === undefined ? 1 : alpha;
+
+    // Aufhaengung und Ring
+    r.px(x + 10, y - 4, 1, 6, '#3a3644');
+    r.px(x + 8, y, 8, 2, '#4a4456');
+
+    // Laternenkoerper: dunkles Gestell mit warmem Glas (dunkelt bei Schaden)
+    r.px(x + 5, y + 2, 14, 18, '#3a3644');
+    var glas = hp > 1 ? '#f6c04a' : '#e08a3a';
+    var kern = hp > 1 ? '#f8e88a' : '#f0b050';
+    r.px(x + 7, y + 4, 10, 14, glas);
+    r.px(x + 9, y + 7, 6, 8, kern);
+    // flackernde Flamme im Kern
+    var fl = Math.floor(now / 120) % 3;
+    r.px(x + 11 + Math.floor(fl / 2), y + 9, 2, 4, '#ffffff');
+    // Stege des Gestells
+    r.px(x + 5, y + 8, 14, 1, '#3a3644');
+    r.px(x + 5, y + 14, 14, 1, '#3a3644');
+    r.px(x + 11, y + 2, 1, 18, '#3a3644');
+    // Dach und Fuss
+    r.px(x + 6, y + 1, 12, 1, '#4a4456');
+    r.px(x + 6, y + 20, 12, 1, '#4a4456');
+
+    // Risse im Glas je nach erlittenem Schaden
+    if (hp <= 2) {
+      r.px(x + 8, y + 5, 1, 5, '#2c2838');
+      r.px(x + 9, y + 9, 2, 1, '#2c2838');
+    }
+    if (hp === 1) {
+      r.px(x + 14, y + 12, 1, 4, '#2c2838');
+      r.px(x + 12, y + 16, 3, 1, '#2c2838');
+    }
+
+    ctx.globalAlpha = 1;
+  }
+
+  // Besiegt-Animation: Das Licht loest sich, Funken regnen nach unten
+  function drawDying(r, def, inst, now) {
+    var t = (now - inst.dieStart()) / 1000;
+    if (t > 1.4) return;
+    var ctx = r.getCtx();
+    var p = Math.min(1, t / 1.2);
+    drawLiving(r, def, inst, inst.dieStart() + 1, Math.max(0, 1 - p));   // einfrieren, abblenden
+    // goldene Funken, die nach unten ziehen
+    ctx.globalAlpha = Math.max(0, 0.8 - p * 0.8);
+    for (var i = 0; i < 7; i++) {
+      var fx = 96 + i * 6 + (i % 2) * 3;
+      var fy = 66 + p * 30 + Math.sin(i * 3 + p * 4) * 3;
+      r.px(fx, fy, 1, 1, '#fff2a0');
+      r.px(fx - 1, fy, 1, 1, '#ffffff');
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  Boss.register('lboss', {
+    maxHp: 3,          // eine feste Aufgabe = ein Herz
+    x: X, y: Y,        // linke obere Ecke der Zeichnung (Rueckstoss)
+    cx: 112, cy: 74,   // Bildmitte fuer die Beruehrung
+    hearts: { x: 100, y: 94 },
+    drawLiving: drawLiving,
+    drawDying: drawDying
+  });
+})();

@@ -374,8 +374,37 @@ var Tasks = (function () {
     }
   ];
 
+  // --- Boss des Leuchtturms: feste, von der Lehrkraft gepruefte Aufgaben ---
+  // Thema des Dungeons: Scheitelform. Sie verbinden alles, was auf dem Weg
+  // und im Turm geuebt wurde (Scheitel ablesen, a bestimmen, aufstellen).
+  var BOSS_TURM = [
+    {
+      frage: 'Gib den Scheitelpunkt der Parabel y = 1,5(x − 2)² − 3 an.',
+      felder: [{ key: 'xs', label: 'xs' }, { key: 'ys', label: 'ys' }],
+      loesung: [2, -3],
+      loesungstext: 'S(2|−3)',
+      hinweis: 'Bei (x − 2) ist xs = 2.'
+    },
+    {
+      frage: 'Die Parabel hat den Scheitel S(1|2) und geht durch P(3|10). Gib den Streckfaktor a an.',
+      felder: [{ key: 'a', label: 'a' }],
+      loesung: [2],
+      loesungstext: '10 = a(3 − 1)² + 2, also 8 = 4a, a = 2',
+      hinweis: 'Setze P ein: 10 = a(3 − 1)² + 2.'
+    },
+    {
+      frage: 'Stelle die Parabel mit S(−1|4) ein, die durch P(1|0) geht.',
+      felder: [{ key: 'a', label: 'a' }, { key: 'xs', label: 'xs' }, { key: 'ys', label: 'ys' }],
+      loesung: [-1, -1, 4],
+      loesungstext: 'y = −(x + 1)² + 4',
+      hinweis: 'Setze P ein: 0 = a(1 + 1)² + 4, also a = −1.',
+      graph: true,
+      graphFix: { xp: 1, yp: 0 }
+    }
+  ];
+
   // Feste Boss-Aufgaben je Dungeon (Schluessel = Boss-Raum)
-  var BOSS_FEST = { dboss: BOSS_HOEHLE };
+  var BOSS_FEST = { dboss: BOSS_HOEHLE, lboss: BOSS_TURM };
 
   function bossTasks(room) {
     return (BOSS_FEST[room] || []).slice();

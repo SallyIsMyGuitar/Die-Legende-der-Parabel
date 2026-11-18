@@ -16,6 +16,7 @@ var World = (function () {
   var W = COLS * TILE;
   var H = ROWS * TILE;
   var BLOCKING = 'THDFGSW~REiCqVL';
+  var lighthouseLit = false;   // Leuchtturm leuchtet wieder (Sieg ueber Dungeon 2)
 
   var SCREENS = {
     start: {
@@ -821,6 +822,20 @@ var World = (function () {
     r.px(x + 20, base - 120, 24, 6, '#d8443c');
     r.px(x + 24, base - 123, 16, 3, '#a02c34');
     r.px(x + 31, base - 129, 2, 6, '#5a5468');
+
+    // Nach dem Sieg ueber den Waechter des Turms: Der Lampenraum leuchtet,
+    // warmes Licht faellt auf Galerie und See
+    if (lighthouseLit) {
+      var ctx = r.getCtx();
+      r.px(x + 18, base - 114, 28, 11, '#f8e88a');
+      r.px(x + 22, base - 111, 7, 5, '#fff6d0');
+      r.px(x + 35, base - 111, 7, 5, '#fff6d0');
+      r.px(x + 18, base - 114, 28, 1, '#ffffff');
+      ctx.globalAlpha = 0.2 + 0.05 * (Math.floor(performance.now() / 300) % 2);
+      r.ellipse(x + 32, base - 108, 26, 12, '#f8e88a');   // Schein um den Lampenraum
+      r.ellipse(x + 32, base + 2, 30, 5, '#f8e88a');       // Lichtfleck am Boden
+      ctx.globalAlpha = 1;
+    }
   }
 
   // Tür des Leuchtturms: dunkler Rahmen, hölzerne Tür mit Griff
@@ -1256,6 +1271,8 @@ var World = (function () {
     doorRect: doorRect,
     setChestOpen: setChestOpen,
     openRockGate: openRockGate,
+    setLighthouseLit: function (p) { lighthouseLit = !!p; },
+    isLighthouseLit: function () { return lighthouseLit; },
     chestPos: chestPos,
     START: START,
     WIDTH: W,
