@@ -265,6 +265,56 @@ var Tasks = (function () {
     };
   }
 
+  // --- Typ 11 (Turm, Auswahl): Wertemenge als Auswahl -------------------
+  // Passt zur Alten Turmuhr: Der Scheitel grenzt die Wertemenge ein.
+  // Auswahl A bis D statt Eingabe, damit die Mengenschreibweise ohne
+  // Tippfehler geprueft wird. Richtige Loesung:
+  //   a > 0 (nach oben geoeffnet) -> W = {y | y >= ys}
+  //   a < 0 (nach unten geoeffnet) -> W = {y | y <= ys}
+  function shuffle(rng, arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(rng() * (i + 1));
+      var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+    }
+    return a;
+  }
+
+  function wertemengeAuswahl(rng) {
+    var a = pick(rng, [0.5, 1, 2, -0.5, -1, -2]);
+    var xs = randInt(rng, -4, 4);
+    var ys = randInt(rng, -3, 3);
+    var auf = a > 0;
+    var richtig = auf
+      ? 'W = {y | y \u2265 ' + fmt(ys) + '}'
+      : 'W = {y | y \u2264 ' + fmt(ys) + '}';
+    // typische Fehler: Oeffnung verkehrt, Grenze daneben, Begrenzung vergessen
+    var verkehrt = auf
+      ? 'W = {y | y \u2264 ' + fmt(ys) + '}'
+      : 'W = {y | y \u2265 ' + fmt(ys) + '}';
+    var daneben = auf
+      ? 'W = {y | y \u2265 ' + fmt(ys + 1) + '}'
+      : 'W = {y | y \u2264 ' + fmt(ys - 1) + '}';
+    var optionen = shuffle(rng, [
+      { t: richtig, ok: true },
+      { t: verkehrt, ok: false },
+      { t: daneben, ok: false },
+      { t: 'W = \u211d', ok: false }
+    ]);
+    var loesungIdx = 0;
+    for (var i = 0; i < optionen.length; i++) if (optionen[i].ok) loesungIdx = i;
+    return {
+      frage: 'Wie lautet die Wertemenge der Parabel ' + spfText(a, xs, ys) + '?',
+      auswahl: optionen.map(function (o) { return o.t; }),
+      felder: [],
+      loesung: loesungIdx,
+      loesungstext: richtig,
+      hinweis: auf
+        ? 'Nach oben ge\u00f6ffnet: Der Scheitel gibt den kleinsten y-Wert vor, also y \u2265 ys.'
+        : 'Nach unten ge\u00f6ffnet: Der Scheitel gibt den gr\u00f6\u00dften y-Wert vor, also y \u2264 ys.'
+    };
+  }
+
   // --- Liste aller Aufgabentypen (sp\u00e4ter kommen weitere Abschnitte dazu) ---
   // Reihenfolge wie im Spiel: Wiese, Wald, Ruine, Hoehle (Halle, Mitte),
   // Truhe, Felder, Klippen, Kueste (Weg zum zweiten Dungeon)
@@ -278,7 +328,8 @@ var Tasks = (function () {
     { id: 'verschiebung', name: 'Verschiebung (Truhe)', make: verschiebung },
     { id: 'spfAusS', name: 'Scheitelform aus S und a', make: spfAusS },
     { id: 'spfAusSP', name: 'Scheitelform aus S und P', make: spfAusSP },
-    { id: 'wertemenge', name: 'Wertemenge am Scheitel', make: wertemenge }
+    { id: 'wertemenge', name: 'Wertemenge am Scheitel', make: wertemenge },
+    { id: 'wertemengeAuswahl', name: 'Wertemenge (Auswahl)', make: wertemengeAuswahl }
   ];
 
   // Eine Aufgabe erzeugen; gleicher Typ + gleicher Samen = gleiche Aufgabe.

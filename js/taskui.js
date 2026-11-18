@@ -88,6 +88,14 @@ var TaskUi = (function () {
     return { x: 170, y: GRAPH.y + 64, w: 70, h: 16 };
   }
 
+  // --- Auswahl-Modus: Option A bis D waehlen -------------------------------
+  // Vier Zeilen im unteren Teil der Box (ueber dem Fuss der Box)
+  var CHOICE_W = 200;
+
+  function choiceRect(i) {
+    return { x: Math.floor((Render.WIDTH - CHOICE_W) / 2), y: 78 + i * 20, w: CHOICE_W, h: 16 };
+  }
+
   // Fester Wert aus der Aufgabe oder aktuelle Einstellung
   function graphVal(key) {
     return task.graphFix && task.graphFix[key] !== undefined ? task.graphFix[key] : graphVals[key];
@@ -193,9 +201,18 @@ var TaskUi = (function () {
     if (v.replace('-', '').replace(',', '').length < 4) values[fieldIndex] = v + ch;
   }
 
-  // Eingabe pruefen: Komma und Punkt gleichwertig; im Graph-Modus
-  // werden die eingestellten Werte direkt verglichen
+  // Eingabe pruefen: Komma und Punkt gleichwertig; in den Sondermodi
+  // (Auswahl bzw. Graph) wird direkt verglichen
   function checkAnswer() {
+    if (task.auswahl) {
+      if (choiceSel === task.loesung) {
+        phase = 'right';
+        phaseTime = 0;
+      } else {
+        onWrong();
+      }
+      return;
+    }
     if (task.graph) {
       for (var g = 0; g < task.felder.length; g++) {
         if (Math.abs(graphVals[task.felder[g].key] - task.loesung[g]) > 1e-6) {
@@ -266,6 +283,18 @@ var TaskUi = (function () {
       e.preventDefault();
       return;
     }
+    if (task.auswahl) {
+      // Auswahlmodus: Zeile antippen waehlt, erneutes Tippen prueft die Antwort
+      for (var c = 0; c < task.auswahl.length; c++) {
+        var cr = choiceRect(c);
+        if (lx >= cr.x && lx < cr.x + cr.w && ly >= cr.y && ly < cr.y + cr.h) {
+          if (choiceSel === c) checkAnswer(); else choiceSel = c;
+          e.preventDefault();
+          return;
+        }
+      }
+      return;
+    }
     if (task.graph) {
       for (var b = 0; b < task.felder.length; b++) {
         var minus = graphBtnRect(b, false);
@@ -329,6 +358,15 @@ var TaskUi = (function () {
       // auf der Testseite kann mit B abgebrochen werden.
       // Ruecktaste (Tastatur) loescht eine Ziffer; sind alle Felder leer,
       // bricht sie die Probeaufgabe ab wie B.
+      if (task.auswahl) {
+        // Auswahlmodus: hoch/runter waehlt, A prueft, Regeln wie sonst
+        if (pressedDir(input, 'up')) choiceSel = (choiceSel + task.auswahl.length - 1) % task.auswahl.length;
+        if (pressedDir(input, 'down')) choiceSel = (choiceSel + 1) % task.auswahl.length;
+        if (input.pressed('sword')) { useSword(); return; }
+        if (input.pressed('b') && (!onResult || abortable)) { finish(false); return; }
+        if (input.pressed('a')) checkAnswer();
+        return;
+      }
       if (task.graph) {
         // Graph-Modus: links/rechts Parameter waehlen, hoch/runter einstellen
         if (pressedDir(input, 'left')) graphSel = (graphSel + task.felder.length - 1) % task.felder.length;
@@ -394,6 +432,41 @@ var TaskUi = (function () {
     var lines = Font.wrap(task.frage, BOX.w - 20).slice(0, task.graph ? 2 : 3);
     for (var i = 0; i < lines.length; i++) {
       Font.draw(ctx, lines[i], BOX.x + 10, BOX.y + 20 + i * Font.LINE, '#f6f0e2');
+    }
+
+    // Auswahl-Modus: Optionen A bis D mit Rahmen, kein Zahlenblock
+    if (task.auswahl) {
+      for (var c = 0; c < task.auswahl.length; c++) {
+        var cr = choiceRect(c);
+        var mark = c === choiceSel && phase === 'input';
+        var loes = phase !== 'input' && c === task.loesung;
+        var ramen = loes ? '#7ec97e' : mark ? '#f0c040' : '#efe4c4';
+        r.px(cr.x, cr.y, cr.w, cr.h, mark ? '#2a2642' : '#0e0c14');
+        r.px(cr.x, cr.y, cr.w, 1, ramen);
+        r.px(cr.x, cr.y + cr.h - 1, cr.w, 1, ramen);
+        r.px(cr.x, cr.y, 1, cr.h, ramen);
+        r.px(cr.x + cr.w - 1, cr.y, 1, cr.h, ramen);
+        Font.draw(ctx, String.fromCharCode(65 + c), cr.x + 6, cr.y + 5,
+          mark ? '#f0c040' : '#8a8496');
+        Font.draw(ctx, task.auswahl[c], cr.x + 18, cr.y + 5,
+          loes ? '#7ec97e' : '#f6f0e2');
+      }
+      if (phase === 'right') drawCheck(r, 218, 152);
+      if (phase === 'wrong') drawCross(r, 216, 150);
+      if (hintShown && phase !== 'solution') {
+        var chl = Font.wrap(task.hinweis, 180);
+        for (var ch = 0; ch < chl.length && ch < 2; ch++) {
+          Font.draw(ctx, chl[ch], BOX.x + 10, 162 + ch * Font.LINE, '#f0c040');
+        }
+      }
+      if (phase === 'solution') {
+        Font.draw(ctx, 'L\u00f6sung:', BOX.x + 10, 162, '#e8344a');
+        Font.draw(ctx, task.loesungstext, BOX.x + 10, 174, '#7ec97e');
+      }
+      var cfuss = onResult ? 'A: pr\u00fcfen' : 'A: pr\u00fcfen  B: abbrechen';
+      if (onResult && !abortable && !bossMode && Sword.has()) cfuss += '  E: Schwert';
+      Font.draw(ctx, cfuss, BOX.x + 10, BOX.y + BOX.h - 12, '#8a8496');
+      return;
     }
 
     // Graph-Modus: Koordinatensystem, live gezeichnete Parabel, Tasten
