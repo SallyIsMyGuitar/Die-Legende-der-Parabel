@@ -329,6 +329,10 @@ var Enemies = (function () {
 
   // Prueft, ob das 16x16-Feld des Gegners an (px, py) frei ist
   function canBeAt(world, px, py) {
+    // Gegner bleiben im sichtbaren Bildschirm: Ohne diese Grenze laufen sie
+    // über offene Ausgänge (Wege) in den Nachbarbildschirm und sind
+    // dort unsichtbar und unerreichbar.
+    if (px < 0 || py < 0 || px + SIZE > TILE * 16 || py + SIZE > TILE * 14) return false;
     var tx1 = Math.floor(px / TILE);
     var ty1 = Math.floor(py / TILE);
     var tx2 = Math.floor((px + SIZE - 1) / TILE);
