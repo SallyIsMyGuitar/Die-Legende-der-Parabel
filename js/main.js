@@ -104,9 +104,11 @@
   // Auf den Wegen zu den Dungeons gibt es keine Hindernisse: Die Gegner sind
   // freiwillige Übung. Der Bann gilt nur noch INNERHALB der Dungeons
   // ('warp' = Öffnung nach vorn ist gesperrt, bis alle Wesen des Raums erlöst sind).
-  var BANN = { dhalle: 'warp', dmittel: 'warp', leingang: 'warp', lmitte: 'warp' };
+  var BANN = { dhalle: 'warp', dmittel: 'warp', leingang: 'warp', lmitte: 'warp',
+               weingang: 'warp', wmitte: 'warp' };
   var FORWARD = { dhalle: 'dmittel', dmittel: 'draetsel',
-                  leingang: 'lmitte', lmitte: 'lraetsel' };   // Öffnung nach vorn
+                  leingang: 'lmitte', lmitte: 'lraetsel',
+                  weingang: 'wmitte', wmitte: 'wraetsel' };   // Öffnung nach vorn
 
   // --- Fackel-Rätsel (Höhle) und Spiegel-Rätsel (Turm) vor dem Boss ------
   // (Logik in raetsel.js bzw. spiegel.js)

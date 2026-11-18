@@ -29,7 +29,9 @@ var Enemies = (function () {
     klippen: 'spfAusSP',        // Fischer: Scheitelform aus S und P
     kueste: 'wertemenge',        // Turmwaerter: Wertemenge am Scheitel
     leingang: 'spfAusSP',         // Tuermerin (Turm): Scheitelform aus S und P
-    lmitte: 'wertemengeAuswahl'   // Alte Turmuhr: Wertemenge als Auswahl
+    lmitte: 'wertemengeAuswahl',   // Alte Turmuhr: Wertemenge als Auswahl
+    weingang: 'scheitelAllgemein', // Netzweber (Wasser): Scheitel aus allgemeiner Form
+    wmitte: 'umformen'             // Alte Bildtafel: Umformen in die Scheitelform
   };
 
   // Kurzer Kontext vor der Aufgabe (die Wesen stehen im Bann von Graf Gerade)
@@ -43,7 +45,9 @@ var Enemies = (function () {
     klippen: 'Ein Klippengeist heult:',
     kueste: 'Ein Krabbengeist scharrt:',
     leingang: 'Ein Möwengeist kreischt:',
-    lmitte: 'Ein Dampfgeist zischt:'
+    lmitte: 'Ein Dampfgeist zischt:',
+    weingang: 'Ein Quallengeist fragt:',
+    wmitte: 'Ein Muschelgeist murmelt:'
   };
 
   // --- Sprites (16x16, ein Frame; Bewegung ueber Wippen) ---------------------
@@ -273,6 +277,48 @@ var Enemies = (function () {
   ];
   var STEAM_COLORS = { o: '#3e4a56', s: '#b4c2d0', E: '#3e4a56', e: '#3e4a56' };
 
+  // Quallengeist (Hafenkaverne): rosa Schirm mit welligen Fäden
+  var JELLY = [
+    '................',
+    '.....jjjjjj.....',
+    '...jjJJJJJJjj...',
+    '..jJJwJJJJwJJj..',
+    '..jJJJJJJJJJJj..',
+    '...jJJJJJJJJj...',
+    '....eje..eje....',
+    '.....j....j.....',
+    '.....e....e.....',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................'
+  ];
+  var JELLY_COLORS = { j: '#d86a9a', J: '#f0a0c0', w: '#ffffff', e: '#5a1a3a' };
+
+  // Muschelgeist (Pumpenkammer): geöffnete Muschel mit Perlenschein
+  var CLAM = [
+    '................',
+    '................',
+    '................',
+    '.....wwwww......',
+    '....wPPPPPw.....',
+    '...wPsssssPw....',
+    '...wPsssssssw...',
+    '...wPsssssssw...',
+    '...wPPsssssww...',
+    '....wwwwwwww....',
+    '...s.ww..ww.s...',
+    '..ss........ss..',
+    '................',
+    '................',
+    '................',
+    '................'
+  ];
+  var CLAM_COLORS = { s: '#c8a878', P: '#e8d8b8', w: '#8a6a48' };
+
   var SPRITES = {
     wiese: { rows: MUSHROOM, colors: MUSHROOM_COLORS },
     wald: { rows: MOSS, colors: MOSS_COLORS },
@@ -283,7 +329,9 @@ var Enemies = (function () {
     klippen: { rows: CLIFF, colors: CLIFF_COLORS },
     kueste: { rows: CRAB, colors: CRAB_COLORS },
     leingang: { rows: GULL, colors: GULL_COLORS },
-    lmitte: { rows: STEAM, colors: STEAM_COLORS }
+    lmitte: { rows: STEAM, colors: STEAM_COLORS },
+    weingang: { rows: JELLY, colors: JELLY_COLORS },
+    wmitte: { rows: CLAM, colors: CLAM_COLORS }
   };
   var spriteCache = {};
   var flashCache = {};   // weisse Silhouette fuer das Aufblitzen
@@ -356,6 +404,14 @@ var Enemies = (function () {
       { x: 12, y: 7 }
     ],
     lmitte: [
+      { x: 4, y: 9 },
+      { x: 13, y: 10 }
+    ],
+    weingang: [
+      { x: 5, y: 8 },
+      { x: 12, y: 7 }
+    ],
+    wmitte: [
       { x: 4, y: 9 },
       { x: 13, y: 10 }
     ]
@@ -468,7 +524,8 @@ var Enemies = (function () {
   function seedOf(e) {
     var screenNo = {
       wiese: 1, wald: 2, ruine: 3, dhalle: 4, dmittel: 5,
-      felder: 6, klippen: 7, kueste: 8, leingang: 9, lmitte: 10
+      felder: 6, klippen: 7, kueste: 8, leingang: 9, lmitte: 10,
+      weingang: 11, wmitte: 12
     }[e.screen] || 1;
     return screenNo * 100 + e.index * 10 + e.attempts;
   }

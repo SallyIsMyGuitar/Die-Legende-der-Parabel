@@ -315,6 +315,27 @@ var Tasks = (function () {
     };
   }
 
+  // --- Typ 12 (Wasserreich): Umformen in die Scheitelform -----------------
+  // Passt zum Merksatz des Netzwebers: Vorgegeben ist die allgemeine Form
+  // y = ax² + bx + c, gesucht sind a, xs und ys der Scheitelform.
+  // Nur "sch\u00f6ne" Werte: ganze Zahlen oder genau eine Nachkommastelle
+  // (bei a = ±0,5 bleibt xs gerade, damit alle Koeffizienten einfach sind).
+  function umformen(rng) {
+    var a = pick(rng, [0.5, 1, 2, -0.5, -1, -2]);
+    var xs = randInt(rng, -4, 4);
+    while (Math.abs(a) === 0.5 && xs % 2 !== 0) xs = randInt(rng, -4, 4);
+    var ys = randInt(rng, -4, 4);
+    var b = -2 * a * xs;
+    var c = a * xs * xs + ys;
+    return {
+      frage: 'Forme in die Scheitelform um. Gib a, xs und ys an: ' + allgText(a, b, c),
+      felder: [{ key: 'a', label: 'a' }, { key: 'xs', label: 'xs' }, { key: 'ys', label: 'ys' }],
+      loesung: [a, xs, ys],
+      loesungstext: spfText(a, xs, ys) + ' mit S(' + fmt(xs) + '|' + fmt(ys) + ')',
+      hinweis: 'Es gilt xs = −b : (2a) und ys = c − a · xs².'
+    };
+  }
+
   // --- Liste aller Aufgabentypen (sp\u00e4ter kommen weitere Abschnitte dazu) ---
   // Reihenfolge wie im Spiel: Wiese, Wald, Ruine, Hoehle (Halle, Mitte),
   // Truhe, Felder, Klippen, Kueste (Weg zum zweiten Dungeon)
@@ -329,7 +350,8 @@ var Tasks = (function () {
     { id: 'spfAusS', name: 'Scheitelform aus S und a', make: spfAusS },
     { id: 'spfAusSP', name: 'Scheitelform aus S und P', make: spfAusSP },
     { id: 'wertemenge', name: 'Wertemenge am Scheitel', make: wertemenge },
-    { id: 'wertemengeAuswahl', name: 'Wertemenge (Auswahl)', make: wertemengeAuswahl }
+    { id: 'wertemengeAuswahl', name: 'Wertemenge (Auswahl)', make: wertemengeAuswahl },
+    { id: 'umformen', name: 'Umformen (Scheitelform)', make: umformen }
   ];
 
   // Eine Aufgabe erzeugen; gleicher Typ + gleicher Samen = gleiche Aufgabe.
