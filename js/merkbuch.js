@@ -143,7 +143,11 @@ var Merkbuch = (function () {
       }
     }
 
-    Font.draw(ctx, 'M: auf/zu  Hoch/Runter: bl\u00e4ttern  B: schlie\u00dfen', BOX.x + 10, BOX.y + BOX.h - 12, '#8a8496');
+    // Bedienhinweis passend zum Gerät (iPad: Tippen statt Tasten M und Hoch/Runter)
+    var fuss = Input.isTouch()
+      ? 'Oben/unten tippen: bl\u00e4ttern  B: schlie\u00dfen'
+      : 'M: auf/zu  Hoch/Runter: bl\u00e4ttern  B: schlie\u00dfen';
+    Font.draw(ctx, fuss, BOX.x + 10, BOX.y + BOX.h - 12, '#8a8496');
   }
 
   // Tippen auf das Buch-Symbol oeffnet bzw. schliesst das Merkbuch
@@ -155,6 +159,15 @@ var Merkbuch = (function () {
       var b = rect();
       if (lx >= b.x && lx < b.x + b.w && ly >= b.y && ly < b.y + b.h) {
         active ? close() : open();
+        e.preventDefault();
+        return;
+      }
+      // Offenes Buch antippen: obere Hälfte blättert zurück, untere weiter
+      // (auf dem iPad ist das Steuerkreuz im Merkbuch ausgeblendet)
+      if (active && lx >= BOX.x && lx < BOX.x + BOX.w && ly >= BOX.y && ly < BOX.y + BOX.h) {
+        var max = Math.max(0, pageLines().length - viewLines());
+        if (ly < BOX.y + BOX.h / 2) scroll = Math.max(0, scroll - 3);
+        else scroll = Math.min(max, scroll + 3);
         e.preventDefault();
       }
     });
