@@ -723,6 +723,9 @@
     var target = null;
     if (title) updateTitle();
     if (title) {
+      // Auf dem Titelbild bleibt das Merkbuch zu (ein Tipp auf das
+      // Buch-Symbol würde es sonst unsichtbar öffnen; nach dem Start wäre es offen)
+      if (Merkbuch.isActive()) Merkbuch.close();
       var tact = currentActions(null);
       Input.setDpadVisible(false);
       Input.setLabels(tact.a, tact.b);
