@@ -68,7 +68,10 @@ var TaskUi = (function () {
   }
 
   // --- Graph-Modus: Parabel mit Plus/Minus-Tasten einstellen ---------------
-  var GRAPH = { x: 14, y: 66, w: 148, h: 68, sx: 16, sy: 6 };
+  // y = 76: Platz für zwei Fragezeilen plus die Zeile mit der Live-Formel
+  // (bei y = 66 verdeckte das Koordinatensystem die Formel)
+  var GRAPH = { x: 14, y: 76, w: 148, h: 68, sx: 16, sy: 6 };
+  var GRAPH_TEXT_Y = 162;   // Hinweis bzw. Lösung unter dem Koordinatensystem und der OK-Taste
   var BTN = { w: 18, h: 14 };   // Größe der Plus/Minus-Tasten
 
   // Tasten neben dem Koordinatensystem: eine Zeile je einstellbarem Parameter
@@ -393,17 +396,18 @@ var TaskUi = (function () {
       Font.draw(ctx, Tasks.spfText(graphVals.a, graphVal('xs'), graphVal('ys')),
         BOX.x + 10, BOX.y + 20 + lines.length * Font.LINE, '#f0c040');
       drawGraph(r, ctx);
-      if (phase === 'right') drawCheck(r, 200, 150);
-      if (phase === 'wrong') drawCross(r, 200, 150);
+      // Haken/Kreuz unter der OK-Taste (rückt mit dem Koordinatensystem nach unten)
+      if (phase === 'right') drawCheck(r, 200, GRAPH_TEXT_Y);
+      if (phase === 'wrong') drawCross(r, 200, GRAPH_TEXT_Y);
       if (hintShown && phase !== 'solution') {
         var ghl = Font.wrap(task.hinweis, 180);
         for (var gh = 0; gh < ghl.length && gh < 2; gh++) {
-          Font.draw(ctx, ghl[gh], BOX.x + 10, 152 + gh * Font.LINE, '#f0c040');
+          Font.draw(ctx, ghl[gh], BOX.x + 10, GRAPH_TEXT_Y + gh * Font.LINE, '#f0c040');
         }
       }
       if (phase === 'solution') {
-        Font.draw(ctx, 'L\u00f6sung:', BOX.x + 10, 152, '#e8344a');
-        Font.draw(ctx, task.loesungstext, BOX.x + 10, 164, '#f6f0e2');
+        Font.draw(ctx, 'L\u00f6sung:', BOX.x + 10, GRAPH_TEXT_Y, '#e8344a');
+        Font.draw(ctx, task.loesungstext, BOX.x + 10, GRAPH_TEXT_Y + 12, '#f6f0e2');
       }
       var gfuss = onResult ? 'A/OK: pr\u00fcfen' : 'A/OK: pr\u00fcfen  B: abbrechen';
       // Hinweis nur, wo das Schwert wirkt (nicht bei Truhe und Boss)
