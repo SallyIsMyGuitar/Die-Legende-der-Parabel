@@ -96,10 +96,11 @@ Ein Mathe-Übungsspiel als Top-Down-Abenteuer im Stil eines modernen 2D-Zelda (O
   - *Nachbarin, 3. und 4. Seite (freigegeben):* „Übrigens: Ein Schluck aus dem Brunnen auf dem Dorfplatz füllt deine Herzen wieder auf.“ / „Und solltest du einmal alle Herzen verlieren, kommst du an der Quelle wieder zu dir, an der du zuletzt getrunken hast.“
   - *Weitere freigegebene Texte:* Brunnen/Quellen, Rücksprung bei null Herzen, Rätsel-Truhe, Schwert-Zerbrechen und Schwert-Verlust beim Rücksprung (`main.js`, `world.js`, `dungeon.js`).
   - *Überarbeitung Story (freigegeben):* Texte von Wanderin, Förster und Einsiedler (`world.js`), Schild an der Ruine, Forscherin, Alte Inschrift und Steintafel nach dem Sieg (`dungeon.js`), Bann-Texte sowie Vorstellung und Sieg des Wächters (`main.js`), Zusatzseiten nach dem ersten Wappen für Mama, Nachbarin, Freund und Verkäufer (`interior.js`, `rooms.js`). Der Wortlaut steht im Code und wird nur nach Go geändert.
+- **Versteck von Herrn Dietl (an der Ruine):** Auf dem Bildschirm beim ersten Dungeon gibt es rechts eine Lücke in der Baumreihe, durch die man hindurchgehen kann. Dahinter liegt das Versteck des Lehrers Herr Dietl. Beantwortet man ihm Fragen zum Spiel, kann man sich entweder ein Schwert oder ein Herz erspielen.
 - Auf dem Weg zu jedem Dungeon stehen Erklär-NPCs mit kurzen Dialogen, je ein Gedanke pro Dialog. Dort gibt es Pflicht-Rätsel, leicht und direkt an die Erklärung gekoppelt, als Verständnis-Check.
 - Alles Gehörte (Merksätze der Erklär-NPCs) landet automatisch in einem Merkbuch, das jederzeit geöffnet werden kann, auch mitten in einer Aufgabe.
 - Die Dungeons sind strikt linear. Der Sieg über den Dungeon-Boss öffnet das nächste Tor (Felsen, Wasser, Sandsturm, Burgtor), gibt ein Wappen als reine Trophäe ohne Funktion und enthüllt einen weiteren Teil der Geschichte.
-- Der letzte Dungeon ist ein Schloss. Nach seinem Sieg werden die Lehrkräfte befreit und die Schule wird wieder aufgebaut.
+- Der letzte Dungeon ist kein Ort, sondern die Schule selbst: Man kann die Schule betreten, dort drei Räume lösen und dann gegen den Endboss kämpfen. Nach seinem Sieg werden die Lehrkräfte befreit und die Schule wird wieder aufgebaut.
 - Nach dem Finale gibt es einen kurzen Abspann mit Wappen-Übersicht und Fehlerstatistik. Danach ist die Welt frei begehbar, alle Dungeons lassen sich mit neu generierten Aufgaben wiederholen. Die Boss-Aufgaben bleiben fest.
 - Die Struktur muss so offen sein, dass sich später ein Bonus-Dungeon 6 (Trägergraph der Scheitelpunkte, Parameterverfahren) ohne Umbau anhängen lässt.
 
@@ -109,7 +110,7 @@ Ein Mathe-Übungsspiel als Top-Down-Abenteuer im Stil eines modernen 2D-Zelda (O
 2. **Scheitelpunktsform:** Scheitelpunkt ablesen, Gleichung aus Scheitelpunkt plus einem Punkt aufstellen, Definitions- und Wertemenge.
 3. **Allgemeine Form:** Umformen zwischen beiden Formen, Scheitelpunkt aus y = ax² + bx + c, Gleichung aus mehreren Punkten.
 4. **Nullstellen und quadratische Gleichungen:** Lösungsformel, Diskriminante, Anzahl der Lösungen.
-5. **Schnittpunkte und Anwendungen (Schloss):** Parabel und Gerade schneiden, Wurfparabeln, Extremwertprobleme als Finale.
+5. **Schnittpunkte und Anwendungen (Finale in der Schule):** Parabel und Gerade schneiden, Wurfparabeln, Extremwertprobleme. Der letzte Dungeon ist kein Ort, sondern die Schule selbst: betreten, drei Räume lösen, dann der Endboss.
 
 ## Kampf, Herzen, Schwert
 
@@ -145,7 +146,7 @@ Gebaut wird immer nur der Meilenstein, den der Nutzer freigibt, mit Test nach je
 2. Startdorf und Oberwelt mit Bildschirmwechsel. – **erledigt:** Startdorf (2 Bildschirme), Bildschirmwechsel, 4 betretbare Häuser mit Tür-Animation, Dialogsystem mit NPC-Texten, Spielstart im Elternhaus, Rastquelle am Brunnen (speichert automatisch), drei weitere Bildschirme mit Weg zum ersten Dungeon (Ruine), Szene am Ost-Ausgang mit Herrn Späth (hält die Spielfigur an, gibt einen Tipp, dreht sich beim Gespräch zur Spielfigur).
 3. Kampf- und Aufgabensystem mit Aufgabenvorlagen und Testseite. – **erledigt:** 4 Aufgabentypen, Aufgabenbox mit Zahlenblock und Graph-Modus (Parabel Live einstellen; Punkt P erst nach dem ersten Fehler sichtbar), gestufte Fehler (Herz, Hinweis, Lösung), Besiegt-Animation mit Herz-Drops, Schwert als Joker (E bzw. Slot-Antippen, kein Herz-Drop, Sperre bei Boss/Truhe/Probe), Testseite mit 10 Beispielen je Typ und Probeaufgabe.
 4. Erster kompletter Dungeon mit Erklär-NPCs, Merkbuch und Boss. – **erledigt** (überarbeitet: Speichern, Lernpfad, Bann, Story, siehe „Getroffene Entscheidungen“): Höhle der Parabeln mit drei Räumen (Eingangshalle, Mittelraum mit Quelle, Vorraum), Höhlen-Optik mit Fackeln, Gegner (Fledermäuse, Kristallgeister), Forscherin als Erklär-NPC, Merkbuch (M bzw. HUD-Symbol, jederzeit öffnen), Wächter-Boss mit 3 festen Aufgaben, Tor-Öffnung nach dem Sieg, Wappenzähler. Rastquellen: Brunnen (Dorf), Quelle vor der Ruine, Quelle im Mittelraum.
-5. Die weiteren vier Dungeons einzeln.
+5. Die weiteren vier Dungeons einzeln (Dungeon 5 ist das Finale in der Schule: betreten, drei Räume lösen, Endboss besiegen).
 6. Abspann (inkl. Befreiung der Lehrkräfte und Wiederaufbau der Schule), Wiederholungsmodus, Feinschliff.
 
 ## Offene Fragen (vor der Umsetzung mit dem Nutzer klären)
