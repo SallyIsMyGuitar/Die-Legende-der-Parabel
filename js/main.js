@@ -31,7 +31,8 @@
       v: 1,
       rest: lastRest,
       defeated: Enemies.getDefeated(),
-      chest: chestDone,
+      chest: !!chestDone.ruine,   // Bit der alten Truhe (abwaertskompatibel)
+      chests: chestDone,
       sword: Sword.has(),
       merk: Merkbuch.all(),
       boss: Boss.isDefeated(),
@@ -49,7 +50,9 @@
   function applyState(st) {
     if (st.rest && st.rest.screen) lastRest = st.rest;
     Enemies.setDefeated(st.defeated);
-    if (st.chest) { chestDone = true; World.setChestOpen(1, 'ruine'); }
+    chestDone = st.chests || (st.chest ? { ruine: true } : {});
+    if (chestDone.ruine) World.setChestOpen(1, 'ruine');
+    if (chestDone.klippen) World.setChestOpen(1, 'klippen');
     if (st.sword) Sword.give();
     Merkbuch.load(st.merk);
     if (st.boss) { Boss.setDefeated(); World.openRockGate('ost'); }
@@ -248,25 +251,28 @@
   }
 
   // --- R\u00e4tsel-Truhe an der Ruine: Belohnung ist das Schwert --------------
-  var chestDone = false;   // Truhe ist nach dem Raetsel leer
-  var chestAttempts = 0;   // Versuche am Raetsel (Hinweis ab dem 2., Loesung im 3.)
+  // Je Bildschirm: Aufgabentyp der dortigen Rätsel-Truhe (Belohnung: Schwert)
+  var CHEST_TYPE = { ruine: 'verschiebung', klippen: 'scheitelAllgemein' };
+  var chestDone = {};       // Bildschirm -> Truhe ist nach dem Raetsel leer
+  var chestAttempts = {};  // Bildschirm -> Versuche am Raetsel (Hinweis ab dem 2., Loesung im 3.)
   var chestSword = null;   // aufsteigendes Schwert ueber der Truhe: { x, y, p }
   function openChest() {
-    if (chestDone) {
+    var screen = World.getScreen();
+    if (chestDone[screen]) {
       Dialog.open('Truhe', ['Die Truhe ist leer.']);
       return;
     }
-    chestAttempts++;
-    // Plus-Raetsel zum Thema des ersten Dungeons: verschobene Parabel
-    TaskUi.open('verschiebung', Math.floor(Date.now() / 1000) % 100000, function (solved, errors) {
+    chestAttempts[screen] = (chestAttempts[screen] || 0) + 1;
+    // Plus-Raetsel zum Thema des jeweiligen Weges (Aufgabentyp je Bildschirm)
+    TaskUi.open(CHEST_TYPE[screen] || 'verschiebung', Math.floor(Date.now() / 1000) % 100000, function (solved, errors) {
       var pos = World.chestPos();
       if (!solved) {
-        if (errors === 0) chestAttempts--;      // mit B abgebrochen: zaehlt nicht
-        else { stats.wrong++; hurt(pos); }       // falsch: Herz weg wie im Kampf
-        return;                                  // Truhe bleibt, spaeter neuer Versuch
+        if (errors === 0) chestAttempts[screen]--;   // mit B abgebrochen: zaehlt nicht
+        else { stats.wrong++; hurt(pos); }            // falsch: Herz weg wie im Kampf
+        return;                                       // Truhe bleibt, spaeter neuer Versuch
       }
       stats.right++;
-      chestDone = true;
+      chestDone[screen] = true;
       // Aufgabe ist zu: Deckel klappt auf, Schwert steigt auf, dann der Text
       run([
         { dur: 0.3, tick: function (p) { World.setChestOpen(p); } },
@@ -284,7 +290,7 @@
           ]);
         } }
       ]);
-    }, 'R\u00e4tsel der Truhe:', { abortable: true, attempt: chestAttempts });
+    }, 'R\u00e4tsel der Truhe:', { abortable: true, attempt: chestAttempts[screen] });
   }
 
   // Schwert steigt aus der Truhe auf, mit kurzem Funkeln

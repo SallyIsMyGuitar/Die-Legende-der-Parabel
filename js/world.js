@@ -146,7 +146,7 @@ var World = (function () {
         'T.T.....PP...T.T',
         'T.......PP.....T',
         'T.T.....PP.TT..T',
-        'T..T....PP.....T',
+        'T..T....PP..C..T',
         'T.T.....PP...T.T',
         'TTTTTTTTPPTTTTTT'
       ],
@@ -163,6 +163,15 @@ var World = (function () {
             ],
             merk: { id: 'spfAusSP', name: 'Scheitelform aus S und P', text: 'P in y = a(x − xs)² + ys einsetzen und nach a auflösen. Beispiel: S(1|−2) und P(3|6) geben a = 2, also y = 2(x − 1)² − 2.' }
           }
+        }
+      ],
+      signs: [
+        {
+          // Freiwillige Rätsel-Truhe mit dem Schwert als Belohnung
+          tiles: [[12, 11]], x: 12 * 16, y: 11 * 16,
+          name: 'Truhe',
+          texts: ['Die Truhe ist leer.'],
+          action: 'chest'
         }
       ],
       exits: { north: 'felder', south: 'kueste' }
