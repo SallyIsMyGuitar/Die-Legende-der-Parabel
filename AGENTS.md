@@ -80,7 +80,7 @@ Ein Mathe-Übungsspiel als Top-Down-Abenteuer im Stil eines modernen 2D-Zelda (O
 
 - Spielstart im Elternhaus, direkt vor der Mutter, die am Herd kocht.
 - **Startdorf** (bisher zwei Bildschirme):
-  - *Start:* Elternhaus (rotes Dach), kleiner Teich, verwilderte und gesperrte Schule mit Zaun, verschlossenem Tor (Kette, Schloss, Schild „GESPERRT“). Die Schule ist nicht betretbar und bleibt optisch so, bis sie im Finale wieder aufgebaut wird.
+  - *Start:* Elternhaus (rotes Dach), kleiner Teich, verwilderte und gesperrte Schule mit Zaun, verschlossenem Tor (Kette, Schloss, Schild „GESPERRT“). Die Schule ist nicht betretbar. Im Finale (Dungeon 5) wird das zerstörte Schulgebäude betreten (drei Räume, Endboss); danach wird sie im Abspann wiederaufgebaut und ist begehbar.
   - *Ost:* Dorfplatz mit Brunnen, Haus der Nachbarin (blaues Dach), Haus des Freundes (grünes Dach), Schreibwarenladen (Hefte, Stifte, Bücher).
   - Die Rastquelle im Startdorf ist der Brunnen auf dem Dorfplatz (Ost-Bildschirm), speichert automatisch.
 - **Häuser sind betretbar:** Tür berühren (nach oben gegen die Tür laufen) → Tür schwingt auf, Figur geht hinein, Abblende. Hinaus über die Fußmatte; die Figur tritt aus der Tür, die Tür schließt sich. Alle Innenräume haben denselben Grundriss.
@@ -99,7 +99,7 @@ Ein Mathe-Übungsspiel als Top-Down-Abenteuer im Stil eines modernen 2D-Zelda (O
 - **Versteck von Herrn Dietl (an der Ruine):** Auf dem Bildschirm beim ersten Dungeon gibt es rechts eine Lücke in der Baumreihe, durch die man hindurchgehen kann. Dahinter liegt das Versteck des Lehrers Herr Dietl. Beantwortet man ihm Fragen zum Spiel, kann man sich entweder ein Schwert oder ein Herz erspielen.
 - Auf dem Weg zu jedem Dungeon stehen Erklär-NPCs mit kurzen Dialogen, je ein Gedanke pro Dialog. Dort gibt es Pflicht-Rätsel, leicht und direkt an die Erklärung gekoppelt, als Verständnis-Check.
 - Alles Gehörte (Merksätze der Erklär-NPCs) landet automatisch in einem Merkbuch, das jederzeit geöffnet werden kann, auch mitten in einer Aufgabe.
-- Die Dungeons sind strikt linear. Der Sieg über den Dungeon-Boss öffnet das nächste Tor (Felsen, Wasser, Sandsturm, Burgtor), gibt ein Wappen als reine Trophäe ohne Funktion und enthüllt einen weiteren Teil der Geschichte.
+- Die Dungeons sind strikt linear. Der Sieg über den Dungeon-Boss öffnet das nächste Tor (Felsen, Wasser, Sandsturm, Schultor), gibt ein Wappen als reine Trophäe ohne Funktion und enthüllt einen weiteren Teil der Geschichte.
 - Der letzte Dungeon ist kein Ort, sondern die Schule selbst: Man kann die Schule betreten, dort drei Räume lösen und dann gegen den Endboss kämpfen. Nach seinem Sieg werden die Lehrkräfte befreit und die Schule wird wieder aufgebaut.
 - Nach dem Finale gibt es einen kurzen Abspann mit Wappen-Übersicht und Fehlerstatistik. Danach ist die Welt frei begehbar, alle Dungeons lassen sich mit neu generierten Aufgaben wiederholen. Die Boss-Aufgaben bleiben fest.
 - Die Struktur muss so offen sein, dass sich später ein Bonus-Dungeon 6 (Trägergraph der Scheitelpunkte, Parameterverfahren) ohne Umbau anhängen lässt.
