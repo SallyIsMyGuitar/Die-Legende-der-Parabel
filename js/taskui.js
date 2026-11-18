@@ -29,6 +29,7 @@ var TaskUi = (function () {
   var abortable = false;      // true = mit B abbrechbar (freiwilliges Raetsel)
   var bossMode = false;       // Bosskampf: das Schwert wirkt hier nicht
   var attempt = 1;            // wievielter Versuch an dieser Stelle (Kampf/Truhe)
+  var heartsBefore = Hud.getHearts();   // Herzen vor der Probeaufgabe (werden danach wiederhergestellt)
   var closing = null;         // Ausblenden: { t, solved, joker } oder null
   var prevDirs = {};          // vorheriger Zustand der Richtungstasten
 
@@ -105,6 +106,9 @@ var TaskUi = (function () {
   function open(typeId, seed, resultCallback, kontext, opts) {
     // Ohne Kampf (Probeaufgabe): leere Herzen wie an einer Rastquelle auffuellen
     if (!resultCallback && Hud.getHearts() === 0) Hud.fill();
+    // Herzen vor der Probeaufgabe merken: Sie zeigt den Herzverlust nur zur
+    // Uebung, danach gilt wieder der Stand von vorher (siehe finish)
+    heartsBefore = Hud.getHearts();
     task = Tasks.make(typeId, seed, kontext);
     values = task.felder.map(function () { return ''; });
     fieldIndex = 0;
@@ -126,6 +130,7 @@ var TaskUi = (function () {
   // Feste Aufgabe (Boss): direkt oeffnen, ohne Vorlage und Zufallszahlen
   function openFixed(def, resultCallback, opts) {
     if (!resultCallback && Hud.getHearts() === 0) Hud.fill();
+    heartsBefore = Hud.getHearts();   // wie bei open(): Stand vor einer Aufgabe ohne Kampf
     task = def;
     values = task.felder.map(function () { return ''; });
     fieldIndex = 0;
@@ -148,9 +153,9 @@ var TaskUi = (function () {
     active = false;
     task = null;
     closing = null;
-    // Probeaufgabe (ohne Kampf): Sind danach alle Herzen weg, wie an einer
-    // Rastquelle auffuellen – sonst liefe das Spiel mit 0 Herzen weiter
-    if (!onResult && Hud.getHearts() === 0) Hud.fill();
+    // Probeaufgabe (ohne Kampf): Die Herzen kommen auf den Stand von vor der
+    // Probe zurueck – sie kostet im Spiel nichts (auch nie 0 Herzen danach)
+    if (!onResult) Hud.setHearts(heartsBefore);
     if (onResult) onResult(solved, errors, !!joker);
   }
 
