@@ -49,6 +49,7 @@
       bosses: bossState(),                                          // besiegt je Boss-Raum
       raetsel: Raetsel.isSolved(),
       spiegel: Spiegel.isSolved(),
+      gezeiten: Gezeiten.isSolved(),
       leuchtturm: World.isLighthouseLit(),
       bossIntro: bossIntroDone,
       wappen: wappens,
@@ -75,6 +76,7 @@
     if (bossesSt.dboss) World.openRockGate('ost');
     if (st.raetsel) Raetsel.setSolved();
     if (st.spiegel) Spiegel.setSolved();
+    if (st.gezeiten) Gezeiten.setSolved();
     if (st.leuchtturm) World.setLighthouseLit(true);
     if (bossesSt.lboss) World.setWaterGateOpen(true);
     // Vorstellung je Boss-Raum; aeltere Staende kennen nur die Hoehle
@@ -97,6 +99,7 @@
     if (l.wappen && wappens < l.wappen) return target.texts;
     if (l.solved && !Raetsel.isSolved()) return target.texts;
     if (l.spiegel && !Spiegel.isSolved()) return target.texts;
+    if (l.gezeiten && !Gezeiten.isSolved()) return target.texts;
     return l.replace ? l.texts : target.texts.concat(l.texts);
   }
 
@@ -110,23 +113,31 @@
                   leingang: 'lmitte', lmitte: 'lraetsel',
                   weingang: 'wmitte', wmitte: 'wraetsel' };   // Öffnung nach vorn
 
-  // --- Fackel-Rätsel (Höhle) und Spiegel-Rätsel (Turm) vor dem Boss ------
-  // (Logik in raetsel.js bzw. spiegel.js)
+  // --- Rätsel vor dem Boss: Fackeln (Höhle), Spiegel (Turm), Brunnen (Wasser) --
+  // (Logik in raetsel.js, spiegel.js bzw. gezeiten.js)
   function lightTorch(t) {
-    var turm = World.getScreen() === 'lraetsel';
-    var R = turm ? Spiegel : Raetsel;
+    var screen = World.getScreen();
+    var R, wrongText, solvedText;
+    if (screen === 'lraetsel') {
+      R = Spiegel;
+      wrongText = 'Das Licht bricht sich – alle Spiegel verdunkeln sich.';
+      solvedText = 'Alle fünf Spiegel stehen im Licht. Mit lautem Ruck hebt sich das Gitter.';
+    } else if (screen === 'wraetsel') {
+      R = Gezeiten;
+      wrongText = 'Das Wasser gischt zurück – alle Brunnen versiegen.';
+      solvedText = 'Alle fünf Brunnen sprudeln im Takt der Gezeiten. Mit lautem Ruck hebt sich das Gitter.';
+    } else {
+      R = Raetsel;
+      wrongText = 'Die Flamme zischt – alle Fackeln erlöschen.';
+      solvedText = 'Alle fünf Fackeln brennen. Mit lautem Knirschen hebt sich das Gitter.';
+    }
     var res = R.light(t.x, t.y);
     if (res === 'wrong') {
-      Dialog.open('', [turm
-        ? 'Das Licht bricht sich – alle Spiegel verdunkeln sich. Der Punkt (' +
-          Tasks.fmt(t.x) + '|' + Tasks.fmt(t.y) + ') liegt nicht auf der Parabel ' + R.FORMEL + '.'
-        : 'Die Flamme zischt – alle Fackeln erlöschen. Der Punkt (' +
-          Tasks.fmt(t.x) + '|' + Tasks.fmt(t.y) + ') liegt nicht auf der Parabel ' + R.FORMEL + '.']);
+      Dialog.open('', [wrongText + ' Der Punkt (' +
+        Tasks.fmt(t.x) + '|' + Tasks.fmt(t.y) + ') liegt nicht auf der Parabel ' + R.FORMEL + '.']);
     } else if (res === 'solved') {
       saveGame();
-      Dialog.open('', [turm
-        ? 'Alle fünf Spiegel stehen im Licht. Mit lautem Ruck hebt sich das Gitter.'
-        : 'Alle fünf Fackeln brennen. Mit lautem Knirschen hebt sich das Gitter.']);
+      Dialog.open('', [solvedText]);
     }
   }
 
@@ -892,6 +903,10 @@
             // Gitter zum Boss bleibt zu, bis alle Spiegel im Licht stehen
             Player.setPosition(Player.getX(), 2 * 16 + 4, 'down');
             Dialog.open('Gitter', ['Ein schweres Gitter versperrt den Weg. Lenke zuerst das Licht auf die richtigen Spiegel.']);
+          } else if (here === 'wraetsel' && w.to.room === 'wboss' && !Gezeiten.isSolved()) {
+            // Gitter zum Boss bleibt zu, bis alle Brunnen im Gezeitentakt sprudeln
+            Player.setPosition(Player.getX(), 2 * 16 + 4, 'down');
+            Dialog.open('Gitter', ['Ein schweres Gitter versperrt den Weg. Rege zuerst die richtigen Brunnen an.']);
           } else roomWarp(w);
         } else {
           var edge = World.checkEdge(Player.getX(), Player.getY());

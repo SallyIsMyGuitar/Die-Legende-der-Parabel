@@ -227,9 +227,30 @@
     ]
   };
 
-  // Raetselraum: das Gezeiten-Raetsel folgt in einem spaeteren Schritt
+  // Kleine Steintafel auf dem Boden (Kartenzeichen 'k'), wie in Hoehle und Turm
+  function floorTablet(r, tx, ty) {
+    var x = tx * TILE, y = ty * TILE;
+    r.ellipse(x + 8, y + 14, 7, 2, 'rgba(10,25,40,0.5)');
+    r.px(x + 2, y + 3, 12, 11, '#3e5e7a');
+    r.px(x + 3, y + 4, 10, 9, '#8ac4cc');
+    r.px(x + 3, y + 4, 10, 1, '#b0dcc8');
+    r.px(x + 5, y + 7, 6, 1, '#28445c');
+    r.px(x + 5, y + 9, 5, 1, '#28445c');
+  }
+
+  // Gitter vor der Oeffnung zum Boss (bis das Gezeiten-Raetsel geloest ist)
+  function bars(r) {
+    var x = 8 * TILE, y = 1 * TILE;
+    r.px(x, y + 2, TILE, 1, '#8ac4cc');
+    for (var i = 1; i < 16; i += 3) {
+      r.px(x + i, y + 2, 2, 14, '#3e6a8a');
+      r.px(x + i, y + 2, 1, 14, '#8ac4cc');
+    }
+  }
+
+  // Raetselraum: Gezeitenbrunnen auf der Parabel anregen (gezeiten.js)
   var RAETSEL = {
-    map: [
+    map: Gezeiten.stampMap([
       '################',
       '#WWWWWWWMWWWWWW#',
       '#W............W#',
@@ -241,14 +262,36 @@
       '#W............W#',
       '#W............W#',
       '#W............W#',
-      '#W............W#',
+      '#W........k...W#',
       '#WWWWWWWMWWWWWW#',
       '################'
-    ],
+    ]),
     mats: {
       '8,1': { room: 'wboss', x: 8 * TILE, y: 11 * TILE, facing: 'up' },
       '8,12': { room: 'wmitte', x: 8 * TILE, y: 2 * TILE, facing: 'down' }
-    }
+    },
+    bakeExtra: function (r) {
+      Gezeiten.bakeGrid(r);
+      for (var ty = 0; ty < 14; ty++) {
+        for (var tx = 0; tx < 16; tx++) {
+          var c = RAETSEL.map[ty].charAt(tx);
+          if (c === 'g') Gezeiten.bakeStand(r, tx, ty);
+          else if (c === 'k') floorTablet(r, tx, ty);
+        }
+      }
+    },
+    objects: Gezeiten.objects().concat([
+      {
+        tiles: [[10, 11]],
+        x: 10 * TILE, y: 11 * TILE,
+        name: 'Steintafel',
+        texts: [
+          'Rege die Brunnen an, die auf der Parabel ' + Gezeiten.FORMEL + ' liegen. Dann \u00f6ffnet sich das Gitter.',
+          'Unten stehen die x-Werte, links die y-Werte. In jeder Spalte sprudelt genau ein Brunnen richtig.'
+        ],
+        later: { gezeiten: true, replace: true, texts: ['Alle Brunnen auf der Parabel ' + Gezeiten.FORMEL + ' sprudeln. Das Gitter ist offen.'] }
+      }
+    ])
   };
 
   // Vorraum zum Boss: der Boss folgt in einem spaeteren Schritt
@@ -280,6 +323,13 @@
     R.anim = function (r, t) { bubbles(r, t, i); };
     R.overlay = vignette;
   });
+
+  // Raetselraum: Blasen und Brunnen im Laufbild, Gitter bis geloest
+  RAETSEL.anim = function (r, t) {
+    bubbles(r, t, 2);
+    Gezeiten.drawWater(r, t);
+    if (!Gezeiten.isSolved()) bars(r);
+  };
 
   Interior.register('weingang', EINGANG);
   Interior.register('wmitte', PUMPE);
