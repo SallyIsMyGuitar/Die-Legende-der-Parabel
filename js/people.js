@@ -226,6 +226,15 @@ var People = (function () {
     }));
   }
 
+  // Tuermerin (Leuchtturm, Dungeon 2): rotbraune Haare, dunkelblaues Kleid
+  function tuemerin() {
+    return dirs(pal({
+      h: '#7a4020', H: '#a85a30',
+      t: '#3a4a6a', T: '#5a6a8a', D: '#2a3450',
+      p: '#2e2a3e', B: '#3a2a20'
+    }));
+  }
+
   // Turmwaerter (Kueste): graue Haare, dunkelblaue Uniform, braune Stiefel
   function turmwaerter() {
     return dirs(pal({
@@ -247,6 +256,7 @@ var People = (function () {
     spaeth: spaeth,
     gartnerin: gartnerin,
     fischer: fischer,
-    turmwaerter: turmwaerter
+    turmwaerter: turmwaerter,
+    tuemerin: tuemerin
   };
 })();

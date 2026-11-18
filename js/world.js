@@ -226,8 +226,8 @@ var World = (function () {
           spawn: { x: 13 * 16, y: 7 * 16, facing: 'up' }
         }
       ],
-      // Der Leuchtturm ist der Dungeon 2; er öffnet sich erst in einem späteren Schritt
-      dungeon: null,
+      // Der Leuchtturm ist der Dungeon 2 (Scheitelform): Turmeingang
+      dungeon: 'leingang',
       exits: { north: 'klippen' }
     },
 
