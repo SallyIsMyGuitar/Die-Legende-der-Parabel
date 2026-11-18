@@ -406,7 +406,8 @@ var TaskUi = (function () {
         Font.draw(ctx, task.loesungstext, BOX.x + 10, 164, '#f6f0e2');
       }
       var gfuss = onResult ? 'A/OK: pr\u00fcfen' : 'A/OK: pr\u00fcfen  B: abbrechen';
-      if (onResult && !abortable && Sword.has()) gfuss += '  E: Schwert';
+      // Hinweis nur, wo das Schwert wirkt (nicht bei Truhe und Boss)
+      if (onResult && !abortable && !bossMode && Sword.has()) gfuss += '  E: Schwert';
       Font.draw(ctx, gfuss, BOX.x + 10, BOX.y + BOX.h - 12, '#8a8496');
       return;
     }
@@ -456,7 +457,8 @@ var TaskUi = (function () {
       }
     }
     var fuss = onResult ? 'A/OK: prüfen  <: löschen' : 'A/OK: prüfen  B: abbrechen';
-    if (onResult && !abortable && Sword.has()) fuss += '  E: Schwert';
+    // Hinweis nur, wo das Schwert wirkt (nicht bei Truhe und Boss)
+    if (onResult && !abortable && !bossMode && Sword.has()) fuss += '  E: Schwert';
     Font.draw(ctx, fuss, BOX.x + 10, BOX.y + BOX.h - 12, '#8a8496');
   }
 
