@@ -258,3 +258,49 @@ html, body {
 body.dpad-off #dpad {
   display: none;
 }
+
+/* Kompakte Touch-Tasten, wenn neben dem Spielbild wenig Platz ist
+   (render.js setzt die Klasse). Gleiche Anordnung, kleinere Maße;
+   alle Tasten bleiben mindestens 44 px groß. */
+body.compact-controls #dpad {
+  left: calc(4px + env(safe-area-inset-left));
+  width: 120px;
+  height: 120px;
+}
+body.compact-controls #dpad::after {
+  left: 40px;
+  top: 40px;
+  width: 40px;
+  height: 40px;
+}
+body.compact-controls .dpad-btn {
+  width: 40px;
+  height: 40px;
+}
+body.compact-controls .dpad-btn.up    { left: 40px; top: 0; }
+body.compact-controls .dpad-btn.left  { left: 0;    top: 40px; }
+body.compact-controls .dpad-btn.right { left: 80px; top: 40px; }
+body.compact-controls .dpad-btn.down  { left: 40px; top: 80px; }
+body.compact-controls .dpad-btn::after { border-width: 8px; }
+body.compact-controls .dpad-btn.up::after    { border-bottom-width: 10px; border-top: 0; }
+body.compact-controls .dpad-btn.down::after  { border-top-width: 10px; border-bottom: 0; }
+body.compact-controls .dpad-btn.left::after  { border-right-width: 10px; border-left: 0; }
+body.compact-controls .dpad-btn.right::after { border-left-width: 10px; border-right: 0; }
+
+body.compact-controls #action-buttons {
+  right: calc(4px + env(safe-area-inset-right));
+  width: 120px;
+  height: 200px;
+}
+body.compact-controls .action-btn {
+  width: 60px;
+  height: 60px;
+  font-size: 24px;
+}
+body.compact-controls .action-btn[data-btn="b"] { bottom: 44px; }
+body.compact-controls .item-btn {
+  width: 48px;
+  height: 48px;
+}
+body.compact-controls .item-btn[data-btn="book"]  { left: 4px; }
+body.compact-controls .item-btn[data-btn="sword"] { right: 4px; }

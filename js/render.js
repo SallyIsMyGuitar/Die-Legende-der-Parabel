@@ -16,6 +16,12 @@ var Render = (function () {
     var scale = Math.max(1, Math.floor(Math.min(availW / LOGICAL_W, availH / LOGICAL_H)));
     canvas.style.width = (LOGICAL_W * scale) + 'px';
     canvas.style.height = (LOGICAL_H * scale) + 'px';
+    // Platz links/rechts neben dem Spielbild: Reicht er nicht für die
+    // normalen Touch-Tasten (Steuerkreuz 16 + 192 px), schaltet das CSS auf
+    // die kompakte Tastengröße um, damit nichts das Spielbild überdeckt
+    // (z. B. iPad mini und andere iPads im 4:3-Format)
+    var side = (availW - LOGICAL_W * scale) / 2;
+    document.body.classList.toggle('compact-controls', side < 212);
   }
 
   function init(canvasEl) {
