@@ -27,7 +27,9 @@ var Enemies = (function () {
     dmittel: 'spfAufstellen',   // Alte Inschrift: Scheitelform aufstellen
     felder: 'spfAusS',          // Gaertnerin: Scheitelform aus S und a
     klippen: 'spfAusSP',        // Fischer: Scheitelform aus S und P
-    kueste: 'wertemenge'        // Turmwaerter: Wertemenge am Scheitel
+    kueste: 'wertemenge',        // Turmwaerter: Wertemenge am Scheitel
+    leingang: 'spfAusSP',         // Tuermerin (Turm): Scheitelform aus S und P
+    lmitte: 'wertemenge'          // Alte Turmuhr: Wertemenge am Scheitel
   };
 
   // Kurzer Kontext vor der Aufgabe (die Wesen stehen im Bann von Graf Gerade)
@@ -39,7 +41,9 @@ var Enemies = (function () {
     dmittel: 'Ein Kristallgeist summt:',
     felder: 'Ein Strohgolem raschelt:',
     klippen: 'Ein Klippengeist heult:',
-    kueste: 'Ein Krabbengeist scharrt:'
+    kueste: 'Ein Krabbengeist scharrt:',
+    leingang: 'Ein Möwengeist kreischt:',
+    lmitte: 'Ein Dampfgeist zischt:'
   };
 
   // --- Sprites (16x16, ein Frame; Bewegung ueber Wippen) ---------------------
@@ -227,6 +231,48 @@ var Enemies = (function () {
   ];
   var CRAB_COLORS = { c: '#d8443c', e: '#f6d64a' };
 
+  // Moewengeist (Turmeingang): weisse Moewe mit grauen Schwingen
+  var GULL = [
+    '................',
+    '......oo........',
+    '.....owwo.......',
+    '....owwwwo......',
+    '...owwwwwo......',
+    '..owwewweo......',
+    '.owwwwwwwo......',
+    'oGwwwwwwwwoo....',
+    '.oGGwwwwwGGGo...',
+    '..oGGGGGGGGo....',
+    '...oGG..GGo.....',
+    '....o....o......',
+    '.....y..........',
+    '................',
+    '................',
+    '................'
+  ];
+  var GULL_COLORS = { o: '#3a3630', w: '#f2eee8', G: '#8a96a2', e: '#101c2c', y: '#e8a43a' };
+
+  // Dampfgeist (Maschinenraum): blaeuliche Wolke mit dunklen Augen
+  var STEAM = [
+    '................',
+    '................',
+    '.....oooo.......',
+    '...oossssoo.....',
+    '..osssssssso....',
+    '..ossseesEsso...',
+    '.ossssssssssso..',
+    '.osssssosssso...',
+    '.ossss...sssso..',
+    'oossss...sssso..',
+    'oosssssssssso...',
+    '.oossssssssso...',
+    '..oossssssoo....',
+    '....oooooo......',
+    '................',
+    '................'
+  ];
+  var STEAM_COLORS = { o: '#3e4a56', s: '#b4c2d0', E: '#3e4a56', e: '#3e4a56' };
+
   var SPRITES = {
     wiese: { rows: MUSHROOM, colors: MUSHROOM_COLORS },
     wald: { rows: MOSS, colors: MOSS_COLORS },
@@ -235,7 +281,9 @@ var Enemies = (function () {
     dmittel: { rows: CRYSTAL, colors: CRYSTAL_COLORS },
     felder: { rows: STRAW, colors: STRAW_COLORS },
     klippen: { rows: CLIFF, colors: CLIFF_COLORS },
-    kueste: { rows: CRAB, colors: CRAB_COLORS }
+    kueste: { rows: CRAB, colors: CRAB_COLORS },
+    leingang: { rows: GULL, colors: GULL_COLORS },
+    lmitte: { rows: STEAM, colors: STEAM_COLORS }
   };
   var spriteCache = {};
   var flashCache = {};   // weisse Silhouette fuer das Aufblitzen
@@ -302,6 +350,14 @@ var Enemies = (function () {
       { x: 4, y: 8 },
       { x: 13, y: 7 },
       { x: 12, y: 10 }
+    ],
+    leingang: [
+      { x: 5, y: 8 },
+      { x: 12, y: 7 }
+    ],
+    lmitte: [
+      { x: 4, y: 9 },
+      { x: 13, y: 10 }
     ]
   };
 
@@ -410,7 +466,10 @@ var Enemies = (function () {
 
   // Samen fuer die Aufgabe: Gegner + Versuchzaehler => neue Zahlen pro Versuch
   function seedOf(e) {
-    var screenNo = { wiese: 1, wald: 2, ruine: 3, dhalle: 4, dmittel: 5, felder: 6, klippen: 7, kueste: 8 }[e.screen] || 1;
+    var screenNo = {
+      wiese: 1, wald: 2, ruine: 3, dhalle: 4, dmittel: 5,
+      felder: 6, klippen: 7, kueste: 8, leingang: 9, lmitte: 10
+    }[e.screen] || 1;
     return screenNo * 100 + e.index * 10 + e.attempts;
   }
 
