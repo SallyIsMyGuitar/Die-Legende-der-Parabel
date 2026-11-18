@@ -467,7 +467,7 @@ var TaskUi = (function () {
         Font.draw(ctx, task.loesungstext, BOX.x + 10, 174, '#7ec97e');
       }
       var cfuss = onResult ? 'A: pr\u00fcfen' : 'A: pr\u00fcfen  B: abbrechen';
-      if (onResult && !abortable && !bossMode && Sword.has()) cfuss += '  E: Schwert';
+      if (onResult && !abortable && !bossMode && Sword.has()) cfuss += swordHint();
       Font.draw(ctx, cfuss, BOX.x + 10, BOX.y + BOX.h - 12, '#8a8496');
       return;
     }
@@ -492,7 +492,7 @@ var TaskUi = (function () {
       }
       var gfuss = onResult ? 'A/OK: pr\u00fcfen' : 'A/OK: pr\u00fcfen  B: abbrechen';
       // Hinweis nur, wo das Schwert wirkt (nicht bei Truhe und Boss)
-      if (onResult && !abortable && !bossMode && Sword.has()) gfuss += '  E: Schwert';
+      if (onResult && !abortable && !bossMode && Sword.has()) gfuss += swordHint();
       Font.draw(ctx, gfuss, BOX.x + 10, BOX.y + BOX.h - 12, '#8a8496');
       return;
     }
@@ -543,7 +543,7 @@ var TaskUi = (function () {
     }
     var fuss = onResult ? 'A/OK: prüfen  <: löschen' : 'A/OK: prüfen  B: abbrechen';
     // Hinweis nur, wo das Schwert wirkt (nicht bei Truhe und Boss)
-    if (onResult && !abortable && !bossMode && Sword.has()) fuss += '  E: Schwert';
+    if (onResult && !abortable && !bossMode && Sword.has()) fuss += swordHint();
     Font.draw(ctx, fuss, BOX.x + 10, BOX.y + BOX.h - 12, '#8a8496');
   }
 
@@ -641,6 +641,12 @@ var TaskUi = (function () {
     r.px(ok.x, ok.y, 1, ok.h, '#efe4c4');
     r.px(ok.x + ok.w - 1, ok.y, 1, ok.h, '#efe4c4');
     Font.draw(ctx, 'OK', ok.x + Math.floor((ok.w - Font.width('OK')) / 2), ok.y + 5, '#f6f0e2');
+  }
+
+  // Hinweis auf das Schwert im Fuß der Box: am PC Taste E, auf dem iPad
+  // die Taste „Schwert“ (bzw. der Schwert-Platz im HUD)
+  function swordHint() {
+    return Input.isTouch() ? '  Schwert-Taste' : '  E: Schwert';
   }
 
   // Kleiner grüner Haken (Form, nicht nur Farbe)
