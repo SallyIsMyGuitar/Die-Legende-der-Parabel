@@ -340,6 +340,9 @@ var Enemies = (function () {
     for (var ty = ty1; ty <= ty2; ty++) {
       for (var tx = tx1; tx <= tx2; tx++) {
         if (world.isBlocked(tx, ty)) return false;
+        // Im Dungeon meiden Gegner die Ausgangsoeffnungen ('M'), damit sie
+        // den Weg zurueck nicht versperren
+        if (!world.isOutdoor() && Interior.isExit(world.getScreen(), tx, ty)) return false;
       }
     }
     return true;
