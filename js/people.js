@@ -235,6 +235,15 @@ var People = (function () {
     }));
   }
 
+  // Netzweber (Wasserreich, Dungeon 3): schwarze Haare, tuerkiser Umhang
+  function netzweber() {
+    return dirs(pal({
+      h: '#1e1a2a', H: '#3a3448',
+      t: '#2a8a8a', T: '#4aa8a8', D: '#1a6a6a',
+      p: '#2a3448', B: '#1a2438'
+    }));
+  }
+
   // Turmwaerter (Kueste): graue Haare, dunkelblaue Uniform, braune Stiefel
   function turmwaerter() {
     return dirs(pal({
@@ -257,6 +266,7 @@ var People = (function () {
     gartnerin: gartnerin,
     fischer: fischer,
     turmwaerter: turmwaerter,
-    tuemerin: tuemerin
+    tuemerin: tuemerin,
+    netzweber: netzweber
   };
 })();
