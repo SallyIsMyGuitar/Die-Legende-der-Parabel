@@ -80,6 +80,7 @@
           texts: [
             'Psst, hier drüben! Ich bin der Hausmeister der Schule – seit der Graf sein Heer aus Linealen schickte, halte ich mich hinter den Tonnen versteckt.',
             'Dahinter, in der Ruine, hält er die Lehrerinnen und Lehrer gefangen. Alles folgt seinen starren, geraden Linien.',
+            'Seltsam ist nur: Kurz bevor der Graf kam, verschwand das große Tafellineal aus dem Matheraum. Keiner weiß, wohin.',
             'Mein Merksatz: Schnittpunkte von Parabel und Gerade: beide Terme gleichsetzen und die quadratische Gleichung lösen.'
           ],
           merk: { id: 'schnittGerade', name: 'Schnittpunkte Parabel/Gerade', text: 'Schnittpunkte von Parabel und Gerade: beide Terme gleichsetzen und die quadratische Gleichung lösen.' },
@@ -87,6 +88,7 @@
           later: { finale: true, replace: true, texts: [
             'Du hast es geschafft! Der Graf ist fort, und ich muss mich nicht mehr hinter den Tonnen verstecken.',
             'Jetzt räume ich endlich auf. Bis die Schule wieder steht, dauert es aber noch ein bisschen.',
+            'Und das alte Tafellineal hänge ich wieder an die Tafel. Aber ab jetzt zeichnen wir damit nur noch Achsen für Parabeln!',
             'Mein Merksatz: Schnittpunkte von Parabel und Gerade: beide Terme gleichsetzen und die quadratische Gleichung lösen.'
           ] }
         }

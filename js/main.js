@@ -316,6 +316,7 @@
       victory: [
         'Seine starren Linien biegen sich \u2013 eine nach der anderen wird zur Parabel. Der Bann über dem Land zerbricht.',
         'Graf Gerade zersplittert in lauter gerade Splitter und verschwindet. Die Lichtlinien über der Schule erlöschen.',
+        'Auf dem Boden liegt nur noch das alte Tafellineal aus dem Matheraum. Jahrelang zog es nur gerade Striche, während daneben an der Tafel die schönsten Parabeln entstanden. Aus Neid wurde Graf Gerade.',
         'Die Lehrerinnen und Lehrer sind frei! Man hört die befreiten Stimmen bis auf den Schulhof. Die Schule wird wieder aufgebaut \u2013 davon bald mehr.',
         'Du erhältst das Wappen der Anwendungen. Der Rückweg durch die Schule steht dir offen.'
       ],
