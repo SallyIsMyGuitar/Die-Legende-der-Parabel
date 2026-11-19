@@ -452,6 +452,94 @@ var Tasks = (function () {
     };
   }
 
+  // ---Schule (Dungeon 5): Schnittpunkte und Anwendungen ---------------
+  // Gerade y = mx + t sauber formatiert (Nullterme entfallen)
+  function geradeText(m, t) {
+    var s = '';
+    if (m !== 0) {
+      if (m === 1) s += 'x';
+      else if (m === -1) s += '-x';
+      else s += fmt(m) + 'x';
+    }
+    if (t !== 0) s += (s && t > 0 ? ' + ' : s ? ' \u2212 ' : '') + fmt(Math.abs(t));
+    if (!s) s = '0';
+    return 'y = ' + s;
+  }
+
+  // ---Typ 17 (Klassenzimmer): Schnittpunkte Parabel/Gerade --------------
+  // Passt zur Zerbrochenen Tafel: gleichsetzen und loesen. Erzeugung ueber
+  // zwei ganze Schnittpunkte x1 < x2 aus \u22124 ... 4, m und t ganzzahlig.
+  function schnittGerade(rng) {
+    var x1 = randInt(rng, -4, 3);
+    var x2;
+    do { x2 = randInt(rng, -4, 4); } while (x2 <= x1);
+    var m = randInt(rng, -3, 3);
+    var t = randInt(rng, -3, 3);
+    var b = m - (x1 + x2);
+    var c = x1 * x2 + t;
+    return {
+      frage: 'Bestimme die x-Koordinaten der Schnittpunkte der Parabel ' + allgText(1, b, c) +
+        ' mit der Geraden ' + geradeText(m, t) + '. Gib x1 < x2 an.',
+      felder: [{ key: 'x1', label: 'x1' }, { key: 'x2', label: 'x2' }],
+      loesung: [x1, x2],
+      loesungstext: 'Gleichsetzen: ' + glText(1, b - m, c - t) + ', also L = {' + fmt(x1) + '; ' + fmt(x2) + '}',
+      hinweis: 'Setze beide Terme gleich, bringe alles auf eine Seite und löse mit der Lösungsformel.'
+    };
+  }
+
+  // ---Typ 18 (Physiksaal): Wurfparabel -----------------------------------
+  // Flugbahn y = a(x \u2212 d)\u00b2 + ys mit Start im Ursprung (xs = d = halbe
+  // Wurfweite, ys = \u2212a \u00b7 d\u00b2). Gefragt wird zufaellig die maximale
+  // Hoehe (= ys) oder die Wurfweite (= 2d).
+  function wurfparabel(rng) {
+    var a = pick(rng, [-0.5, -1, -2]);
+    var d = randInt(rng, 1, 5);
+    var ys = -a * d * d;
+    var paar = pick(rng, [
+      ['Ball', 'geworfen'],
+      ['Speer', 'abgeschossen'],
+      ['Wasserstrahl', 'gespritzt']
+    ]);
+    var Ding = paar[0];
+    var hoch = rng() < 0.5;
+    var bahn = 'Ein ' + Ding + ' wird ' + paar[1] + ' und fliegt auf der Flugbahn ' +
+      spfText(a, d, ys) + '. Die Angaben sind in Metern.';
+    if (hoch) {
+      return {
+        frage: bahn + ' Gib die maximale Höhe in m an.',
+        felder: [{ key: 'y', label: 'y' }],
+        loesung: [ys],
+        loesungstext: 'Der Scheitel ist S(' + fmt(d) + '|' + fmt(ys) + '), also ymax = ' + fmt(ys) + ' m.',
+        hinweis: 'Der höchste Punkt einer Wurfparabel ist ihr Scheitel S(xs|ys).'
+      };
+    }
+    return {
+      frage: bahn + ' Gib die Wurfweite in m an.',
+      felder: [{ key: 'x', label: 'x' }],
+      loesung: [2 * d],
+      loesungstext: 'Die Flugbahn endet wieder bei y = 0, also bei x = ' + fmt(2 * d) +
+        ' m. Wurfweite = ' + fmt(2 * d) + ' m.',
+      hinweis: 'Setze y = 0 und löse. Eine Nullstelle ist der Start bei x = 0, die andere ist die Landestelle.'
+    };
+  }
+
+  // ---Typ 19 (Turnhalle): Groesstes Rechteck am Zaun --------------------
+  // Klassisches Extremwertproblem: Rechteck mit Umfang U, groesster
+  // Flaecheninhalt beim Quadrat: x = U : 4, A = x\u00b2.
+  function extremwert(rng) {
+    var U = 4 * randInt(rng, 2, 10);   // 8, 12, 16 ... 40
+    var x = U / 4;
+    var A = x * x;
+    return {
+      frage: 'Mit einem Zaun der Länge ' + U + ' m wird ein rechteckiges Beet abgesteckt. Bei welcher Seitenlänge x (in m) ist der Flächeninhalt am größten, und wie groß ist er (in m²)?',
+      felder: [{ key: 'x', label: 'x' }, { key: 'A', label: 'A' }],
+      loesung: [x, A],
+      loesungstext: 'U = 2x + 2b mit b = ' + fmt(U / 2) + ' \u2212 x. A(x) = x \u00b7 (' + (U / 2) + ' \u2212 x) hat den Scheitel bei x = ' + fmt(x) +
+        '. A = ' + fmt(x) + ' \u00b7 ' + fmt(x) + ' = ' + fmt(A) + '.',
+      hinweis: 'Die zweite Seite ist ' + (U / 2) + ' \u2212 x. Setze in A = x \u00b7 (zweite Seite) ein; das größte Rechteck ist das Quadrat mit x = U : 4.'
+    };
+  }
+
   // --- Liste aller Aufgabentypen (sp\u00e4ter kommen weitere Abschnitte dazu) ---
   // Reihenfolge wie im Spiel: Wiese, Wald, Ruine, Hoehle (Halle, Mitte),
   // Truhe, Felder, Klippen, Kueste (Weg zum zweiten Dungeon)
@@ -471,7 +559,10 @@ var Tasks = (function () {
     { id: 'diskriminante', name: 'Diskriminante', make: diskriminante },
     { id: 'anzahlLoesungen', name: 'Anzahl der Lösungen (Auswahl)', make: anzahlLoesungen },
     { id: 'loesungsformel', name: 'Lösungsmenge (Lösungsformel)', make: loesungsformel },
-    { id: 'nullstellenSF', name: 'Nullstellen (Scheitelform)', make: nullstellenSF }
+    { id: 'nullstellenSF', name: 'Nullstellen (Scheitelform)', make: nullstellenSF },
+    { id: 'schnittGerade', name: 'Schnittpunkte Parabel/Gerade', make: schnittGerade },
+    { id: 'wurfparabel', name: 'Wurfparabel', make: wurfparabel },
+    { id: 'extremwert', name: 'Größtes Rechteck (Zaun)', make: extremwert }
   ];
 
   // Eine Aufgabe erzeugen; gleicher Typ + gleicher Samen = gleiche Aufgabe.

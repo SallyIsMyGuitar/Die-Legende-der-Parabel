@@ -36,7 +36,10 @@ var Enemies = (function () {
     duenen: 'anzahlLoesungen',      // Sterndeuter: Anzahl der Loesungen
     oase: 'loesungsformel',         // Brunnenhueterin: Loesungsformel
     seingang: 'loesungsformel',     // Alte Wandinschrift: erst D, dann Formel
-    smitte: 'nullstellenSF'         // Steinerne Waage: Nullstellen, y = 0
+    smitte: 'nullstellenSF',        // Steinerne Waage: Nullstellen, y = 0
+    klassenzimmer: 'schnittGerade', // Zerbrochene Tafel: gleichsetzen
+    physiksaal: 'wurfparabel',      // Alte Wurfmaschine: Scheitel, Wurfweite
+    turnhalle: 'extremwert'         // Anzeigetafel: Extremwert am Scheitel
   };
 
   // Kurzer Kontext vor der Aufgabe (die Wesen stehen im Bann von Graf Gerade)
@@ -57,7 +60,10 @@ var Enemies = (function () {
     duenen: 'Ein Staubgeist huscht vorbei (drei Faelle, sagt der Sterndeuter):',
     oase: 'Eine Sandschlange zischt (die Lösungsformel, sagt die Brunnenhüterin):',
     seingang: 'Ein Mumienkäfer raschelt (erst D, sagt die Wandinschrift):',
-    smitte: 'Ein Wüstengeist seufzt (y = 0, sagt die Steinerne Waage):'
+    smitte: 'Ein Wüstengeist seufzt (y = 0, sagt die Steinerne Waage):',
+    klassenzimmer: 'Ein Lineal-Soldat schnarrt (gleichsetzen, sagt die Tafel):',
+    physiksaal: 'Ein Kreide-Geist knirscht (der Scheitel, sagt die Wurfmaschine):',
+    turnhalle: 'Ein Geodreieck-Wächter dröhnt (am Scheitel, sagt die Anzeigetafel):'
   };
 
   // --- Sprites (16x16, ein Frame; Bewegung ueber Wippen) ---------------------
@@ -435,6 +441,70 @@ var Enemies = (function () {
   ];
   var DESERT_COLORS = { o: '#4a3626', d: '#d8c8a8', D: '#3a2818' };
 
+
+  // Lineal-Soldat (Klassenzimmer): aufrechtes Lineal mit Helm und Augen
+  var RULER = [
+    '................',
+    '....ggggggg.....',
+    '....ghhhhhg.....',
+    '....ghrhrhg.....',
+    '....ghhhhhg.....',
+    '.noo.ghhhhg.oo..',
+    '..nnnggggggnnn..',
+    '...hhhhhhhhhh...',
+    '...hhhhhhhhhh...',
+    '...hhhhhhhhhh...',
+    '....hhhhhhhh....',
+    '....hhhhhhhh....',
+    '.....hh..hh.....',
+    '.....hh..hh.....',
+    '................',
+    '................'
+  ];
+  var RULER_COLORS = { g: '#3a3a44', h: '#d8c89a', r: '#e8343a', n: '#8a8496', o: '#5a5a64' };
+
+  // Kreide-Geist (Physiksaal): weisser Geist mit Kreidestaub
+  var CHALK = [
+    '................',
+    '......ccccc.....',
+    '....ccwwwwwc....',
+    '...cwwwwwwwwc...',
+    '...cwWwwwWwwc...',
+    '..cwwwwwwwwwwc..',
+    '..cwWwwwWwwwc...',
+    '..cwwwwwwwwwwc..',
+    '..cwwwwwwwwwwc..',
+    '...cwwwwwwwc....',
+    '...cw.ww.w.c....',
+    '....c.cwwc.c....',
+    '...s...ss...s...',
+    '................',
+    '................',
+    '................'
+  ];
+  var CHALK_COLORS = { c: '#8a8496', w: '#f2f0e8', W: '#2c2a36', s: '#e0dcd0' };
+
+  // Geodreieck-Waechter (Turnhalle): schwebendes Dreieck mit Auge
+  var GEO = [
+    '................',
+    '.......t........',
+    '......ttt.......',
+    '......tTt.......',
+    '.....ttttt......',
+    '.....tTTTt......',
+    '....ttTTTtt.....',
+    '....ttttttt.....',
+    '...tt.tt.tt.....',
+    '...tt..t..tt....',
+    '..tt...t...tt...',
+    '..t....t....t...',
+    '.tttttttttttt...',
+    '......tttt......',
+    '................',
+    '................'
+  ];
+  var GEO_COLORS = { t: '#2a5a8a', T: '#4a8ac0' };
+
   var SPRITES = {
     wiese: { rows: MUSHROOM, colors: MUSHROOM_COLORS },
     wald: { rows: MOSS, colors: MOSS_COLORS },
@@ -452,7 +522,10 @@ var Enemies = (function () {
     duenen: { rows: DUST, colors: DUST_COLORS },
     oase: { rows: SNAKE, colors: SNAKE_COLORS },
     seingang: { rows: MUMMY, colors: MUMMY_COLORS },
-    smitte: { rows: DESERT, colors: DESERT_COLORS }
+    smitte: { rows: DESERT, colors: DESERT_COLORS },
+    klassenzimmer: { rows: RULER, colors: RULER_COLORS },
+    physiksaal: { rows: CHALK, colors: CHALK_COLORS },
+    turnhalle: { rows: GEO, colors: GEO_COLORS }
   };
   var spriteCache = {};
   var flashCache = {};   // weisse Silhouette fuer das Aufblitzen
@@ -557,6 +630,20 @@ var Enemies = (function () {
     smitte: [
       { x: 4, y: 9 },
       { x: 13, y: 10 }
+    ],
+    klassenzimmer: [
+      { x: 4, y: 8 },
+      { x: 12, y: 6 },
+      { x: 5, y: 11 }
+    ],
+    physiksaal: [
+      { x: 4, y: 3 },
+      { x: 13, y: 11 }
+    ],
+    turnhalle: [
+      { x: 4, y: 9 },
+      { x: 12, y: 4 },
+      { x: 11, y: 11 }
     ]
   };
 
@@ -669,7 +756,9 @@ var Enemies = (function () {
       wiese: 1, wald: 2, ruine: 3, dhalle: 4, dmittel: 5,
       felder: 6, klippen: 7, kueste: 8, leingang: 9, lmitte: 10,
       weingang: 11, wmitte: 12,
-      steppe: 13, duenen: 14, oase: 15, seingang: 16, smitte: 17
+      steppe: 13, duenen: 14, oase: 15,
+      seingang: 16, smitte: 17,
+      klassenzimmer: 18, physiksaal: 19, turnhalle: 20
     }[e.screen] || 1;
     return screenNo * 100 + e.index * 10 + e.attempts;
   }
