@@ -21,9 +21,9 @@ var Abspann = (function () {
   // absichtlich)
   var TITLES = [
     ['Der Bann ist zerbrochen.', 'Die Lehrerinnen und Lehrer sind frei!'],
-    ['Die Schule wird wieder aufgebaut.', 'Bald klingt die Schulglocke wieder ueber dem Dorf.'],
+    ['Die Schule wird wieder aufgebaut.', 'Bald klingt die Schulglocke wieder über das Dorf.'],
     ['Deine Wappen', ''],
-    ['Deine Rechnungen', 'Danke für dein Spielen!']
+    ['Deine Rechnungen', 'Danke fürs Spielen!']
   ];
   // Namen der fuenf Wappen in der Reihenfolge der Dungeons
   var WAPPEN = ['Normalparabel', 'Scheitelform', 'Allgemeine Form', 'Nullstellen', 'Anwendungen'];
