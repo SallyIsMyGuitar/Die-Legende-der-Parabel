@@ -15,25 +15,27 @@ var World = (function () {
   var ROWS = 14;
   var W = COLS * TILE;
   var H = ROWS * TILE;
-  var BLOCKING = 'THDFGSW~REiCqVL';
+  var BLOCKING = 'THDFGSW~REiCqVLKBZN';
   var lighthouseLit = false;   // Leuchtturm leuchtet wieder (Sieg ueber Dungeon 2)
   var waterGateOpen = false;  // Wassertor der Lagune offen (Sieg ueber Dungeon 2)
+  var sandstormOpen = false;  // Sandsturm im Westen aufgeloest (Sieg ueber Dungeon 3)
+  var schoolGateOpen = false;  // Schultor offen (Sieg ueber Dungeon 4)
 
   var SCREENS = {
     start: {
       map: [
-        'TTTTTTTTTTTTTTTT',
-        'T.....T........T',
-        'T..TT.T........T',
+        'TTTTTNNTTTTTTTTT',
+        'T..............T',
+        'T..TT..........T',
         'T..T...........T',
         'T..T.PPPPPPPPPPP',
-        'T....P..........',
-        'T....P..FSSSSSST',
-        'T.~~.P..FSSSSSST',
-        'T.~~.P..FSSSSSST',
-        'T....P..FSSSSSST',
-        'T....P..FSSSSSST',
-        'T....P..FFFGGFFT',
+        'Z....P..........',
+        'Zi...P..FSSSSSST',
+        'Z.~~.P..FSSSSSST',
+        'Z.~~.P..FSSSSSST',
+        'Z....P..FSSSSSST',
+        'Z....P..FSSSSSST',
+        'Z....P..FFFGGFFT',
         'T....PPPPPPPP..T',
         'TTTTTTTTTTTTTTTT'
       ],
@@ -45,10 +47,16 @@ var World = (function () {
         {
           tiles: [[11, 11], [12, 11]], x: 12 * 16, y: 11 * 16,
           name: 'Schild',
-          texts: ['GESPERRT. Die Schule bleibt geschlossen, bis die Lehrkräfte zurück sind.']
+          texts: ['GESPERRT. Die Schule bleibt geschlossen, bis die Lehrkräfte zurück sind.'],
+          later: { school: true, replace: true, texts: ['Das Tor steht offen. Der Weg zur zerstörten Schule im Norden ist frei.'] }
+        },
+        {
+          // Schild am Sandsturm: West-Ausgang des Dorfes
+          tiles: [[1, 6]], x: 1 * 16, y: 6 * 16, name: 'Schild',
+          texts: ['Ein Sandsturm versperrt den Weg nach Westen. Er trägt das Siegel des Grafen.']
         }
       ],
-      exits: { east: 'ost' }
+      exits: { west: 'steppe', north: 'schulhof', east: 'ost' }
     },
     ost: {
       map: [
@@ -431,6 +439,13 @@ var World = (function () {
     states[name] = { name: name, def: def, tiles: buildTiles(def), doors: {} };
   });
 
+  // Bildschirm aus einer anderen Datei anmelden (z. B. Wueste in wueste.js).
+  // Muss vor dem ersten Zeichnen passieren (statischer Aufbau beim Laden).
+  function addScreen(name, def) {
+    SCREENS[name] = def;
+    states[name] = { name: name, def: def, tiles: buildTiles(def), doors: {} };
+  }
+
   // Zielraum -> Bildschirm und Gebäude (für den Weg nach draußen)
   var roomHome = {};
   Object.keys(SCREENS).forEach(function (name) {
@@ -584,6 +599,39 @@ var World = (function () {
   }
 
   // Pixelposition der Truhe auf dem aktuellen Bildschirm (oder null)
+  // Alle Kacheln mit Zeichen from im Bildschirm durch ersetzen (oeffnende
+  // Tore) und den Bildschirm neu vorberechnen, falls er schon gezeichnet wurde
+  function swapTiles(screen, from, to) {
+    var st = states[screen];
+    if (!st) return;
+    var changed = false;
+    for (var ty = 0; ty < ROWS; ty++) {
+      for (var tx = 0; tx < COLS; tx++) {
+        if (st.tiles[ty][tx] === from) {
+          st.tiles[ty][tx] = to;
+          changed = true;
+        }
+      }
+    }
+    if (changed && st.ground) bake(st);
+  }
+
+  // Sandsturm im Westen des Dorfes loest sich auf (Sieg ueber Dungeon 3)
+  function setSandstormOpen(p) {
+    sandstormOpen = !!p;
+    if (p) swapTiles('start', 'Z', 'P');
+  }
+
+  // Schultor oeffnet sich (Sieg ueber Dungeon 4): Suedtor wird offen
+  // begehbar ('O'), das Gitter am Nordausgang weicht
+  function setSchoolGateOpen(p) {
+    schoolGateOpen = !!p;
+    if (p) {
+      swapTiles('start', 'G', 'O');
+      swapTiles('start', 'N', 'P');
+    }
+  }
+
   function chestPos() {
     var st = states[current];
     var sg = st && (st.def.signs || []).filter(function (g) { return g.action === 'chest'; })[0];
@@ -890,6 +938,83 @@ var World = (function () {
   // Wassertor der Lagune (Dungeon 3): linke Haelfte zeichnet beide
   // 'E'-Kacheln gemeinsam. Zu: Waende aus Wasser mit dem Siegel des Grafen.
   // Offen (nach dem Sieg ueber den Waechter des Turms): dunkler Durchgang.
+  // Kaktus (Wueste, Kartenzeichen 'K', blockiert)
+  function drawCactus(r, tx, ty) {
+    var x = tx * TILE, y = ty * TILE;
+    r.ellipse(x + 8, y + 15, 5, 2, 'rgba(60,40,10,0.35)');
+    // Hauptstamm
+    r.px(x + 6, y + 2, 4, 13, '#3f7a2e');
+    r.px(x + 6, y + 2, 1, 13, '#5f9e48');
+    r.px(x + 9, y + 2, 1, 13, '#2c5c1e');
+    // linker Arm
+    r.px(x + 2, y + 7, 4, 2, '#3f7a2e');
+    r.px(x + 2, y + 3, 2, 5, '#3f7a2e');
+    r.px(x + 2, y + 3, 1, 5, '#5f9e48');
+    // rechter Arm
+    r.px(x + 10, y + 9, 4, 2, '#3f7a2e');
+    r.px(x + 12, y + 5, 2, 5, '#3f7a2e');
+    r.px(x + 12, y + 5, 1, 5, '#5f9e48');
+    // kleine Blüte oben
+    r.px(x + 7, y, 2, 2, '#e86a8a');
+    r.px(x + 7, y, 1, 1, '#f8a0b8');
+  }
+
+  // Trockener Busch (Wueste, Kartenzeichen 'B', blockiert)
+  function drawDryBush(r, tx, ty) {
+    var x = tx * TILE, y = ty * TILE;
+    r.ellipse(x + 8, y + 14, 6, 2, 'rgba(60,40,10,0.3)');
+    r.ellipse(x + 8, y + 9, 6, 5, '#7a5c32');
+    r.ellipse(x + 7, y + 8, 4, 3, '#9a7a46');
+    // duerre Zweige
+    r.px(x + 2, y + 6, 1, 4, '#5e4626');
+    r.px(x + 13, y + 7, 1, 3, '#5e4626');
+    r.px(x + 6, y + 3, 1, 3, '#5e4626');
+    r.px(x + 10, y + 4, 1, 2, '#5e4626');
+    r.px(x + 4, y + 12, 1, 3, '#5e4626');
+    r.px(x + 11, y + 13, 1, 2, '#5e4626');
+  }
+
+  // Schultor-Gitter am Nordausgang (Kartenzeichen 'N', zu solange das Tor zu ist)
+  function drawSchoolGate(r, gx, gy) {
+    var x = gx * TILE, y = gy * TILE, w = 2 * TILE, i;
+    // Zaunpfosten oben und unten
+    r.px(x - 2, y - 2, 4, 18, '#3a3434');
+    r.px(x + w - 2, y - 2, 4, 18, '#3a3434');
+    r.px(x - 2, y - 2, 4, 1, '#6a6262');
+    r.px(x + w - 2, y - 2, 4, 1, '#6a6262');
+    // Eisenstaebe
+    r.px(x + 2, y + 1, w - 4, 2, '#2e2e36');
+    r.px(x + 2, y + 13, w - 4, 2, '#2e2e36');
+    for (i = x + 3; i < x + w - 3; i += 3) r.px(i, y, 1, 15, '#3a3a44');
+    // Kette und Schloss (wie am suedlichen Schultor)
+    for (i = 0; i < w - 4; i += 2) {
+      var cy = y + 6 + Math.round(Math.abs(i - (w - 4) / 2) / 4);
+      r.px(x + 2 + i, cy, 2, 1, i % 4 ? '#c8ccd2' : '#7a8088');
+    }
+    r.px(x + w / 2 - 2, y + 7, 5, 5, '#2a2018');
+    r.px(x + w / 2 - 1, y + 8, 3, 3, '#d8b040');
+    r.px(x + w / 2 - 1, y + 5, 3, 2, '#7a8088');
+    r.px(x + w / 2, y + 9, 1, 1, '#2a2018');
+  }
+
+  // Offenes Schultor (Kartenzeichen 'O', begehbar): Fluegel seitlich aufgeschlagen
+  function drawSchoolGateOpen(r, gx, gy) {
+    var x = gx * TILE, y = gy * TILE, w = 2 * TILE, i;
+    r.px(x - 2, y - 2, 4, 18, '#3a3434');
+    r.px(x + w - 2, y - 2, 4, 18, '#3a3434');
+    r.px(x - 2, y - 2, 4, 1, '#6a6262');
+    r.px(x + w - 2, y - 2, 4, 1, '#6a6262');
+    // aufgeschlagene Fluegel links und rechts
+    for (i = 0; i < 5; i++) {
+      r.px(x + 1 + i, y + 2, 1, 13, '#3a3a44');
+      r.px(x + w - 2 - i, y + 2, 1, 13, '#3a3a44');
+    }
+    r.px(x + 1, y + 2, 5, 1, '#2e2e36');
+    r.px(x + w - 6, y + 2, 5, 1, '#2e2e36');
+    r.px(x + 1, y + 14, 5, 1, '#2e2e36');
+    r.px(x + w - 6, y + 14, 5, 1, '#2e2e36');
+  }
+
   function drawWasserTor(r, tx, ty) {
     if (tileAt(tx - 1, ty) === 'E') return;   // rechte Haelfte wird mitgezeichnet
     var x = tx * TILE, y = ty * TILE;
@@ -1013,6 +1138,13 @@ var World = (function () {
     st.waterMask = shapeMask('~', 4, 1, 3, false);
     st.bankMask = buildBank();
     st.waterDepth = buildDepth(st.waterMask);
+    // Kacheln des Sandsturms sammeln (Ani­mation in drawGround)
+    st.stormTiles = [];
+    for (var sy = 0; sy < ROWS; sy++) {
+      for (var sx2 = 0; sx2 < COLS; sx2++) {
+        if (st.tiles[sy][sx2] === 'Z') st.stormTiles.push({ tx: sx2, ty: sy });
+      }
+    }
 
     // 1) Bodenpixel
     st.ground = Render.createLayer(W, H);
@@ -1037,7 +1169,7 @@ var World = (function () {
         } else {
           c = grassColor(x, y);
           if (id === 'T') c = lerp(c, C.grassDark, 0.25);
-          if (id === 'S' || id === 'F' || id === 'G' || id === 'R' || id === 'E' || id === 'i' || id === 'C' || id === 'q' || id === 'V' || id === 'L') c = lerp(c, C.dry, 0.35);
+          if (id === 'S' || id === 'F' || id === 'G' || id === 'R' || id === 'E' || id === 'i' || id === 'C' || id === 'q' || id === 'V' || id === 'L' || id === 'K' || id === 'B' || id === 'Z' || id === 'N' || id === 'O') c = lerp(c, C.dry, 0.35);
           if (adjacent(st.pathMask, k) || adjacent(st.waterMask, k) || adjacent(st.bankMask, k)) {
             c = lerp(c, C.grassDark, 0.55);
           }
@@ -1092,6 +1224,10 @@ var World = (function () {
         }
       }
     }
+
+    // Extras des Bildschirms (z. B. Tempelfassade, Muelltonnen),
+    // gebacken wie der Rest des Bodens
+    if (st.def.bakeExtra) st.def.bakeExtra(Render);
 
     // 4) Objekte zeilenweise (je Grundzeile eine Ebene) und Baumkronen
     //    (eigene Ebene ganz oben), siehe Tiefensortierung unten
@@ -1184,7 +1320,7 @@ var World = (function () {
   // Hat die Grundzeile row mindestens ein Objekt?
   function rowHasObjects(st, row) {
     for (var cx = 0; cx < COLS; cx++) {
-      if ('WqREiVCFG'.indexOf(tileAt(cx, row)) >= 0) return true;
+      if ('WqREiVCFKBNO'.indexOf(tileAt(cx, row)) >= 0) return true;
     }
     var s = st.def.school;
     if (s && s.y + s.h - 1 === row) return true;
@@ -1277,6 +1413,40 @@ var World = (function () {
     }
   }
 
+  // Sandsturm ueber den 'Z'-Kacheln (lebendig wirbelnde Körner, Sandschleier),
+  // solange der Sturm das Siegel des Grafen traegt
+  function drawStorm(r, t, st) {
+    var ctx = r.getCtx();
+    if (!st.stormTiles.length) return;
+    var y0 = st.stormTiles[0].ty * TILE;
+    var y1 = (st.stormTiles[st.stormTiles.length - 1].ty + 1) * TILE;
+    // Sandschleier
+    ctx.globalAlpha = 0.55 + 0.1 * Math.sin(t / 300);
+    r.px(0, y0, 24, y1 - y0, '#c8a468');
+    ctx.globalAlpha = 0.35;
+    r.px(24, y0, 8, y1 - y0, '#c8a468');
+    ctx.globalAlpha = 1;
+    // wirbelnde Sandkoerner
+    for (var i = 0; i < 26; i++) {
+      var ph = (t / 900 + i * 0.137) % 1;
+      var gx = 2 + ((i * 37) % 28);
+      var gy = y0 + ph * (y1 - y0);
+      var wob = Math.round(Math.sin(t / 140 + i) * 2);
+      ctx.globalAlpha = 0.5 + 0.3 * Math.sin(i * 2 + t / 200);
+      r.px(gx + wob, Math.round(gy), 1, 1, i % 3 ? '#e8c888' : '#a8834e');
+      ctx.globalAlpha = 1;
+    }
+    // Siegel des Grafen: eckige Runen
+    var sy = Math.round((y0 + y1) / 2);
+    ctx.globalAlpha = 0.8 + 0.2 * Math.sin(t / 250);
+    r.px(9, sy - 5, 6, 1, '#f0c040');
+    r.px(9, sy + 4, 6, 1, '#f0c040');
+    r.px(10, sy - 4, 1, 3, '#f0c040');
+    r.px(13, sy - 4, 1, 3, '#f0c040');
+    r.px(11, sy - 2, 1, 3, '#f0c040');
+    ctx.globalAlpha = 1;
+  }
+
   // Boden inkl. Animationen (unter der Spielfigur); name optional
   function drawGround(r, time, name) {
     var t = time || 0;
@@ -1286,6 +1456,8 @@ var World = (function () {
     r.image(st.ground.canvas, 0, 0);
     drawWater(r.getCtx(), st, t);
     drawFlowers(r, st, t);
+    // Sandsturm (solange das Siegel des Grafen ihn aufrecht haelt)
+    if (!sandstormOpen && st.stormTiles && st.stormTiles.length) drawStorm(r, t, st);
     // Außen-NPCs (unter Gebänden und Baumkronen)
     var npcs = st.def.npcs || [];
     if (npcs.length && !st.npcSprites) {
@@ -1325,6 +1497,8 @@ var World = (function () {
       }
       ctx.globalAlpha = 1;
     });
+    // laufende Extras des Bildschirms (z. B. Lichtlinien des Grafen)
+    if (st.def.anim) st.def.anim(r, t);
   }
 
   return {
@@ -1347,6 +1521,11 @@ var World = (function () {
     isLighthouseLit: function () { return lighthouseLit; },
     setWaterGateOpen: function (p) { waterGateOpen = !!p; },
     isWaterGateOpen: function () { return waterGateOpen; },
+    addScreen: addScreen,
+    setSandstormOpen: setSandstormOpen,
+    isSandstormOpen: function () { return sandstormOpen; },
+    setSchoolGateOpen: setSchoolGateOpen,
+    isSchoolGateOpen: function () { return schoolGateOpen; },
     chestPos: chestPos,
     START: START,
     WIDTH: W,
