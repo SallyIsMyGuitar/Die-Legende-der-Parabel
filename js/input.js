@@ -12,6 +12,7 @@ var Input = (function () {
   };
 
   function onKeyDown(e) {
+    if (suspended) return;   // Texteingabe im Code-Panel
     var dir = keyMap[e.code];
     if (dir) {
       held[dir] = true;
@@ -39,6 +40,7 @@ var Input = (function () {
   }
 
   function onKeyUp(e) {
+    if (suspended) return;
     var dir = keyMap[e.code];
     if (dir) {
       held[dir] = false;
@@ -75,6 +77,7 @@ var Input = (function () {
   }
 
   function onTouchStart(e) {
+    if (suspended) return;   // Panel off: Touch geht nur ins DOM-Panel
     e.preventDefault();
     var dpad = document.getElementById('dpad');
     var dpadRect = dpad.getBoundingClientRect();
@@ -165,6 +168,14 @@ var Input = (function () {
     }
   }
 
+  // Waehrend ein DOM-Panel offen ist (Spielstand-Code), hoert das Spiel auf
+  // Tastatur- und Tasteneingaben; Texteingaben landen nur im Panel.
+  var suspended = false;
+  function setSuspended(on) {
+    suspended = !!on;
+    if (suspended) releaseAll();
+  }
+
   function init() {
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
@@ -215,12 +226,14 @@ var Input = (function () {
 
   return {
     init: init,
+    setSuspended: setSuspended,
     isTouch: function () { return document.body.classList.contains('touch'); },
     setDpadVisible: setDpadVisible,
     setLabels: setLabels,
     isDown: function (dir) { return !!held[dir]; },
     // true genau einmal pro Tastendruck (A/B)
     pressed: function (name) {
+      if (suspended) return false;
       var p = !!pressedOnce[name];
       pressedOnce[name] = false;
       return p;

@@ -35,5 +35,28 @@ var Save = (function () {
     try { window.localStorage.removeItem(KEY); } catch (e) { /* egal */ }
   }
 
-  return { write: write, read: read, clear: clear };
+  // --- Spielstand-Code (Schritt 4, Feinschliff) ----------------------------
+  // Kompakter Text ohne Pruefsumme zum Kopieren und Einfuegen. Er enthaelt
+  // den Fortschritt inklusive Fehlerstatistik. Die Merkbuch-Eintraege bleiben
+  // bewusst aus: Ihre Merksaetze lassen sich im Spiel wieder anhoeren, der
+  // Code bleibt dadurch kurz. Ungueltige Codes lehnt parseCode still ab.
+  function code(state) {
+    var st = {};
+    for (var k in state) if (state.hasOwnProperty(k) && k !== 'merk') st[k] = state[k];
+    return 'LDP1-' + btoa(unescape(encodeURIComponent(JSON.stringify(st))));
+  }
+
+  function parseCode(text) {
+    try {
+      var t = String(text || '').replace(/\s+/g, '');
+      if (t.indexOf('LDP1-') !== 0) return null;
+      var json = decodeURIComponent(escape(atob(t.slice(5))));
+      var st = JSON.parse(json);
+      return st && typeof st === 'object' ? st : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  return { write: write, read: read, clear: clear, code: code, parseCode: parseCode };
 })();

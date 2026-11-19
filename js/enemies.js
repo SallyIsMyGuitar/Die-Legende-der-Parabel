@@ -650,6 +650,8 @@ var Enemies = (function () {
   // Zustand: einmalig angelegt, ueberlebt Bildschirmwechsel
   var enemies = [];
   var defeated = {};   // 'screen:index' -> true, dauerhaft besiegt
+  var repeat = {};     // 'screen' -> Wiederholungszaehler des Dungeons (Schritt 3):
+                      // hoehere Zahl => andere Zahlen in den Aufgaben
   var drops = [];      // fallen gelassene Herzen: { screen, x, y, t0 }
   var dying = [];      // laufende Besiegt-Animationen: { e, t0 }
   var firstTryWins = 0;   // Siege im ersten Versuch (fuer Herz-Drops)
@@ -750,7 +752,8 @@ var Enemies = (function () {
 
   // --- Kampf-Ergebnis -----------------------------------------------------------
 
-  // Samen fuer die Aufgabe: Gegner + Versuchzaehler => neue Zahlen pro Versuch
+  // Samen fuer die Aufgabe: Gegner + Versuchzaehler => neue Zahlen pro Versuch.
+// Der Wiederholungszaehler (Schritt 3) liefert je Durchlauf neue Zahlen.
   function seedOf(e) {
     var screenNo = {
       wiese: 1, wald: 2, ruine: 3, dhalle: 4, dmittel: 5,
@@ -760,7 +763,7 @@ var Enemies = (function () {
       seingang: 16, smitte: 17,
       klassenzimmer: 18, physiksaal: 19, turnhalle: 20
     }[e.screen] || 1;
-    return screenNo * 100 + e.index * 10 + e.attempts;
+    return screenNo * 100 + e.index * 10 + e.attempts + (repeat[e.screen] || 0) * 100000;
   }
 
   function typeIdOf(e) { return TYPES[e.screen]; }
@@ -789,6 +792,30 @@ var Enemies = (function () {
 
   // Hat der Bildschirm Gegner? (dafuer, ob im Dungeon gezeichnet wird)
   function hasScreen(screen) { return !!DEFS[screen]; }
+
+  // --- Wiederholungsmodus (Schritt 3) ---------------------------------------
+  // Alle Gegner der Raeume eines Dungeons kehren zurueck (neuer Versuch,
+  // neue Zahlen); Bosse und Bodenraetsel bleiben, wie sie sind.
+  function clearScreens(rooms) {
+    (rooms || []).forEach(function (room) {
+      for (var i = 0; i < enemies.length; i++) {
+        var e = enemies[i];
+        if (e.screen !== room) continue;
+        delete defeated[room + ':' + e.index];
+        e.attempts = 0;
+        e.cooldown = 0;
+        e.dirX = 0; e.dirY = 0;
+      }
+    });
+  }
+
+  function advanceRepeat(room) { repeat[room] = (repeat[room] || 0) + 1; }
+
+  function setRepeats(map) {
+    repeat = {};
+    if (map) for (var k in map) repeat[k] = map[k];
+  }
+  function getRepeats() { return repeat; }
 
   // Richtig geloest: Gegner dauerhaft besiegt, Besiegt-Animation startet.
   // Bei Sieg im ersten Versuch laesst jeder n-te Gegner ein Herz fallen.
@@ -905,6 +932,10 @@ var Enemies = (function () {
     contextOf: contextOf,
     remaining: remaining,
     getDefeated: getDefeated,
-    setDefeated: setDefeated
+    setDefeated: setDefeated,
+    clearScreens: clearScreens,
+    advanceRepeat: advanceRepeat,
+    setRepeats: setRepeats,
+    getRepeats: getRepeats
   };
 })();

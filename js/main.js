@@ -24,7 +24,8 @@
 
   // --- Spielstand: Fortschritt sammeln, speichern und laden ----------------
   var stats = { right: 0, wrong: 0 };   // Fehlerstatistik (fuer Abspann/Code)
-  var finaleDone = false;               // Endboss Graf Gerade besiegt (Meilenstein 6: Abspann)
+  var finaleDone = false;               // Endboss Graf Gerade besiegt
+  var abspannDone = false;              // Abspann war schon zu Ende gesehen
 
   // --- Bosse der Dungeons: Vorstellung und Sieg je Boss-Raum ------------
   // (Instanz mit Herzen und Zeichnung liegt in boss.js, Aufgaben in tasks.js)
@@ -60,7 +61,9 @@
       wappen: wappens,
       spaeth: spaethDone,
       dietl: dietlRewards,
-      stats: stats
+      stats: stats,
+      abspann: abspannDone,
+      repeats: Enemies.getRepeats()
     };
   }
 
@@ -99,9 +102,29 @@
     if (st.spaeth) { spaethDone = true; placeSpaethNpc(); }
     if (st.stats) stats = { right: st.stats.right || 0, wrong: st.stats.wrong || 0 };
     dietlRewards = st.dietl || 0;   // aeltere Staende: noch keine Belohnung
+    abspannDone = !!st.abspann;      // aeltere Staende: Abspann noch nicht gesehen
+    Enemies.setRepeats(st.repeats);   // Wiederholungszaehler je Dungeon-Raum
+    if (finaleDone && abspannDone) placeTeachers();
     World.setScreen(lastRest.screen);
     Player.setPosition(lastRest.x, lastRest.y, lastRest.facing);
     Hud.fill();
+  }
+
+  // Spielstand-Seite im Merkbuch (Schritt 4): Statistik und per A der
+  // Spielstand-Code (codepanel.js, ohne Server und Pruefsumme)
+  var standSetupDone = false;
+  function setupStandPage() {
+    if (standSetupDone) return;
+    standSetupDone = true;
+    Merkbuch.setStand(function () {
+      return [
+        'Richtig: ' + stats.right + '   Falsch: ' + stats.wrong,
+        'Wappen: ' + wappens + ' von 5',
+        'Mit A hier den Spielstand-Code zeigen.'
+      ];
+    }, function () {
+      CodePanel.open(collectState());
+    });
   }
 
   // Texte einer Figur: nach dem ersten Wappen kommen Zusatzseiten dazu
@@ -317,7 +340,7 @@
         'Seine starren Linien biegen sich \u2013 eine nach der anderen wird zur Parabel. Der Bann über dem Land zerbricht.',
         'Graf Gerade zersplittert in lauter gerade Splitter und verschwindet. Die Lichtlinien über der Schule erlöschen.',
         'Auf dem Boden liegt nur noch das alte Tafellineal aus dem Matheraum. Jahrelang zog es nur gerade Striche, während daneben an der Tafel die schönsten Parabeln entstanden. Aus Neid wurde Graf Gerade.',
-        'Die Lehrerinnen und Lehrer sind frei! Man hört die befreiten Stimmen bis auf den Schulhof. Die Schule wird wieder aufgebaut \u2013 davon bald mehr.',
+        'Die Lehrerinnen und Lehrer sind frei! Man hört die befreiten Stimmen bis auf den Schulhof. Die Schule wird wieder aufgebaut.',
         'Du erhältst das Wappen der Anwendungen. Der Rückweg durch die Schule steht dir offen.'
       ],
       // nach dem Sieg: Finale-Flagge (Abspann und Wiederholungsmodus folgen
@@ -327,6 +350,54 @@
   };
   var bossAttempts = 1;    // Versuche an der aktuellen Boss-Aufgabe
   var wappens = 0;         // gesammelte Wappen (fuer den Abspann)
+  var finaleTalkPending = false;   // Siegdialog des Grafen ist zu: Abspann starten
+
+  // Abspann nach dem Sieg ueber Graf Gerade (abspann.js); danach steht die
+  // Figur im Dorf vor dem Schultor
+  function startAbspann() {
+    Abspann.start(wappens, stats, function () {
+      abspannDone = true;
+      placeTeachers();                       // befreite Lehrkraefte (Schritt 2)
+      World.rebake('start');                 // Schule im Dorf: intakt zeichnen
+      World.rebake('schulhof');
+      World.setScreen('start');
+      Player.setPosition(11 * 16, 12 * 16, 'up');   // vor dem Schultor
+      saveGame();
+    });
+  }
+
+  // Befreite Lehrkraefte auf dem Schulhof (Schritt 2, Texte vorlaeufig).
+  // Nur Rollenbezeichnungen, keine Namen; Herr Spaeth und Herr Dietl stehen
+  // weiter dort, wo sie schon stehen.
+  var teachersPlaced = false;
+  function placeTeachers() {
+    if (teachersPlaced) return;
+    teachersPlaced = true;
+    World.addNpc('schulhof', {
+      x: 6 * 16, y: 6 * 16, baseFacing: 'down',
+      sprites: function () { return People.netzweber(); },
+      talk: { name: 'Lehrerin', texts: [
+        'Wir sind frei! Danke, dass du die Schule gerettet hast.',
+        'Ab jetzt üben wir wieder Parabeln – jeden Tag ein bisschen.'
+      ] }
+    });
+    World.addNpc('schulhof', {
+      x: 10 * 16, y: 6 * 16, baseFacing: 'down',
+      sprites: function () { return People.tuemerin(); },
+      talk: { name: 'Lehrerin', texts: [
+        'Der Bann ist zerbrochen. Uebung macht den Meister!',
+        'Die Steintafel neben dem Eingang startet eine Wiederholung.'
+      ] }
+    });
+    World.addNpc('schulhof', {
+      x: 11 * 16, y: 10 * 16, baseFacing: 'left',
+      sprites: function () { return People.sterndeuter(); },
+      talk: { name: 'Lehrer', texts: [
+        'Fünf Wappen und ein freies Land. Gut gemacht!',
+        'Jede Steintafel an einem Dungeon-Eingang startet eine Wiederholung.'
+      ] }
+    });
+  }
 
   function startBossTask() {
     var room = World.getScreen();            // Boss-Raum bestimmt den Boss
@@ -357,6 +428,7 @@
           wappens++;
           if (BOSSES[room].onWin) BOSSES[room].onWin();
           saveGame();   // nach dem Dungeon automatisch speichern
+          if (room === 'aula') finaleTalkPending = true;   // danach: Abspann
           run([
             { dur: 1.3 },
             { dur: 0, end: function () {
@@ -369,6 +441,73 @@
         hurt({ x: boss.def.x, y: boss.def.y });   // Rueckstoss vom Boss weg
       }
     }, { boss: true, attempt: bossAttempts });
+  }
+
+  // --- Wiederholungsmodus (Schritt 3) --------------------------------------
+  // Nach dem Finale kann jeder Dungeon ueber die Steintafel am Eingang
+  // wiederholt werden: Die Gegner kehren mit neuen Zahlen zurueck (der
+  // Wiederholungszaehler zaehlt in den Samen), Bosse und Bodenraetsel
+  // bleiben, wie sie sind, und der erste Durchlauf samt Wappen bleibt erhalten.
+  var DUNGEONS = {
+    hoehle: { name: 'H\u00f6hle der Parabeln', rooms: ['dhalle', 'dmittel', 'draetsel', 'dboss'] },
+    turm: { name: 'Leuchtturm', rooms: ['leingang', 'lmitte', 'lraetsel', 'lboss'] },
+    wasser: { name: 'Wasserreich', rooms: ['weingang', 'wmitte', 'wraetsel', 'wboss'] },
+    sand: { name: 'Sandtempel', rooms: ['seingang', 'smitte', 'splatten', 'sboss'] },
+    schule: { name: 'Schule', rooms: ['klassenzimmer', 'physiksaal', 'turnhalle', 'aula'] }
+  };
+
+  // Steintafeln an den Dungeon-Eingaengen (Texte vorlaeufig) und die
+  // Erinnerungstafel zum erneuten Ansehen des Abspanns (Aktion 'abspann').
+  // Beides wird beim Laden registriert, bevor irgendein Bildschirm gebacken wird.
+  function addStele(screen, tiles, dungeonKey) {
+    World.addSign(screen, {
+      tiles: tiles, x: tiles[0][0] * 16, y: tiles[0][1] * 16,
+      name: 'Steintafel',
+      texts: ['Eine alte Steintafel mit fuenf Wappen-Vertiefungen. Sie schl\u00e4ft noch \u2026'],
+      action: 'repeat', dungeon: dungeonKey
+    });
+  }
+  addStele('ruine', [[10, 5]], 'hoehle');
+  addStele('kueste', [[11, 12]], 'turm');
+  addStele('lagune', [[10, 6]], 'wasser');
+  addStele('oase', [[9, 5]], 'sand');
+  addStele('schulhof', [[7, 4]], 'schule');
+  World.addSign('ost', {
+    tiles: [[6, 3]], x: 6 * 16, y: 3 * 16,
+    name: 'Erinnerungstafel',
+    texts: ['Hier soll einmal an die Rettung der Schule erinnert werden. Noch ist es nicht so weit.'],
+    action: 'abspann'
+  });
+
+  // Rueckfrage der Steintafel: A = Wiederholung starten, B = zurueck
+  var repeatAsk = null;    // { key: dungeon } waehrend der Rueckfrage
+
+  function doRepeat(key) {
+    var D = DUNGEONS[key];
+    D.rooms.forEach(function (rm) { Enemies.advanceRepeat(rm); });
+    Enemies.clearScreens(D.rooms);
+    saveGame();
+    var durchlauf = (Enemies.getRepeats()[D.rooms[0]] || 0) + 1;
+    Dialog.open('Steintafel', [
+      'Wiederholung: ' + D.name + '. Durchlauf ' + durchlauf + '.',
+      'Die verzauberten Wesen kehren zur\u00fcck \u2013 mit neuen Zahlen. Deine Wappen und der erste Durchlauf bleiben erhalten.'
+    ]);
+  }
+
+  // Kleine Box fuer die Rueckfrage (Bauart wie der Dialog)
+  function drawRepeatAsk(r) {
+    var ctx = r.getCtx();
+    var b = { x: 40, y: 82, w: 176, h: 60 };
+    r.px(b.x + 2, b.y, b.w - 4, b.h, '#1c1828');
+    r.px(b.x, b.y + 2, b.w, b.h - 4, '#1c1828');
+    r.px(b.x + 1, b.y + 1, b.w - 2, b.h - 2, '#1c1828');
+    r.px(b.x + 3, b.y + 1, b.w - 6, 1, '#efe4c4');
+    r.px(b.x + 3, b.y + b.h - 2, b.w - 6, 1, '#efe4c4');
+    r.px(b.x + 1, b.y + 3, 1, b.h - 6, '#efe4c4');
+    r.px(b.x + b.w - 2, b.y + 3, 1, b.h - 6, '#efe4c4');
+    Font.draw(ctx, 'Wiederholung \u00fcben?', b.x + 10, b.y + 8, '#f0c040');
+    Font.draw(ctx, DUNGEONS[repeatAsk.key].name, b.x + 10, b.y + 22, '#f6f0e2');
+    Font.draw(ctx, 'A: Ja   B: Nein', b.x + 10, b.y + 42, '#8a8496');
   }
 
   // --- Kampf: Beruehrung mit einem Gegner startet genau eine Aufgabe -------
@@ -895,7 +1034,7 @@
     if (t.action === 'rest') return 'Trinken';
     if (t.action === 'chest') return 'Öffnen';
     if (t.action === 'torch') return 'Entzünden';
-    if (t.action === 'testpage') return 'Lesen';
+    if (t.action === 'testpage' || t.action === 'repeat' || t.action === 'abspann') return 'Lesen';
     if (/Schild|Steintafel|Inschrift/.test(t.name)) return 'Lesen';
     return 'Reden';
   }
@@ -906,7 +1045,13 @@
       if (title.phase === 'confirm') return { a: 'Ja', b: 'Nein', dpad: false };
       return { a: saved ? 'Weiter' : 'Start', b: saved ? 'Neu' : '', dpad: false };
     }
-    if (Merkbuch.isActive()) return { a: 'Schließen', b: 'Schließen', dpad: false };
+    if (Abspann.isActive()) {
+      return { a: Abspann.onLast() ? 'Ins Dorf' : 'Weiter',
+               b: Abspann.onLast() ? '' : 'Überspringen', dpad: false };
+    }
+    if (repeatAsk) return { a: 'Ja', b: 'Nein', dpad: false };
+    if (Merkbuch.isActive())
+      return { a: Merkbuch.atStand() ? 'Code zeigen' : 'Schließen', b: 'Schließen', dpad: false };
     if (TaskUi.isActive()) return { a: 'Prüfen', b: TaskUi.isAbortable() ? 'Abbrechen' : '', dpad: false };
     if (TestPage.isActive()) return { a: TestPage.isExamples() ? 'Neue Zahlen' : 'Öffnen', b: TestPage.isExamples() ? 'Zurück' : 'Schließen', dpad: false };
     if (Dialog.isActive()) return { a: 'Weiter', b: 'Schließen', dpad: false };
@@ -953,6 +1098,18 @@
 
     var target = null;
     if (title) updateTitle();
+    if (Abspann.isActive()) {
+      Abspann.update(dt, Input);
+      var aact = currentActions(null);
+      Input.setDpadVisible(false);
+      Input.setLabels(aact.a, aact.b);
+      drawScene(now);
+      Abspann.draw(Render, now);
+      drawKeyHints(Render, aact);
+      Input.clearPressed();
+      requestAnimationFrame(loop);
+      return;
+    }
     if (title) {
       // Auf dem Titelbild bleibt das Merkbuch zu (ein Tipp auf das
       // Buch-Symbol würde es sonst unsichtbar öffnen; nach dem Start wäre es offen)
@@ -967,10 +1124,17 @@
       return;
     }
     // Merkbuch geht jederzeit auf und zu, auch mitten in einer Aufgabe
-    if (Input.pressed('book')) {
+    // (im Abspann bleibt es zu)
+    if (!Abspann.isActive() && !repeatAsk && Input.pressed('book')) {
       Merkbuch.isActive() ? Merkbuch.close() : Merkbuch.open();
     }
-    if (Merkbuch.isActive()) {
+    if (repeatAsk) {
+      // Rueckfrage der Steintafel: A startet die Wiederholung, B bricht ab
+      var askKey = repeatAsk.key;
+      var ja = Input.pressed('a'), nein = Input.pressed('b');
+      if (ja || nein) repeatAsk = null;
+      if (ja) doRepeat(askKey);
+    } else if (Merkbuch.isActive()) {
       Merkbuch.update(Input);
     } else if (TaskUi.isActive()) {
       TaskUi.update(dt, Input);
@@ -985,6 +1149,9 @@
     } else if (dietlQuizPending) {
       dietlQuizPending = false;
       startDietlQuiz();   // Gespräch mit Herrn Dietl beendet: jetzt die Frage
+    } else if (finaleTalkPending && !Dialog.isActive()) {
+      finaleTalkPending = false;
+      startAbspann();     // Siegdialog des Grafen beendet: der Abspann läuft
     } else if (turnedNpc && !Dialog.isActive()) {
       // Gespräch beendet: Figur dreht sich zurück
       turnedNpc.facing = turnedNpc.baseFacing || 'down';
@@ -1023,6 +1190,17 @@
             openChest();       // Rätsel-Truhe mit dem Schwert
           } else if (target.action === 'torch') {
             lightTorch(target.torch);   // Fackel-Rätsel vor dem Boss
+          } else if (target.action === 'repeat') {
+            // Steintafel: vor dem Finale schlaeft sie, danach Rueckfrage
+            if (!finaleDone) {
+              Dialog.open(target.name, textsFor(target));
+            } else {
+              repeatAsk = { key: target.dungeon };
+            }
+          } else if (target.action === 'abspann') {
+            // Erinnerungstafel: Abspann erneut ansehen (erst nach dem Finale)
+            if (finaleDone && abspannDone) Abspann.start(wappens, stats, null);
+            else Dialog.open(target.name, textsFor(target));
           } else if (target.action === 'dietl') {
             target.npc.facing = faceToward(target.npc, Player.getX(), Player.getY());
             turnedNpc = target.npc;
@@ -1099,6 +1277,7 @@
     Input.setLabels(act.a, act.b);
     if (!TaskUi.isActive() && !Merkbuch.isActive() && !TestPage.isActive()) drawKeyHints(Render, act);
     Dialog.draw(Render);
+    if (repeatAsk) drawRepeatAsk(Render);
     TestPage.draw(Render);
     // Boss-Herzen unter der Aufgabenbox (sonst verdecken sie die Eingabefelder)
     var bossFight = Boss.of(World.getScreen());
@@ -1110,6 +1289,8 @@
 
     requestAnimationFrame(loop);
   }
+
+  setupStandPage();   // Spielstand-Seite im Merkbuch (Schritt 4)
 
   requestAnimationFrame(loop);
 })();

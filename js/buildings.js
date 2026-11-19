@@ -320,6 +320,105 @@ var Buildings = (function () {
     r.px(tx - 4, ty + 7, 2, 1, '#e8e0c8');
   }
 
+  // --- Intakte Schule (Meilenstein 6) -------------------------------------
+  // s = { x, y, w, h } in Kacheln wie bei school(): Gebaeude oben, unterste
+  // Reihe ist der Hof. Zusaetzlich: s.door = Spalte der Eingangstuer relativ
+  // zur linken Kante (Standard 2), s.doorFrame = false zeichnet keine eigene
+  // Fassaden-Tuer (z. B. wenn das Kachel-'E' den Eingang darstellt).
+  // Wiederverwendbar fuer Schritt 2 (Wiederaufbau im Dorf und auf dem
+  // Schulhof). Heile Fenster, sauberes Dach, Uhr ohne Sprung.
+  function schoolIntact(r, s) {
+    var X0 = s.x * TILE, Y0 = s.y * TILE, W = s.w * TILE;
+    var by = (s.y + s.h - 1) * TILE;        // Unterkante Gebaeude
+    var wTop = Y0 + 12;                     // Oberkante Wand
+    var tall = by - wTop >= 40;             // zwei Fenster-Reihen wie im Original
+    var cx = X0 + W / 2;
+    var dcol = s.door === undefined ? 2 : s.door;
+    var i, j;
+
+    // Frische Wand mit Gesims (Gesims nur bei hohen Fassaden)
+    for (i = wTop; i < by; i++) r.px(X0 + 2, i, W - 4, 1, mix('#e8dcc0', '#cfc0a0', (i - wTop) / (by - wTop)));
+    r.px(X0 + 1, wTop, 1, by - wTop, '#2e2a22');
+    r.px(X0 + W - 2, wTop, 1, by - wTop, '#2e2a22');
+    if (tall) {
+      r.px(X0 + 2, wTop + 24, W - 4, 2, '#9a8c70');
+      r.px(X0 + 2, wTop + 24, W - 4, 1, '#d4c8a8');
+    }
+
+    // Fenster: heil, mit hellem Glas und Fensterbaenken; zwei Reihen nur
+    // bei hoher Fassade, keine Fenster in der Eingangsspalte
+    var rowsY = tall ? [wTop + 6, by - 23] : [wTop + 6];
+    for (j = 0; j < rowsY.length; j++) {
+      for (i = 0; i < s.w; i++) {
+        if (j === 1 && (i === dcol || i === dcol + 1)) continue;   // Eingang frei
+        intactWindow(r, X0 + i * TILE + 3, rowsY[j], i + j);
+      }
+    }
+
+    // Eingang: Doppelte Glastuer mit Stufen (weglassbar)
+    if (s.doorFrame !== false) {
+      var dx = X0 + dcol * TILE + 4, dw = 2 * TILE - 8, dy = by - 23;
+      r.px(dx - 1, dy - 1, dw + 2, by - dy + 1, '#2a2018');
+      r.px(dx, dy, dw / 2 - 1, by - dy, '#5a7a94');
+      r.px(dx + dw / 2 + 1, dy, dw / 2 - 1, by - dy, '#5a7a94');
+      r.px(dx, dy, dw, 1, '#c8d8e4');
+      r.px(dx + 3, dy + 3, 3, 2, '#8fb4cc');
+      r.px(dx + dw - 6, dy + 3, 3, 2, '#8fb4cc');
+      r.px(dx + Math.floor(dw / 2) - 1, dy, 2, by - dy, '#2a2018');   // Trennsteg
+      r.px(dx - 3, by - 2, dw + 6, 2, '#8a8478');
+      r.px(dx - 3, by - 2, dw + 6, 1, '#c4bca8');
+    }
+
+    // Gepflegtes Schild "SCHULE" (nur bei hohen Fassaden, hoehe wie Original)
+    if (tall) {
+      var label = 'SCHULE', tw = Render.textWidth(label);
+      r.px(cx - tw / 2 - 3, wTop + 17, tw + 6, 9, '#3a2418');
+      r.px(cx - tw / 2 - 2, wTop + 18, tw + 4, 7, '#f4e8c8');
+      Render.text(label, cx - tw / 2, wTop + 19, '#8a2a24');
+    }
+
+    // Dach: heiler Schiefer mit First
+    var rTop = Y0 - 4, rows = 16;
+    for (i = 0; i < rows; i++) {
+      var inset = Math.round((rows - 1 - i) / (rows - 1) * 5);
+      var l = X0 - 3 + inset, rr = X0 + W + 3 - inset, y = rTop + i;
+      r.px(l - 1, y, rr - l + 2, 1, '#1e2228');
+      r.px(l, y, rr - l, 1, mix('#7a8090', '#4a505e', i / (rows - 1)));
+      if (i % 4 === 3) r.px(l, y, rr - l, 1, '#3e4450');
+    }
+    r.px(X0 + 1, rTop - 1, W - 2, 2, '#1e2228');
+    r.px(X0 + 2, rTop, W - 4, 1, '#a8b0c0');
+    r.px(X0 - 4, rTop + rows, W + 8, 2, '#1e2228');
+    r.px(X0 - 3, rTop + rows, W + 6, 1, '#3e4a58');
+
+    // Giebel mit heiler Uhr
+    for (i = 0; i < 10; i++) r.px(cx - 2 - i, rTop - 10 + i, 4 + i * 2, 1, i === 0 ? '#1e2228' : '#6a7080');
+    r.px(cx - 12, rTop, 24, 1, '#1e2228');
+    r.ellipse(cx, rTop - 2, 4, 4, '#2a2a30');
+    r.ellipse(cx, rTop - 2, 3, 3, '#f4eed8');
+    r.px(cx, rTop - 5, 1, 3, '#2a2030');
+    r.px(cx - 2, rTop - 2, 2, 1, '#2a2030');
+    r.px(cx + 1, rTop - 2, 1, 2, '#4a4050');
+
+    // Hof: gefegte Platten, Blumenbeet an der Ecke
+    var yy = by;
+    for (i = 0; i < 4; i++) r.px(cx - 8 + (i % 2) * 8, yy + 1 + Math.floor(i / 2) * 7, 7, 6, i === 2 ? '#94948a' : '#a2a296');
+    r.ellipse(X0 + 8, yy + 8, 5, 3, '#5a7a3a');
+    for (i = 0; i < 3; i++) r.px(X0 + 5 + i * 3, yy + 5, 2, 2, i === 1 ? '#f6d64a' : '#e8506a');
+  }
+
+  // Heiles Schul-Fenster mit Rahmen und Fensterbank (kein Brett, kein Riss)
+  function intactWindow(r, x, y, seed) {
+    r.px(x - 1, y - 1, 12, 13, '#6a5c48');
+    r.px(x, y, 10, 11, '#4a5c70');
+    for (var i = 0; i < 9; i++) r.px(x + 1, y + 1 + i, 8, 1, mix('#d4ecf8', '#8ab4d4', i / 8));
+    r.px(x + 2, y + 1, 2, 2, '#ffffff');
+    r.px(x + 5, y, 1, 11, '#6a5c48');
+    r.px(x, y + 5, 10, 1, '#6a5c48');
+    r.px(x - 1, y + 11, 12, 1, '#8a8064');
+    if (seed % 2) r.px(x + 11, y + 2, 2, 2, '#e8506a');   // Blumenkasten
+  }
+
   function crack(r, x, y, len) {
     for (var i = 0; i < len; i++) {
       r.px(x + Math.round(Math.sin(i * 1.3) * 1.5), y + i, 1, 1, '#6a5c44');
@@ -482,6 +581,7 @@ var Buildings = (function () {
     openDoor: openDoor,
     doorRect: doorRect,
     school: school,
+    schoolIntact: schoolIntact,
     fence: fence,
     gate: gate,
     fenceWeeds: fenceWeeds,

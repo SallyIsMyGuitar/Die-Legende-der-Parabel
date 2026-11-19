@@ -37,6 +37,7 @@ Ein Mathe-Übungsspiel als Top-Down-Abenteuer im Stil eines modernen 2D-Zelda (O
   - `config.js`: Spielwerte an einer Stelle (Herzen, Herz-Drop-Rate, Kampf-Cooldown, Rückstoß)
   - `save.js`: Spielstand im Local Storage (lesen, schreiben, löschen)
   - `boss.js`: Wächter der Höhle (Herzen, Besiegt-Animation)
+  - `codepanel.js`: Panel mit dem Spielstand-Code (DOM, kopieren/einfügen, kein Server)
   - `merkbuch.js`: Merkbuch (Sammlung und Ansicht)
   - `render.js`: Canvas-Skalierung (ganzzahlig, scharfe Pixel), Zeichenhilfen, Ebenen, Sprites, Farbhilfen
   - `font.js`: eigene Pixelschrift für Dialoge (Groß-/Kleinbuchstaben, ä, ö, ü, ß, Ziffern, Satzzeichen)
@@ -59,6 +60,7 @@ Ein Mathe-Übungsspiel als Top-Down-Abenteuer im Stil eines modernen 2D-Zelda (O
   - `platten.js`: Platten-Rätsel vor dem Boss des Sandtempels (Druckplatten auf der x-Achse)
   - `sandtempel.js`: Sandtempel (Dungeon 4, vier Räume, Sandstein-Optik, Quelle)
   - `schule.js`: Schulhof (Außenwelt-Bildschirm) und zerstörte Schulräume (Dungeon 5: Klassenzimmer, Physiksaal, Turnhalle, Aula)
+  - `abspann.js`: Abspann nach dem Finale (vier Standbild-Seiten: Befreiung der Lehrkräfte, Wiederaufbau, Wappen-Übersicht, Fehlerstatistik)
   - `dietl.js`: Versteck von Herrn Dietl (Bildschirm `dietl` östlich der Ruine), Fragen zur Spielwelt und Texte; Ablauf in `main.js` (`talkDietl`)
   - `player.js`: Spielfigur, Bewegung, Laufanimation; Wand-Kollisionsbox als Konstanten (`HITBOX_*`, `CORNER_ASSIST`), getrennt von Treffer-/Interaktions-Checks
   - `dialog.js`: Textbox und Sprechblasen-Hinweis
@@ -145,7 +147,7 @@ Ein Mathe-Übungsspiel als Top-Down-Abenteuer im Stil eines modernen 2D-Zelda (O
 ## Speichern
 
 - Automatisches Speichern im Local Storage an Rastquellen und nach Dungeons.
-- Zusätzlich ein Spielstand-Code als kompakter Text ohne Prüfsumme zum Kopieren und Einfügen. Er enthält Fortschritt und Fehlerstatistik, damit die Lehrkraft sich den Stand zeigen lassen kann. Kein Server, keine Übertragung von Daten.
+- Zusätzlich ein Spielstand-Code als kompakter Text ohne Prüfsumme zum Kopieren und Einfügen – **gebaut (Meilenstein 6, Schritt 4)**: `Save.code()`/`Save.parseCode()` in `save.js` (Präfix `LDP1-`, Base64 des JSON ohne Merkbuch-Einträge, damit er kurz bleibt). Anzeigen/einfügen über das Panel `js/codepanel.js` (CSS in `style.css`), erreichbar über die Spielstand-Seite im Merkbuch (ganz nach unten blättern, A = „Code zeigen“). Übernehmen speichert den Stand lokal und lädt die Seite neu. Während das Panel offen ist, ist die Steuerung ausgesetzt (`Input.setSuspended`). Er enthält Fortschritt und Fehlerstatistik, damit die Lehrkraft sich den Stand zeigen lassen kann. Kein Server, keine Übertragung von Daten.
 
 ## Meilensteine
 
@@ -156,7 +158,7 @@ Gebaut wird immer nur der Meilenstein, den der Nutzer freigibt, mit Test nach je
 3. Kampf- und Aufgabensystem mit Aufgabenvorlagen und Testseite. – **erledigt:** 4 Aufgabentypen, Aufgabenbox mit Zahlenblock und Graph-Modus (Parabel Live einstellen; Punkt P erst nach dem ersten Fehler sichtbar), gestufte Fehler (Herz, Hinweis, Lösung), Besiegt-Animation mit Herz-Drops, Schwert als Joker (E bzw. Slot-Antippen, kein Herz-Drop, Sperre bei Boss/Truhe/Probe), Testseite mit 10 Beispielen je Typ und Probeaufgabe.
 4. Erster kompletter Dungeon mit Erklär-NPCs, Merkbuch und Boss. – **erledigt** (überarbeitet: Speichern, Lernpfad, Bann, Story, siehe „Getroffene Entscheidungen“): Höhle der Parabeln mit drei Räumen (Eingangshalle, Mittelraum mit Quelle, Vorraum), Höhlen-Optik mit Fackeln, Gegner (Fledermäuse, Kristallgeister), Forscherin als Erklär-NPC, Merkbuch (M bzw. HUD-Symbol, jederzeit öffnen), Wächter-Boss mit 3 festen Aufgaben, Tor-Öffnung nach dem Sieg, Wappenzähler. Rastquellen: Brunnen (Dorf), Quelle vor der Ruine, Quelle im Mittelraum.
 5. Die weiteren vier Dungeons einzeln (Dungeon 5 ist das Finale in der Schule: betreten, drei Räume lösen, Endboss besiegen). – **erledigt:** Dungeon 2 (Leuchtturm), Dungeon 3 (Wasserreich), Dungeon 4 (Sandtempel/Wüste) und Dungeon 5 (Finale in der zerstörten Schule mit Endboss Graf Gerade) sind gebaut und vollständig begehbar.
-6. Abspann (inkl. Befreiung der Lehrkräfte und Wiederaufbau der Schule), Wiederholungsmodus, Feinschliff.
+6. Abspann (inkl. Befreiung der Lehrkräfte und Wiederaufbau der Schule), Wiederholungsmodus, Feinschliff. – **erledigt** (Texte vorläufig, Details unter „Getroffene Entscheidungen zu Meilenstein 6“).
 
 ## Offene Fragen (vor der Umsetzung mit dem Nutzer klären)
 
@@ -260,3 +262,37 @@ Nach der Durchsicht des gesamten Spiels wurden am 13 Funden behoben (Details im 
 - **Minuszeichen:** „-“ und „−“ sehen in der Spielschrift gleich aus; keine Änderung nötig.
 - **Dorf nach Fortschritt (Texte vorläufig):** `later` darf eine Liste von Stufen sein; es gilt die letzte erfüllte Stufe (neue Bedingung `finale`). Mama, Nachbarin, Freund und Verkäufer haben Zusatzseiten nach Wappen 1 (unverändert), 2, 3 und 4 sowie nach dem Finale (Mama, Freund und Verkäufer ersetzen dann ihre Grundtexte, die Nachbarin ergänzt). Hausmeister und Schild am Schulhof haben eine Finale-Fassung.
 - **Herr Dietl (Regeln vom Nutzer bestätigt, Texte und Fragen vorläufig):** Bildschirm `dietl` (dichter Wald mit Lichtung) östlich der Ruine, erreichbar durch die Baumlücke in Zeile 5. Aussehen: leicht braune Haut, schwarze Haare, oranger Pullover, blaue Jeans, dunkelbraune Schuhe. Nach dem Gespräch stellt er eine Auswahlfrage (A–C) zur Spielwelt (Wissen bis zur Ruine, zehn Fragen, nie zweimal dieselbe hintereinander). Richtig: zufällig ein Herz (nur wenn eines fehlt) oder ein Schwert (nur ohne Schwert); höchstens 4 Belohnungen (gespeichert als `dietl`). Falsch oder Abbruch mit B: kein Herzverlust, keine Fehlerstatistik, neue Frage beim nächsten Gespräch. Sind die Herzen voll und das Schwert vorhanden, stellt er keine Frage.
+
+## Getroffene Entscheidungen zu Meilenstein 6 (gebaut, Texte vorläufig)
+
+**Schritt 1 – Abspann (gebaut, Texte vorläufig):**
+
+- **Ablauf:** Nach dem Siegdialog des Grafen (Raum `aula`) startet der Abspann (`js/abspann.js`, vor `main.js` eingebunden). Vier Standbild-Seiten mit je ein bis zwei Textzeilen und dezenten Animationen, kein Lauftext: (1) Befreiung der Lehrkräfte (generische Figuren ohne Namen), (2) Wiederaufbau der Schule, (3) Wappen-Übersicht mit allen fünf Wappen und ihren Namen (Normalparabel, Scheitelform, Allgemeine Form, Nullstellen, Anwendungen; errungene gold, fehlende als grauer Umriss), (4) Fehlerstatistik gesamt richtig/falsch mit Haken bzw. Kreuz (Form und Farbe) sowie „richtig im ersten Versuch“-Angabe.
+- **Bedienung:** A = nächste Seite. B springt direkt auf die letzte Seite (Statistik). A auf der letzten Seite beendet den Abspann. Danach steht die Spielfigur auf `start` vor dem Schultor (Kachel 11/12, Blick nach oben), Steuerkreuz ist während des Abspanns aus, Merkbuch bleibt zu.
+- **Speichern:** Neues Feld `abspann` (true = Abspann gesehen). Ältere Spielstände ohne das Feld laden fehlerfrei (Abspann gilt als noch nicht gesehen); der Abspann startet nur nach einem live ausgetragenen Sieg über den Grafen.
+- **Siegtext Graf Gerade (vorläufig geändert):** „… Die Schule wird wieder aufgebaut – davon bald mehr.“ wurde zu „… Die Schule wird wieder aufgebaut.“ Die übrigen Siegseiten blieben unverändert.
+- **`Buildings.schoolIntact(r, s)`** in `buildings.js`: intakte Schule (heile Fenster, sauberes Schieferdach, Uhr ohne Sprung, frisches SCHULE-Schild, Blumen im Hof) in derselben Kachel-Geometrie wie `Buildings.school`; gezeichnet im Abspann, wiederverwendbar für Schritt 2 (Wiederaufbau im Dorf und auf dem Schulhof). In der Spielwelt bleibt die Schule bis Schritt 2 zerstört.
+- **Statistik:** nur gesamt `stats.right`/`stats.wrong`, keine Zählung je Dungeon. Richtig/falsch nie nur über Farbe (Haken/Kreuz).
+- **Erneut ansehen:** verschoben auf Schritt 4 (Feinschliff), im Abspann-Schritt nicht eingebaut.
+- Herr Späth und Herr Dietl kommen im Abspann nicht vor; Lehrkräfte dort nur als generische Figuren ohne Namen und ohne Sprechtexte. Kein Ton.
+
+**Schritt 2 – Wiederaufbau und befreite Lehrkräfte (gebaut, Texte vorläufig):**
+
+- Nach dem Abspann zeichnen `start` und `schulhof` die intakte Schule: `Buildings.schoolIntact(r, s)` in `buildings.js` (gleiches Kachel-Format wie `Buildings.school`, Parameter `door` = Türspalte, `doorFrame: false` ohne eigene Fassadentür). `world.js` backt mit `schoolIsIntact()` (Bedingung: Endboss `aula` besiegt) die intakte statt der zerstörten Schule und lässt die Ruinen-Kacheln `R` weg; `World.rebake(name)` backt einen Bildschirm neu (nach dem Abspann und in `applyState` nicht nötig). Die Lichtlinien des Grafen auf dem Schulhof verschwinden ohnehin mit dem Boss-Sieg (`grafLines`), die Tafellineal-Story des Hausmeisters bleibt unverändert.
+- Der Eingang bleibt das Kachel `E` auf dem Schulhof (Kachel 8/3) in die Schulräume; der Hausmeister und das Hof-Schild behalten ihre Finale-Texte.
+- Auf dem Schulhof stehen nach dem Abspann drei befreite Lehrkräfte als NPCs (nur Rollenbezeichnungen „Lehrerin“/„Lehrer“, keine Namen, Texte vorläufig; Sprites generisch wiederverwendet): Kachel 6/6, 10/6 und 11/10. Herr Späth bleibt am Dorfplatz, Herr Dietl im Versteck – beide unverändert und nicht in den Wiederaufbau einbezogen.
+
+**Schritt 3 – Wiederholungsmodus (gebaut):**
+
+- Nach dem Finale (`finaleDone`) startet jede **Steintafel** (Schild mit Aktion `repeat`) an den Dungeon-Eingängen eine Wiederholung: `ruine` (10/5), `kueste` (11/12), `lagune` (10/6), `oase` (9/5), `schulhof` (7/4). Vor dem Finale liest man nur den Schlaf-Text. Rückfrage im Spiel (kleines Dialogfeld): **A = Ja** startet, **B = Nein** bricht ab.
+- Zurückgesetzt werden nur die Gegner des Dungeons (`Enemies.clearScreens`, Räume je Dungeon inklusive der Endräume), Versuchszähler auf 0; der Bann wird dadurch automatisch wieder aktiv (Öffnung nach vorn gesperrt, Rückweg bleibt offen). Bodenrätsel (Fackeln/Spiegel/Gezeiten/Platten) und Bosse bleiben gelöst bzw. besiegt, Wappen und erster Durchlauf bleiben erhalten. Bestätigungstext nennt den Durchlauf („Durchlauf 2…“).
+- Neue Zahlen: `Enemies.advanceRepeat(room)` erhöht den Wiederholungszähler je Raum, der in `seedOf` einfließt (`+ n · 100000`); gespeichert wird die Map als Feld `repeats`. Boss-Aufgaben bleiben fest (Bosse werden nicht erneut bekämpft).
+- Nach dem Finale bleibt die Welt frei begehbar (Tore/Wege offen, wie nach Boss-Siegen ohnehin).
+
+**Schritt 4 – Feinschliff (gebaut):**
+
+- **Spielstand-Code:** siehe Abschnitt „Speichern“. Merkbuch hat eine „Spielstand“-Seite (Statistik + „A: Code zeigen“; `Merkbuch.setStand`, `atStand()`); A ganz unten öffnet das Code-Panel, nur dort sind Kopieren und Einfügen möglich. Kein Server, keine Datenübertragung.
+- **Abspann erneut ansehen:** Die **Erinnerungstafel** auf dem Dorfplatz `ost` (Kachel 6/3, Aktion `abspann`) zeigt nach dem Finale den Abspann noch einmal (ohne Teleport und ohne nochmaliges Speichern des `abspann`-Felds). Davor liest man einen neutralen Hinweistext (vorläufig).
+- Weitere Feinschliff-Punkte nur nach Absprache.
+
+**Offen:** Test der Schritte 2–4 durch den Nutzer (iPad: Tafeln antippen, A/B der Rückfrage, Panel kopieren/einfügen). Texte von Abspann, Lehrkräften, Tafeln und Stele-Dialogen sind vorläufig und werden erst nach Go final.

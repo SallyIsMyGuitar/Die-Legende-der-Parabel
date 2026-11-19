@@ -304,3 +304,61 @@ body.compact-controls .item-btn {
 }
 body.compact-controls .item-btn[data-btn="book"]  { left: 4px; }
 body.compact-controls .item-btn[data-btn="sword"] { right: 4px; }
+
+/* --- Spielstand-Code (js/codepanel.js) -------------------------------- */
+#code-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 8, 16, 0.85);
+  /* Safe-Area auf dem iPad beachten */
+  padding: calc(10px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right))
+           calc(10px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left));
+  box-sizing: border-box;
+}
+#code-panel[hidden] { display: none; }
+.code-box {
+  width: min(92vw, 560px);
+  max-height: 92vh;
+  overflow-y: auto;
+  background: #1c1828;
+  color: #f6f0e2;
+  border: 2px solid #efe4c4;
+  border-radius: 8px;
+  padding: 12px 14px;
+  box-sizing: border-box;
+  font-size: 16px;
+}
+.code-title { font-weight: bold; font-size: 18px; margin-bottom: 8px; }
+#code-panel textarea {
+  width: 100%;
+  min-height: 76px;
+  margin: 6px 0;
+  padding: 8px;
+  box-sizing: border-box;
+  background: #14121a;
+  color: #f6f0e2;
+  border: 1px solid #55506a;
+  border-radius: 4px;
+  font-size: 13px;
+  word-break: break-all;
+  resize: vertical;
+}
+#code-panel textarea.error { border-color: #e8344a; }
+.code-row { display: flex; gap: 8px; margin: 8px 0; }
+.code-box button {
+  flex: 1;
+  padding: 10px 12px;
+  font-size: 16px;
+  background: #2e2a3e;
+  color: #f6f0e2;
+  border: 1px solid #efe4c4;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.code-box button:active { background: #3a3450; }
+.code-hint { color: #8a8496; font-size: 14px; margin-top: 10px; }
+#code-msg { min-height: 1.2em; color: #e8344a; font-size: 14px; }

@@ -8,6 +8,8 @@ var Merkbuch = (function () {
   var BOX = { x: 6, y: 24, w: 244, h: 194 };
 
   var entries = [];   // { id, name, text }, Reihenfolge des Hoerens
+  var standLines = null;   // Funktion: Zeilen der Spielstand-Seite (Schritt 4)
+  var standAction = null;  // Funktion: A ganz unten startet diese Aktion
   var active = false;
   var scroll = 0;          // erste sichtbare Zeile
   var prevDirs = {};       // vorheriger Zustand der Richtungstasten
@@ -33,7 +35,12 @@ var Merkbuch = (function () {
 
   function update(input) {
     if (!active) return;
-    if (input.pressed('b') || input.pressed('a')) { close(); return; }
+    if (input.pressed('b')) { close(); return; }
+    if (input.pressed('a')) {
+      // ganz unten: A zeigt den Spielstand-Code (statt zu schliessen)
+      if (atStand()) { standAction(); return; }
+      close(); return;
+    }
     var lines = pageLines();
     var view = viewLines();
     if (pressedDir(input, 'up')) scroll = Math.max(0, scroll - 1);
@@ -51,7 +58,19 @@ var Merkbuch = (function () {
       }
       lines.push({ t: ' ', c: '#f6f0e2' });   // Abstand zwischen Eintraegen
     }
+    // Spielstand-Seite (Schritt 4): Statistik und Hinweis zum Code
+    if (standLines) {
+      lines.push({ t: 'Spielstand', c: '#f0c040' });
+      var sl = standLines();
+      for (var k = 0; k < sl.length; k++) lines.push({ t: sl[k], c: '#f6f0e2' });
+    }
     return lines;
+  }
+
+  // Steht das Bluettern ganz unten auf der Spielstand-Seite?
+  function atStand() {
+    if (!active || !standLines || !standAction) return false;
+    return scroll + viewLines() >= pageLines().length;
   }
 
   function viewLines() { return 13; }
@@ -122,7 +141,7 @@ var Merkbuch = (function () {
     r.px(BOX.x + BOX.w - 2, BOX.y + 3, 1, BOX.h - 6, '#efe4c4');
     Font.draw(ctx, 'Merkbuch', BOX.x + 10, BOX.y + 7, '#f0c040');
 
-    if (entries.length === 0) {
+    if (entries.length === 0 && !standLines) {
       Font.draw(ctx, 'Noch keine Merks\u00e4tze geh\u00f6rt.', BOX.x + 10, BOX.y + 24, '#f6f0e2');
       Font.draw(ctx, 'Sprich mit den Erkl\u00e4rerinnen und Erkl\u00e4rern', BOX.x + 10, BOX.y + 36, '#8a8496');
       Font.draw(ctx, 'auf dem Weg zu den Dungeons!', BOX.x + 10, BOX.y + 46, '#8a8496');
@@ -185,6 +204,9 @@ var Merkbuch = (function () {
     // Spielstand laden: gespeicherte Eintraege uebernehmen
     load: function (list) { entries = (list || []).slice(); },
     count: function () { return entries.length; },
+    // Spielstand-Seite einrichten (Schritt 4)
+    setStand: function (lines, action) { standLines = lines; standAction = action; },
+    atStand: atStand,
     isActive: function () { return active; }
   };
 })();

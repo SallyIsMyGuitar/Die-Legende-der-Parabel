@@ -12,6 +12,23 @@
 </head>
 <body>
   <div id="rotate-hint">Bitte Gerät drehen</div>
+  <!-- Panel fuer den Spielstand-Code (js/codepanel.js), liegt ueberm Spiel -->
+  <div id="code-panel" hidden>
+    <div class="code-box">
+      <div class="code-title">Spielstand-Code</div>
+      <textarea id="code-out" readonly spellcheck="false"></textarea>
+      <div class="code-row">
+        <button type="button" id="code-copy">Kopieren</button>
+        <button type="button" id="code-close">Schließen</button>
+      </div>
+      <div class="code-hint">Neuer Spielstand: Code hier einfügen und Übernehmen.</div>
+      <textarea id="code-in" spellcheck="false" placeholder="Code einfügen …"></textarea>
+      <div class="code-row">
+        <button type="button" id="code-apply">Übernehmen</button>
+      </div>
+      <div id="code-msg"></div>
+    </div>
+  </div>
   <div id="game-wrap">
     <canvas id="game-canvas" width="256" height="224"></canvas>
   </div>
@@ -58,7 +75,9 @@
   <script src="js/sandtempel.js"></script>
   <script src="js/schule.js"></script>
   <script src="js/dietl.js"></script>
+  <script src="js/abspann.js"></script>
   <script src="js/input.js"></script>
+  <script src="js/codepanel.js"></script>
   <script src="js/player.js"></script>
   <script src="js/fx.js"></script>
   <script src="js/hud.js"></script>

@@ -58,7 +58,7 @@
       'T...RRRRRRRRR..T',
       'T...RRRRRRRRR..T',
       'T...RRRREERRR..T',
-      'T..............T',
+      'T......i.......T',
       'T.........q....T',
       'T..............T',
       'T..............T',
@@ -109,6 +109,10 @@
         spawn: { x: 10 * 16, y: 6 * 16, facing: 'up' }
       }
     ],
+    // Nach dem Finale (Schritt 2) zeichnet world.js die intakte Fassade,
+    // gezeichnet mit Buildings.schoolIntact statt der Ruinenwand ('R').
+    // Der Eingang bleibt das Kachel-'E' bei (8,3).
+    school: { x: 4, y: 1, w: 9, h: 3, door: 4, doorFrame: false, intactOnly: true },
     dungeon: 'klassenzimmer',
     exits: { south: 'start' }
   });

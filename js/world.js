@@ -63,7 +63,7 @@ var World = (function () {
         'TTTTTTTTTTTTTTTT',
         'T.......T......T',
         'T.......T......T',
-        'T..............T',
+        'T.....i........T',
         'PPPPPPPPPPPPPPPP',
         '........PP......',
         'T.....PPPP.....T',
@@ -202,7 +202,7 @@ var World = (function () {
         'T......LLLL.....',
         'T......LLLL.....',
         'T......LLEE.....',
-        'T..............T',
+        'T..........i...T',
         'TTTTTTTTTTTTTTTT'
       ],
       buildings: [],
@@ -254,7 +254,7 @@ var World = (function () {
         '~~~~~~~~~~~~~~~~',
         '~~~~TTEETT~~~~~~',
         '~~~~T....T~~~~~~',
-        '~~~T........T~~~',
+        '~~~T......i.T~~~',
         '~~....i.......~~',
         '................',
         '...............~',
@@ -356,7 +356,7 @@ var World = (function () {
         'T..RRRRRRRRRR..T',
         'T..RRRRRRRRRR..T',
         'PPPRRREERRRR...T',
-        '.....i..........',
+        '.....i....i.....',
         'T..............T',
         'T...T..........T',
         'T...........T..T',
@@ -547,7 +547,7 @@ var World = (function () {
       for (var j = 0; j < signs[i].tiles.length; j++) {
         var t = signs[i].tiles[j];
         if (t[0] === tx && t[1] === ty) {
-          return { name: signs[i].name, texts: signs[i].texts, action: signs[i].action, spawn: signs[i].spawn, merk: signs[i].merk, later: signs[i].later, hintX: signs[i].x, hintY: signs[i].y };
+          return { name: signs[i].name, texts: signs[i].texts, action: signs[i].action, spawn: signs[i].spawn, merk: signs[i].merk, later: signs[i].later, dungeon: signs[i].dungeon, hintX: signs[i].x, hintY: signs[i].y };
         }
       }
     }
@@ -564,6 +564,21 @@ var World = (function () {
 
   function setScreen(name) { current = name; }
   function getScreen() { return current; }
+
+  // Schild/Steintafel zur Laufzeit in einen Bildschirm einfügen (vor dem
+  // ersten Betreten, damit es mitgebacken wird)
+  function addSign(name, sign) {
+    var def = states[name].def;
+    if (!def.signs) def.signs = [];
+    def.signs.push(sign);
+  }
+
+  // Bildschirm neu backen (z. B. wenn die Schule nach dem Finale wieder
+  // aufgebaut gezeichnet wird, der Bildschirm aber schon gebacken war)
+  function rebake(name) {
+    var st = states[name];
+    if (st) st.ground = null;
+  }
 
   // NPC zur Laufzeit in einen Bildschirm einfügen (z. B. nach einer Szene)
   function addNpc(name, npc) {
@@ -1128,8 +1143,18 @@ var World = (function () {
       r.px(x + w - 2, y - 4, 6, h + 4, col);
       r.px(x + 2, y + h, w + 2, 3, col);
     });
+    // Schattenstreifen an der Schul-Giebelseite (nur wenn die Fassade gezeichnet wird)
     var s = S.def.school;
-    if (s) r.px((s.x + s.w) * TILE - 2, s.y * TILE - 2, 4, (s.h - 1) * TILE + 2, col);
+    if (s && !(s.intactOnly && !schoolIsIntact(S)))
+      r.px((s.x + s.w) * TILE - 2, s.y * TILE - 2, 4, (s.h - 1) * TILE + 2, col);
+  }
+
+  // Nach dem Finale ist die Schule wieder aufgebaut: Dann wird statt der
+  // zerstoerten Schule (Buildings.school) die intakte gezeichnet und die
+  // Ruinen-Kacheln ('R') treten hinter der intakten Fassade zurueck.
+  function schoolIsIntact(st) {
+    return !!(st.def.school && typeof Boss !== 'undefined' &&
+      Boss.of('aula') && Boss.of('aula').isDefeated());
   }
 
   // --- Vorberechnung eines Bildschirms ---------------------------------------
@@ -1279,7 +1304,7 @@ var World = (function () {
         var x = cx, y = cy;
         if (tt === 'T') { if (mode === 'canopy') drawCanopy(Render, cx, cy); }
         else if (tt === 'W' || tt === 'q') obj(cy, function () { Buildings.well(Render, x, y); });  // Quelle sieht aus wie der Dorfbrunnen
-        else if (tt === 'R') obj(cy, function () { drawRuinWall(Render, x, y); });
+        else if (tt === 'R' && !schoolIsIntact(st)) obj(cy, function () { drawRuinWall(Render, x, y); });
         else if (tt === 'E') obj(cy, function () {
           // Leuchtturm-Tür sieht anders aus als der Höhleneingang,
           // das Wassertor der Lagune ist zu, bis das Siegel bricht
@@ -1291,7 +1316,10 @@ var World = (function () {
         else if (tt === 'C') obj(cy, function () { drawChest(Render, x, y); });
         else if (tt === 'V') obj(cy, function () { drawRock(Render, x, y); });
       }
-      if (s && cy === s.y) obj(s.y + s.h - 1, function () { Buildings.school(Render, s); });
+      // intactOnly (Schulhof): vor dem Finale zeichnet allein die Ruine ('R')
+      if (s && cy === s.y && (!s.intactOnly || schoolIsIntact(st))) obj(s.y + s.h - 1, function () {
+        schoolIsIntact(st) ? Buildings.schoolIntact(Render, s) : Buildings.school(Render, s);
+      });
       var lt = st.def.lighthouse;
       if (lt && cy === lt.y + lt.h - 1) obj(lt.y + lt.h - 1, function () { drawLighthouse(Render, lt); });
       for (cx = 0; cx < COLS; cx++) {
@@ -1523,6 +1551,8 @@ var World = (function () {
     setWaterGateOpen: function (p) { waterGateOpen = !!p; },
     isWaterGateOpen: function () { return waterGateOpen; },
     addScreen: addScreen,
+    addSign: addSign,
+    rebake: rebake,
     setSandstormOpen: setSandstormOpen,
     isSandstormOpen: function () { return sandstormOpen; },
     setSchoolGateOpen: setSchoolGateOpen,
