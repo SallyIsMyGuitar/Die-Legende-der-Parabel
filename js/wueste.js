@@ -78,7 +78,7 @@
         talk: {
           name: 'Karawanenführerin',
           texts: [
-            'Grüße in der Steppe! Meine Karawanenwägen kommen hier nicht weiter – der Sandsturm dahinter trägt das Siegel des Grafen.',
+            'Grüße in der Steppe! Meine Karawanenwägen kommen hier nicht weiter – der Sandsturm im Osten trägt das Siegel des Grafen.',
             'Bricht er, können meine Leute weiterziehen. Bis dahin: Die Sandkäfer hier geben deine Übung für den Sandtempel.',
             'Mein Merksatz: Die Diskriminante D = b² − 4ac entscheidet über die Anzahl der Lösungen von ax² + bx + c = 0.'
           ],

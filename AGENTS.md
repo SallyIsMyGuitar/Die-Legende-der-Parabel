@@ -239,3 +239,4 @@ Nach der Durchsicht des gesamten Spiels wurden am 13 Funden behoben (Details im 
 - **Schulhof-Schild (mittel):** Sprechziel liegt jetzt auf der sichtbaren `i`-Kachel (11,8).
 - **Oasen-Truhe (mittel):** `applyState` öffnet die Oasen-Truhe nach dem Neuladen wie ruine/klippen.
 - **Unsichtbare Wände (mittel):** Steppe-Ostrand (Felsen `V` oben/unten), Küste Reihe 7 (Wasser) und Lagune Reihe 12 (Baum) schließen jetzt sichtbar ab.
+- **Story-Harmonisierung (freigegeben):** Die Gerüchte der Dorfbewohner („Schloss") lösen sich im Sieg des Sandtempel-Wächters auf: Das Schloss ist die zerstörte Schule im Norden, wo Graf Gerade die Lehrerinnen und Lehrer gefangen hält. Der Wasserwächter spricht mit „du" statt „ihr" (AGENTS-Regel zur Ansrede), im Sandtempel-Intro „verweht alles auf geraden Bahnen" (der Graf hasst Kurven), und die Karawanenführerin verortet den Sandsturm im Osten (Kante zum Dorf).

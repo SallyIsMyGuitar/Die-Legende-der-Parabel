@@ -269,7 +269,7 @@
       victory: [
         'Die starren Wasserwände zerfließen in sanfte Wellen. Der Bann über dem Wasserreich zerbricht.',
         'Ich bin die Perle des Reichs, verzaubert vom Grafen. In meiner Schale spiegelt sich jede Parabel – das konnte er nicht dulden.',
-        'Habt ihr vom Sandsturm im Westen gehört? Er trägt sein Siegel. Erst wenn ihr ihn bannet, öffnet sich der Weg zum letzten Wächter.',
+        'Hast du vom Sandsturm im Westen gehört? Er trägt sein Siegel. Erst wenn du ihn bannst, öffnet sich der Weg zum letzten Wächter.',
         'Du erhältst das Wappen der allgemeinen Form. Die Gezeiten sagen voraus: Eure Schule wird wieder erstehen.'
       ],
       // nach dem Sieg: Der Sandsturm im Westen loest sich auf
@@ -280,13 +280,13 @@
       name: 'Wächter des Sandtempels',
       kontext: 'Der Wächter fragt:',
       intro: [
-        'Halt! Graf Gerade hat den Sandtempel versiegelt: Im Sand verweht alles, was gerade ist \u2013 und jede Krümmung begräbt er!',
+        'Halt! Graf Gerade hat den Sandtempel versiegelt: Im Sand verweht alles auf geraden Bahnen \u2013 jede Krümmung begräbt er!',
         'Beantworte meine drei Fragen. Für jede richtige Antwort verliere ich ein Herz. Dein Schwert hilft dir hier nicht.'
       ],
       victory: [
         'Der Bann zerbricht, und der Sand rieselt willenlos in sanften Bögen.',
         'Ich bin die Sanduhr des Tempels, verzaubert vom Grafen. Er glaubte, selbst die Zeit müsse gradlinig verfallen.',
-        'Graf Gerade hat sich in der zerstörten Schule im Norden verschanzt. Dort hält er die Lehrerinnen und Lehrer gefangen. Das Schultor öffnet sich nun.',
+        'Das Schloss, von dem im Dorf geflüstert wird, ist die zerstörte Schule im Norden: Dort hat Graf Gerade sich verschanzt und hält die Lehrerinnen und Lehrer gefangen. Das Schultor öffnet sich nun.',
         'Du erhältst das Wappen der Nullstellen. Der Sand weht dir den Weg.'
       ],
       // nach dem Sieg: Das Schultor im Dorf oeffnet sich (Dungeon 5: Finale)
