@@ -106,6 +106,10 @@ var Font = (function () {
     '\u2265': ['..#.', '.#..', '#...', '....', '####', '....', '....'],   // >=
     '\u2264': ['.#..', '..#.', '...#', '....', '####', '....', '....'],   // <=
     '\u211d': ['####.', '#...#', '#...#', '####.', '#..#.', '#.#..', '#..##'],   // R (reelle Zahlen)
+    ';': ['.', '.', '.', '#', '.', '#', '#'],                                    // Semikolon (L = {x1; x2})
+    '\u00b7': ['..', '..', '..', '#.', '..', '..', '..'],                          // Malpunkt (2a etc.)
+    '\u00b1': ['..#..', '..#..', '#####', '.....', '#####', '.....', '.....'],   // plusminus (x1,2)
+    '\u221a': ['....#', '....#', '....#', '#...#', '#...#', '.#.#.', '..#..'],   // Wurzelzeichen
     ' ': ['..', '..']
   };
 
@@ -143,7 +147,7 @@ var Font = (function () {
   }
 
   // Rechenzeichen, an denen nie umbrochen wird (Formeln bleiben zusammen)
-  var OPS = { '=': 1, '+': 1, '-': 1, '\u2212': 1, '<': 1, '>': 1, '\u2265': 1, '\u2264': 1, '|': 1 };
+  var OPS = { '=': 1, '+': 1, '-': 1, '\u2212': 1, '<': 1, '>': 1, '\u2265': 1, '\u2264': 1, '|': 1, '\u00b1': 1, '\u221a': 1 };
 
   // Woerter zu Bloecken zusammenfassen: ein alleinstehendes Rechenzeichen
   // klebt am Wort davor und danach, z. B. "y = x² + 3" bleibt in einer Zeile

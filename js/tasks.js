@@ -336,6 +336,122 @@ var Tasks = (function () {
     };
   }
 
+  // ---Wueste (Dungeon 4): quadratische Gleichungen -----------------------
+  // Negative Werte in Rechenwegen in Klammern, z. B. (−6)² statt -6²
+  function kl(n) { return n < 0 ? '(' + fmt(n) + ')' : fmt(n); }
+
+  // Klammer (x − xs)² mit richtigem Vorzeichen (wie in der Scheitelform)
+  function klammerX(xs) {
+    if (xs === 0) return 'x\u00b2';
+    return xs > 0 ? '(x \u2212 ' + fmt(xs) + ')\u00b2' : '(x + ' + fmt(-xs) + ')\u00b2';
+  }
+
+  // Gleichung ax\u00b2 + bx + c = 0 sauber formatiert (Nullterme entfallen)
+  function glText(a, b, c) {
+    var t = '';
+    if (a === 1) t += 'x\u00b2';
+    else if (a === -1) t += '-x\u00b2';
+    else t += fmt(a) + 'x\u00b2';
+    if (b !== 0) t += (b > 0 ? ' + ' : ' \u2212 ') + (Math.abs(b) === 1 ? '' : fmt(Math.abs(b))) + 'x';
+    if (c !== 0) t += signed(c);
+    return t + ' = 0';
+  }
+
+  // ---Typ 13 (Steppe, leicht): Diskriminante berechnen --------------------
+  // Passt zum Merksatz der Karawanenfuehrerin: D = b\u00b2 \u2212 4ac.
+  function diskriminante(rng) {
+    var a = pick(rng, [1, -1, 2]);
+    var b = randInt(rng, -6, 6);
+    var c;
+    do { c = randInt(rng, -6, 6); } while (c === 0);
+    var d = b * b - 4 * a * c;
+    return {
+      frage: 'Berechne die Diskriminante D von ' + glText(a, b, c) + '.',
+      felder: [{ key: 'D', label: 'D' }],
+      loesung: [d],
+      loesungstext: 'D = b\u00b2 \u2212 4ac = ' + kl(b) + '\u00b2 \u2212 4 \u00b7 ' + kl(a) + ' \u00b7 ' + kl(c) + ' = ' + fmt(d),
+      hinweis: 'Setze in D = b\u00b2 \u2212 4ac ein: a = ' + fmt(a) + ', b = ' + fmt(b) + ', c = ' + fmt(c) + '.'
+    };
+  }
+
+  // ---Typ 14 (Duenen, mittel): Anzahl der Loesungen als Auswahl -----------
+  // Passt zum Merksatz des Sterndeuters: D > 0, D = 0, D < 0.
+  // Die drei Faelle kommen gleich oft vor.
+  function anzahlLoesungen(rng) {
+    var fall = Math.floor(rng() * 999) % 3;   // 0 = zwei, 1 = genau eine, 2 = keine
+    var a, b, c, d;
+    if (fall === 0) {
+      a = pick(rng, [1, -1, 2]);
+      var x1 = randInt(rng, -4, 3);
+      var x2 = randInt(rng, x1 + 1, 5);
+      b = -a * (x1 + x2);
+      c = a * x1 * x2;
+    } else if (fall === 1) {
+      // D = 0: a(x \u2212 r)\u00b2 = 0 ausmultipliziert
+      a = pick(rng, [1, 2]);
+      var r = randInt(rng, -4, 4);
+      b = -2 * a * r;
+      c = a * r * r;
+    } else {
+      // D < 0: Koeffizienten ziehen, bis die Diskriminante negativ ist
+      a = pick(rng, [1, 2]);
+      do {
+        b = randInt(rng, -4, 4);
+        c = randInt(rng, 1, 6) * pick(rng, [1, -1]);
+      } while (b * b - 4 * a * c >= 0);
+    }
+    d = b * b - 4 * a * c;
+    var worte = ['zwei Lösungen', 'genau eine Lösung', 'keine Lösung'];
+    return {
+      frage: 'Wie viele Lösungen hat die Gleichung ' + glText(a, b, c) + '?',
+      auswahl: worte,
+      felder: [],
+      loesung: fall,
+      loesungstext: 'D = ' + fmt(d) + ', also ' + worte[fall] + '.',
+      hinweis: 'Berechne D = b\u00b2 \u2212 4ac. D > 0: zwei Lösungen, D = 0: genau eine, D < 0: keine.'
+    };
+  }
+
+  // ---Typ 15 (Oase, schwer): Loesungsformel ------------------------------
+  // Passt zum Merksatz der Brunnenhueterin: x1,2 = (\u2212b \u00b1 \u221aD) : (2a).
+  // Erzeugung ueber zwei verschiedene ganze Loesungen x1 < x2 aus \u22126 ... 6,
+  // alle Koeffizienten ganzzahlig.
+  function loesungsformel(rng) {
+    var a = pick(rng, [1, -1, 2]);
+    var x1 = randInt(rng, -6, 4);
+    var x2;
+    do { x2 = randInt(rng, -6, 6); } while (x2 <= x1);
+    var b = -a * (x1 + x2);
+    var c = a * x1 * x2;
+    var d = b * b - 4 * a * c;
+    return {
+      frage: 'Bestimme die Lösungsmenge L von ' + glText(a, b, c) + '. Gib x1 < x2 an.',
+      felder: [{ key: 'x1', label: 'x1' }, { key: 'x2', label: 'x2' }],
+      loesung: [x1, x2],
+      loesungstext: 'D = ' + fmt(d) + ', also x1,2 = (' + fmt(-b) + ' \u00b1 ' + fmt(Math.sqrt(d)) + ') : ' + kl(2 * a) +
+        '. L = {' + fmt(x1) + '; ' + fmt(x2) + '}',
+      hinweis: 'Erst D = b\u00b2 \u2212 4ac berechnen, dann x1,2 = (\u2212b \u00b1 \u221aD) : (2a).'
+    };
+  }
+
+  // ---Typ 16 (Truhe der Oase): Nullstellen aus der Scheitelform ----------
+  // y = a(x \u2212 xs)\u00b2 + ys mit ys = \u2212a \u00b7 d\u00b2, Nullstellen xs \u00b1 d.
+  function nullstellenSF(rng) {
+    var xs = randInt(rng, -3, 3);
+    var d = pick(rng, [1, 2, 3]);
+    var a = pick(rng, [0.5, 1, 2, -0.5, -1, -2]);
+    var ys = -a * d * d;
+    var x1 = xs - d, x2 = xs + d;
+    return {
+      frage: 'Bestimme die Nullstellen von ' + spfText(a, xs, ys) + '. Gib x1 < x2 an.',
+      felder: [{ key: 'x1', label: 'x1' }, { key: 'x2', label: 'x2' }],
+      loesung: [x1, x2],
+      loesungstext: 'y = 0 gibt ' + klammerX(xs) + ' = ' + kl(-ys) + ' : ' + kl(a) +
+        ' = ' + fmt(d) + '\u00b2. L = {' + fmt(x1) + '; ' + fmt(x2) + '}',
+      hinweis: 'Setze y = 0 und löse ' + klammerX(xs) + ' = ' + kl(-ys) + ' : ' + kl(a) + '.'
+    };
+  }
+
   // --- Liste aller Aufgabentypen (sp\u00e4ter kommen weitere Abschnitte dazu) ---
   // Reihenfolge wie im Spiel: Wiese, Wald, Ruine, Hoehle (Halle, Mitte),
   // Truhe, Felder, Klippen, Kueste (Weg zum zweiten Dungeon)
@@ -351,7 +467,11 @@ var Tasks = (function () {
     { id: 'spfAusSP', name: 'Scheitelform aus S und P', make: spfAusSP },
     { id: 'wertemenge', name: 'Wertemenge am Scheitel', make: wertemenge },
     { id: 'wertemengeAuswahl', name: 'Wertemenge (Auswahl)', make: wertemengeAuswahl },
-    { id: 'umformen', name: 'Umformen (Scheitelform)', make: umformen }
+    { id: 'umformen', name: 'Umformen (Scheitelform)', make: umformen },
+    { id: 'diskriminante', name: 'Diskriminante', make: diskriminante },
+    { id: 'anzahlLoesungen', name: 'Anzahl der Lösungen (Auswahl)', make: anzahlLoesungen },
+    { id: 'loesungsformel', name: 'Lösungsmenge (Lösungsformel)', make: loesungsformel },
+    { id: 'nullstellenSF', name: 'Nullstellen (Scheitelform)', make: nullstellenSF }
   ];
 
   // Eine Aufgabe erzeugen; gleicher Typ + gleicher Samen = gleiche Aufgabe.

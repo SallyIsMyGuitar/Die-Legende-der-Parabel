@@ -229,10 +229,12 @@
       victory: [
         'Die starren Wasserwände zerfließen in sanfte Wellen. Der Bann über dem Wasserreich zerbricht.',
         'Ich bin die Perle des Reichs, verzaubert vom Grafen. In meiner Schale spiegelt sich jede Parabel – das konnte er nicht dulden.',
-        'Habt ihr vom Sandsturm im Süden gehört? Er trägt sein Siegel. Erst wenn ihr ihn bannet, öffnet sich der Weg zum letzten Wächter.',
+        'Habt ihr vom Sandsturm im Westen gehört? Er trägt sein Siegel. Erst wenn ihr ihn bannet, öffnet sich der Weg zum letzten Wächter.',
         'Du erhältst das Wappen der allgemeinen Form. Die Gezeiten sagen voraus: Eure Schule wird wieder erstehen.'
-      ]
-      // Das Tor zum Sandsturm (Dungeon 4) oeffnet sich in einem spaeteren Schritt
+      ],
+      // nach dem Sieg: Der Sandsturm im Westen loest sich auf
+      // (Dungeon 4: Weg ueber Steppe, Duenen und Oase zum Sandtempel)
+      onWin: function () { World.setSandstormOpen(true); }
     }
   };
   var bossAttempts = 1;    // Versuche an der aktuellen Boss-Aufgabe

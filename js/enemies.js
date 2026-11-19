@@ -31,7 +31,12 @@ var Enemies = (function () {
     leingang: 'spfAusSP',         // Tuermerin (Turm): Scheitelform aus S und P
     lmitte: 'wertemengeAuswahl',   // Alte Turmuhr: Wertemenge als Auswahl
     weingang: 'scheitelAllgemein', // Netzweber (Wasser): Scheitel aus allgemeiner Form
-    wmitte: 'umformen'             // Alte Bildtafel: Umformen in die Scheitelform
+    wmitte: 'umformen',             // Alte Bildtafel: Umformen in die Scheitelform
+    steppe: 'diskriminante',        // Karawanenfuehrerin: D = b^2 - 4ac
+    duenen: 'anzahlLoesungen',      // Sterndeuter: Anzahl der Loesungen
+    oase: 'loesungsformel',         // Brunnenhueterin: Loesungsformel
+    seingang: 'loesungsformel',     // Alte Wandinschrift: erst D, dann Formel
+    smitte: 'nullstellenSF'         // Steinerne Waage: Nullstellen, y = 0
   };
 
   // Kurzer Kontext vor der Aufgabe (die Wesen stehen im Bann von Graf Gerade)
@@ -47,7 +52,12 @@ var Enemies = (function () {
     leingang: 'Ein Möwengeist kreischt:',
     lmitte: 'Ein Dampfgeist zischt:',
     weingang: 'Ein Quallengeist fragt:',
-    wmitte: 'Ein Muschelgeist murmelt:'
+    wmitte: 'Ein Muschelgeist murmelt:',
+    steppe: 'Ein Sandkäfer zirpt (denk an die Diskriminante der Karawanenführerin):',
+    duenen: 'Ein Staubgeist huscht vorbei (drei Faelle, sagt der Sterndeuter):',
+    oase: 'Eine Sandschlange zischt (die Lösungsformel, sagt die Brunnenhüterin):',
+    seingang: 'Ein Mumienkäfer raschelt (erst D, sagt die Wandinschrift):',
+    smitte: 'Ein Wüstengeist seufzt (y = 0, sagt die Steinerne Waage):'
   };
 
   // --- Sprites (16x16, ein Frame; Bewegung ueber Wippen) ---------------------
@@ -319,6 +329,112 @@ var Enemies = (function () {
   ];
   var CLAM_COLORS = { s: '#c8a878', P: '#e8d8b8', w: '#8a6a48' };
 
+
+  // Sandkaefer (Steppe): brauner Panzer mit Sandstreifen
+  var SCARAB = [
+    '................',
+    '.....oooo.......',
+    '....oaaaao......',
+    '...oaSaSaSao....',
+    '...oaaaaaaao....',
+    '..oSaaaaaaSo....',
+    '..oaaaaaaaao....',
+    '..oSSaaaaSSo....',
+    '..oaaaaaaaaoo...',
+    '...oeaaaaeo.....',
+    '....o.oo.o......',
+    '...o......o.....',
+    '................',
+    '................',
+    '................',
+    '................'
+  ];
+  var SCARAB_COLORS = { o: '#3a2410', a: '#b08c4a', S: '#d8b878', e: '#5e3a14' };
+
+  // Staubgeist (Duenen): wirbelnder grauer Sack mit dunkeln Augen
+  var DUST = [
+    '................',
+    '......oooo......',
+    '....oodddoo.....',
+    '...odddddddo....',
+    '..oddDdddDdo....',
+    '..oddddddddo....',
+    '.oddDddddDddo...',
+    '.oddddddddddo...',
+    '.odddddddddo....',
+    '..oddddddddo....',
+    '..odd..dddo.....',
+    '...o....o.......',
+    '................',
+    '................',
+    '................',
+    '................'
+  ];
+  var DUST_COLORS = { o: '#5a4836', d: '#c8b096', D: '#4a3828' };
+
+  // Sandschlange (Oase): gewundene Schlange mit Rautenmuster
+  var SNAKE = [
+    '..............oo',
+    '.............oSS',
+    '..........ooSSe.',
+    '.........oSSSo..',
+    '....oooSSSSo....',
+    '...oSSSSSSo.....',
+    '..oSSoSSSSo.....',
+    '..oSSoSso.......',
+    '..oSSSSo........',
+    '...oSSSsooooo...',
+    '....oSSSSSSSo...',
+    '.....ooooSSo....',
+    '.........oo.....',
+    '................',
+    '................',
+    '................'
+  ];
+  var SNAKE_COLORS = { o: '#2a4a2a', S: '#c8a038', s: '#8a7020', e: '#e8443a' };
+
+  // Mumienkaefer (Sandtempel-Eingang): in Leinen gewickelter Kaefer
+  var MUMMY = [
+    '................',
+    '....oooooo......',
+    '...oLlLlLlo.....',
+    '..oLlLlLlLlo....',
+    '..oLlLlLlLlo....',
+    '.oLlLeLlLeLlo...',
+    '.oLlLlLlLlLo....',
+    '.oLlLlLlLllo....',
+    '..oLlLlLlLo.....',
+    '..oLlLlLlLo.....',
+    '...oLlLlLo......',
+    '....oooooo......',
+    '................',
+    '................',
+    '................',
+    '................'
+  ];
+  var MUMMY_COLORS = { o: '#5a4428', L: '#e8dcc0', l: '#c8b894', e: '#7a2a20' };
+
+  // Wuestengeist (Sandtempel-Mitte): fliedernder Geist mit Sandmaske
+  var DESERT = [
+    '................',
+    '.....oooo.......',
+    '...oodddoo......',
+    '..oddddddoo.....',
+    '..odDdddDdo.....',
+    '.odddddddddo....',
+    '.oddDdddDddo....',
+    '.odddddddddo....',
+    '.odddddddddo....',
+    '.oddddddddddo...',
+    '..oddddddddo....',
+    '..oddo..oddo....',
+    '...oo....oo.....',
+    '................',
+    '................',
+    '................'
+  ];
+  var DESERT_COLORS = { o: '#4a3626', d: '#d8c8a8', D: '#3a2818' };
+
   var SPRITES = {
     wiese: { rows: MUSHROOM, colors: MUSHROOM_COLORS },
     wald: { rows: MOSS, colors: MOSS_COLORS },
@@ -331,7 +447,12 @@ var Enemies = (function () {
     leingang: { rows: GULL, colors: GULL_COLORS },
     lmitte: { rows: STEAM, colors: STEAM_COLORS },
     weingang: { rows: JELLY, colors: JELLY_COLORS },
-    wmitte: { rows: CLAM, colors: CLAM_COLORS }
+    wmitte: { rows: CLAM, colors: CLAM_COLORS },
+    steppe: { rows: SCARAB, colors: SCARAB_COLORS },
+    duenen: { rows: DUST, colors: DUST_COLORS },
+    oase: { rows: SNAKE, colors: SNAKE_COLORS },
+    seingang: { rows: MUMMY, colors: MUMMY_COLORS },
+    smitte: { rows: DESERT, colors: DESERT_COLORS }
   };
   var spriteCache = {};
   var flashCache = {};   // weisse Silhouette fuer das Aufblitzen
@@ -412,6 +533,28 @@ var Enemies = (function () {
       { x: 12, y: 7 }
     ],
     wmitte: [
+      { x: 4, y: 9 },
+      { x: 13, y: 10 }
+    ],
+    steppe: [
+      { x: 6, y: 4 },
+      { x: 12, y: 11 }
+    ],
+    duenen: [
+      { x: 4, y: 3 },
+      { x: 12, y: 6 },
+      { x: 5, y: 11 }
+    ],
+    oase: [
+      { x: 12, y: 5 },
+      { x: 5, y: 9 },
+      { x: 12, y: 12 }
+    ],
+    seingang: [
+      { x: 4, y: 9 },
+      { x: 12, y: 7 }
+    ],
+    smitte: [
       { x: 4, y: 9 },
       { x: 13, y: 10 }
     ]
@@ -525,7 +668,8 @@ var Enemies = (function () {
     var screenNo = {
       wiese: 1, wald: 2, ruine: 3, dhalle: 4, dmittel: 5,
       felder: 6, klippen: 7, kueste: 8, leingang: 9, lmitte: 10,
-      weingang: 11, wmitte: 12
+      weingang: 11, wmitte: 12,
+      steppe: 13, duenen: 14, oase: 15, seingang: 16, smitte: 17
     }[e.screen] || 1;
     return screenNo * 100 + e.index * 10 + e.attempts;
   }

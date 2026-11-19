@@ -72,6 +72,20 @@
       'PPPPPPPVPPPPKPPP'
     ],
     buildings: [],
+    npcs: [
+      {
+        x: 3 * 16, y: 8 * 16, sprites: function () { return People.karawanenfuehrerin(); },
+        talk: {
+          name: 'Karawanenführerin',
+          texts: [
+            'Grüße in der Steppe! Meine Karawanenwägen kommen hier nicht weiter – der Sandsturm dahinter trägt das Siegel des Grafen.',
+            'Bricht er, können meine Leute weiterziehen. Bis dahin: Die Sandkäfer hier geben deine Übung für den Sandtempel.',
+            'Mein Merksatz: Die Diskriminante D = b² − 4ac entscheidet über die Anzahl der Lösungen von ax² + bx + c = 0.'
+          ],
+          merk: { id: 'diskriminante', name: 'Diskriminante', text: 'Die Diskriminante D = b² − 4ac entscheidet über die Anzahl der Lösungen von ax² + bx + c = 0.' }
+        }
+      }
+    ],
     exits: { east: 'start', west: 'duenen' }
   });
 
@@ -94,6 +108,20 @@
       'PPPPVPPPPPPPPPPP'
     ],
     buildings: [],
+    npcs: [
+      {
+        x: 11 * 16, y: 9 * 16, sprites: function () { return People.sterndeuter(); },
+        talk: {
+          name: 'Sterndeuter',
+          texts: [
+            'Die Dünen verschieben sich jede Nacht, doch der Himmel bleibt gleich – hier lese ich die Bahnen der Sterne.',
+            'Die Staubgeister treiben hier ihr Spiel. Sie prüfen dich, bevor du die Oase erreichst.',
+            'Mein Merksatz: D > 0: zwei Lösungen. D = 0: genau eine Lösung. D < 0: keine Lösung.'
+          ],
+          merk: { id: 'anzahlLoesungen', name: 'Anzahl der Lösungen', text: 'D > 0: zwei Lösungen. D = 0: genau eine Lösung. D < 0: keine Lösung.' }
+        }
+      }
+    ],
     exits: { east: 'steppe', west: 'oase' }
   });
 
@@ -118,6 +146,20 @@
     ],
     buildings: [],
     bakeExtra: function (r) { bakeTemple(r); },
+    npcs: [
+      {
+        x: 4 * 16, y: 11 * 16, sprites: function () { return People.brunnenhueterin(); },
+        talk: {
+          name: 'Brunnenhüterin',
+          texts: [
+            'Willkommen an der Oase! Trink aus der Quelle, solange sie noch sprudelt. Jenseits des Teichs wartet der Sandtempel.',
+            'Die Sandschlangen stehen unter dem Bann des Grafen. Wer sie erlösen will, braucht die Lösungsformel.',
+            'Mein Merksatz: Lösungsformel: x1,2 = (−b ± √D) : (2a). Beispiel: x² − 2x − 8 = 0 hat D = 36, also x1,2 = (2 ± 6) : 2 und L = {4; −2}.'
+          ],
+          merk: { id: 'loesungsformel', name: 'Lösungsformel', text: 'x1,2 = (−b ± √D) : (2a). Beispiel: x² − 2x − 8 = 0: D = 36, also x1,2 = (2 ± 6) : 2, L = {−2; 4}.' }
+        }
+      }
+    ],
     signs: [
       {
         // Schild vor dem Tempel

@@ -253,6 +253,42 @@ var People = (function () {
     }));
   }
 
+  // Karawanenfuehrerin (Steppe, Dungeon 4): dunkles Tuch, gelbe Robe
+  function karawanenfuehrerin() {
+    return dirs(pal({
+      h: '#3a2418', H: '#c8a048',
+      t: '#d8a828', T: '#f0c858', D: '#b08418',
+      p: '#6a4a2e', B: '#4a3624'
+    }));
+  }
+
+  // Sterndeuter (Duenen): weisser Bart, tiefblaue Robe mit Sternen
+  function sterndeuter() {
+    return dirs(pal({
+      h: '#e8e8e8', H: '#ffffff',
+      t: '#24346e', T: '#3c5088', D: '#1a2650',
+      p: '#24346e', B: '#8a7448'
+    }));
+  }
+
+  // Brunnenhueterin (Oase): blaues Kopftuch, helles Gewand
+  function brunnenhueterin() {
+    return dirs(pal({
+      h: '#2a4868', H: '#4a6a94',
+      t: '#e8e2d4', T: '#f6f4ec', D: '#c8c0b0',
+      p: '#3a5a4a', B: '#6a4a2e'
+    }));
+  }
+
+  // Hausmeister (Schulhof): graues Haar, dunkelblaue Arbeitskleidung
+  function hausmeister() {
+    return dirs(pal({
+      h: '#8a8a8a', H: '#b0b0b0',
+      t: '#3a4a5a', T: '#546478', D: '#2c3a48',
+      p: '#3a3a44', B: '#2a2420'
+    }));
+  }
+
   return {
     researcher: researcher,
     hermit: hermit,
@@ -267,6 +303,10 @@ var People = (function () {
     fischer: fischer,
     turmwaerter: turmwaerter,
     tuemerin: tuemerin,
-    netzweber: netzweber
+    netzweber: netzweber,
+    karawanenfuehrerin: karawanenfuehrerin,
+    sterndeuter: sterndeuter,
+    brunnenhueterin: brunnenhueterin,
+    hausmeister: hausmeister
   };
 })();
