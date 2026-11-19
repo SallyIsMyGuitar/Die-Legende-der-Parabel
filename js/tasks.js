@@ -692,8 +692,43 @@ var Tasks = (function () {
     }
   ];
 
+  // ---Graf Gerade (Endboss): feste, von der Lehrkraft gepruefte Aufgaben ---
+  // Thema des Finales: Schnittpunkte und Anwendungen. Vier Fragen verbinden
+  // alles Geuebte.
+  var BOSS_GRAF = [
+    {
+      frage: 'Bestimme die x-Koordinaten der Schnittpunkte der Parabel y = x\u00b2 \u2212 1 mit der Geraden y = x + 1. Gib x1 < x2 an.',
+      felder: [{ key: 'x1', label: 'x1' }, { key: 'x2', label: 'x2' }],
+      loesung: [-1, 2],
+      loesungstext: 'x\u00b2 \u2212 1 = x + 1 gibt x\u00b2 \u2212 x \u2212 2 = 0, also L = {\u22121; 2}',
+      hinweis: 'Setze gleich: x\u00b2 \u2212 1 = x + 1, bringe alles auf eine Seite und loese.'
+    },
+    {
+      frage: 'Ein Ball wird geworfen und fliegt auf der Flugbahn y = \u22120,5(x \u2212 3)\u00b2 + 4,5. Die Angaben sind in Metern. Gib die Wurfweite in m an.',
+      felder: [{ key: 'x', label: 'x' }],
+      loesung: [6],
+      loesungstext: 'y = 0 gibt \u22120,5(x \u2212 3)\u00b2 + 4,5 = 0, also (x \u2212 3)\u00b2 = 9. Wurfweite = 6 m.',
+      hinweis: 'Setze y = 0. Eine Nullstelle ist der Start bei x = 0, die andere die Landestelle.'
+    },
+    {
+      frage: 'Mit einem Zaun der Länge 24 m wird ein rechteckiges Beet abgesteckt. Bei welcher Seitenlänge x (in m) ist der Flächeninhalt am größten, und wie groß ist er (in m²)?',
+      felder: [{ key: 'x', label: 'x' }, { key: 'A', label: 'A' }],
+      loesung: [6, 36],
+      loesungstext: 'A(x) = x \u00b7 (12 \u2212 x), Scheitel bei x = 6: A = 36 m\u00b2.',
+      hinweis: 'Die zweite Seite ist 12 \u2212 x. Das groesste Rechteck ist das Quadrat: x = 24 : 4.'
+    },
+    {
+      frage: 'Wie viele gemeinsame Punkte haben die Parabel y = x\u00b2 und die Gerade y = 2x \u2212 1?',
+      auswahl: ['zwei gemeinsame Punkte', 'genau ein gemeinsamer Punkt', 'kein gemeinsamer Punkt'],
+      felder: [],
+      loesung: 1,
+      loesungstext: 'x\u00b2 = 2x \u2212 1 gibt (x \u2212 1)\u00b2 = 0, also D = 0: genau ein Punkt, der Ber\u00fchrpunkt B(1|1).',
+      hinweis: 'Setze gleich und berechne D von x\u00b2 \u2212 2x + 1 = 0.'
+    }
+  ];
+
   // Feste Boss-Aufgaben je Dungeon (Schluessel = Boss-Raum)
-  var BOSS_FEST = { dboss: BOSS_HOEHLE, lboss: BOSS_TURM, wboss: BOSS_WASSER, sboss: BOSS_SANDTEMPEL };
+  var BOSS_FEST = { dboss: BOSS_HOEHLE, lboss: BOSS_TURM, wboss: BOSS_WASSER, sboss: BOSS_SANDTEMPEL, aula: BOSS_GRAF };
 
   function bossTasks(room) {
     return (BOSS_FEST[room] || []).slice();

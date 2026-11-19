@@ -24,6 +24,7 @@
 
   // --- Spielstand: Fortschritt sammeln, speichern und laden ----------------
   var stats = { right: 0, wrong: 0 };   // Fehlerstatistik (fuer Abspann/Code)
+  var finaleDone = false;               // Endboss Graf Gerade besiegt (Meilenstein 6: Abspann)
 
   // --- Bosse der Dungeons: Vorstellung und Sieg je Boss-Raum ------------
   // (Instanz mit Herzen und Zeichnung liegt in boss.js, Aufgaben in tasks.js)
@@ -50,7 +51,11 @@
       raetsel: Raetsel.isSolved(),
       spiegel: Spiegel.isSolved(),
       gezeiten: Gezeiten.isSolved(),
+      platten: Platten.isSolved(),
       leuchtturm: World.isLighthouseLit(),
+      sandsturm: World.isSandstormOpen(),
+      schultor: World.isSchoolGateOpen(),
+      finale: finaleDone,
       bossIntro: bossIntroDone,
       wappen: wappens,
       spaeth: spaethDone,
@@ -77,8 +82,13 @@
     if (st.raetsel) Raetsel.setSolved();
     if (st.spiegel) Spiegel.setSolved();
     if (st.gezeiten) Gezeiten.setSolved();
+    if (st.platten) Platten.setSolved();
     if (st.leuchtturm) World.setLighthouseLit(true);
     if (bossesSt.lboss) World.setWaterGateOpen(true);
+    // Sandsturm, Platten-Raeetsel und Schultor (aeltere Staende bleiben zu)
+    if (st.sandsturm) World.setSandstormOpen(true);
+    if (st.schultor) World.setSchoolGateOpen(true);
+    finaleDone = !!st.finale;
     // Vorstellung je Boss-Raum; aeltere Staende kennen nur die Hoehle
     bossIntroDone = st.bossIntro && typeof st.bossIntro === 'object'
       ? st.bossIntro
@@ -280,6 +290,23 @@
       ],
       // nach dem Sieg: Das Schultor im Dorf oeffnet sich (Dungeon 5: Finale)
       onWin: function () { World.setSchoolGateOpen(true); }
+    },
+    aula: {
+      name: 'Graf Gerade',
+      kontext: 'Graf Gerade fragt:',
+      intro: [
+        'So weit kommst du also. Ich bin Graf Gerade! Ich dulde nichts, was sich krümmt \u2013 und Parabeln hasse ich am meisten.',
+        'Solange in dieser Schule eine einzige Kurve gelehrt wird, bleiben die Lehrerinnen und Lehrer gefangen. Vier Fragen \u2013 dein Schwert hilft dir nicht.'
+      ],
+      victory: [
+        'Seine starren Linien biegen sich \u2013 eine nach der anderen wird zur Parabel. Der Bann über dem Land zerbricht.',
+        'Graf Gerade zersplittert in lauter gerade Splitter und verschwindet. Die Lichtlinien über der Schule erlöschen.',
+        'Die Lehrerinnen und Lehrer sind frei! Man hört die befreiten Stimmen bis auf den Schulhof. Die Schule wird wieder aufgebaut \u2013 davon bald mehr.',
+        'Du erhältst das Wappen der Anwendungen. Der Rückweg durch die Schule steht dir offen.'
+      ],
+      // nach dem Sieg: Finale-Flagge (Abspann und Wiederholungsmodus folgen
+      // in Meilenstein 6); die Figur bleibt in der Aula stehen
+      onWin: function () { finaleDone = true; }
     }
   };
   var bossAttempts = 1;    // Versuche an der aktuellen Boss-Aufgabe

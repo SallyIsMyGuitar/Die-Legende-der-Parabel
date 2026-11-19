@@ -423,3 +423,112 @@ var Boss = (function () {
     drawDying: drawDying
   });
 })();
+
+// ---Graf Gerade, der Endboss der zerstoerten Schule (Dungeon 5, 'aula') -----
+// Hagerer Graf aus kantigen, geraden Linien: Lineal-Mantel, eckige Krone.
+// Kein Kreis, keine Kurve - nur Stufen und Kanten. Vier Herzen, vier Fragen.
+// Im Bann zeichnet er gerade Lichtlinien in den Raum; beim Sieg biegen sich
+// seine Linien zu Parabeln und der Graf zersplittert.
+(function () {
+  'use strict';
+
+  var X = 102, Y = 60;     // linke obere Ecke; Bildmitte (112, 72), Punkte (112, 74)
+
+  // Gehrock aus geraden Trapezen per Treppenstufen (keine schwingende Kurve)
+  function stepLine(r, x0, y0, dx, dy, col) {
+    var n = Math.max(Math.abs(dx), Math.abs(dy));
+    for (var i = 0; i <= n; i++) {
+      r.px(x0 + Math.round(dx * i / n), y0 + Math.round(dy * i / n), 1, 1, col);
+    }
+  }
+
+  function drawLiving(r, def, inst, now, alpha) {
+    var ctx = r.getCtx();
+    var hp = def.maxHp - inst.index();
+    var bob = Math.round(Math.sin(now / 500) * 2);
+    var x = X, y = Y + bob;
+    if (alpha !== undefined) ctx.globalAlpha = alpha;
+
+    // kalter Lichtschein auf dem Fussboden der Aula
+    ctx.globalAlpha = (alpha === undefined ? 1 : alpha) * (0.14 + 0.04 * (Math.floor(now / 220) % 2));
+    r.ellipse(112, 92, 16, 5, '#b8c8f8');
+    ctx.globalAlpha = alpha === undefined ? 1 : alpha;
+
+    // Lineal-Mantel: zwei gerade Trapeze
+    var mantel = hp > 2 ? '#2e3a5a' : '#26304c';
+    stepLine(r, x + 2, y + 10, 6, 14, mantel);       // linke Mantelkante
+    stepLine(r, x + 20, y + 10, -6, 14, mantel);     // rechte Mantelkante
+    r.px(x + 8, y + 9, 8, 16, mantel);
+    r.px(x + 8, y + 24, 1, 2, mantel);
+    r.px(x + 15, y + 24, 1, 2, mantel);
+    r.px(x + 2, y + 24, 20, 1, '#3e4a6c');          // Mantelsaum
+    r.px(x + 11, y + 10, 2, 14, '#1c2438');         // Mantelmitte
+    // Lineal-Skala auf dem Mantel (Striche wie auf einem Lineal)
+    for (var s = 0; s < 5; s++) r.px(x + 4, y + 12 + s * 3, 2, 1, '#8a94b4');
+    for (var s2 = 0; s2 < 5; s2++) r.px(x + 18, y + 12 + s2 * 3, 2, 1, '#8a94b4');
+
+    // Kopf: eckiges Gesicht
+    r.px(x + 7, y + 2, 10, 8, '#e0d8c8');
+    r.px(x + 7, y + 2, 10, 1, '#f0eadc');
+    r.px(x + 8, y + 4, 2, 2, hp > 1 ? '#3a4a74' : '#e8443a');   // Augen
+    r.px(x + 14, y + 4, 2, 2, hp > 1 ? '#3a4a74' : '#e8443a');
+    r.px(x + 9, y + 8, 6, 1, '#8a8072');            // strenger Mund, gerade
+
+    // eckige Krone aus Zacken
+    r.px(x + 5, y + 1, 14, 1, '#f0c040');
+    r.px(x + 6, y, 2, 1, '#f0c040');
+    r.px(x + 10, y - 1, 2, 2, '#f0c040');
+    r.px(x + 14, y, 2, 1, '#f0c040');
+    r.px(x + 6, y, 1, 1, '#f8e088');
+    r.px(x + 10, y - 1, 1, 1, '#f8e088');
+    r.px(x + 14, y, 1, 1, '#f8e088');
+
+    // Arme: gestreckte, winklig abgesetzte Aermel
+    r.px(x, y + 11, 7, 3, mantel);
+    r.px(x - 3, y + 13, 3, 2, '#1c2438');           // linke Hand
+    r.px(x + 15, y + 11, 7, 3, mantel);
+    r.px(x + 19, y + 13, 3, 2, '#1c2438');           // rechte Hand
+
+    // Risse im Bann: je verlorener Frage mehr gerade Lichtlinien am Koerper
+    var risse = def.maxHp - hp;
+    for (var l = 0; l < risse; l++) {
+      stepLine(r, x + 3 + l * 5, y + 24, 3, -5, '#b8c8f8');
+    }
+
+    ctx.globalAlpha = 1;
+  }
+
+  // Besiegt-Animation: Die geraden Linien biegen sich zu Parabeln, der Graf
+  // zersplittert in Splitter, die in Bogen davonziehen
+  function drawDying(r, def, inst, now) {
+    var t = (now - inst.dieStart()) / 1000;
+    if (t > 1.4) return;
+    var ctx = r.getCtx();
+    var p = Math.min(1, t / 1.2);
+    drawLiving(r, def, inst, inst.dieStart() + 1, Math.max(0, 1 - p));   // einfrieren, abblenden
+    ctx.globalAlpha = Math.max(0, 0.85 - p * 0.85);
+    // Seine Linien werden zu Parabeln: leuchtende Boegen ueber der Stelle
+    for (var b = 0; b < 3; b++) {
+      for (var o = -10; o <= 10; o++) {
+        var oyy = 70 - b * 6 - p * 10 - Math.round(o * o / 10);
+        r.px(112 + o + b * 2, oyy, 1, 1, b === 0 ? '#f8e0a0' : '#b8c8f8');
+      }
+    }
+    // Splitter: gerade Stuecke fliegen in Bogen davon
+    for (var i = 0; i < 7; i++) {
+      var sx = 100 + i * 6 + Math.sin(i * 2 + p * 6) * 4 * p;
+      var sy = 62 + p * 34 - Math.sin(p * 3 + i) * 6;
+      r.px(Math.round(sx), Math.round(sy), 2, 1, '#d8d8e8');
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  Boss.register('aula', {
+    maxHp: 4,          // eine feste Aufgabe = ein Herz (vier Fragen des Grafen)
+    x: X, y: Y,        // linke obere Ecke der Zeichnung (Rueckstoss)
+    cx: 112, cy: 74,   // Bildmitte fuer die Beruehrung
+    hearts: { x: 96, y: 94 },
+    drawLiving: drawLiving,
+    drawDying: drawDying
+  });
+})();
