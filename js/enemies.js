@@ -62,8 +62,8 @@ var Enemies = (function () {
     seingang: 'Ein Mumienkäfer raschelt (erst D, sagt die Wandinschrift):',
     smitte: 'Ein Wüstengeist seufzt (y = 0, sagt die Steinerne Waage):',
     klassenzimmer: 'Ein Lineal-Soldat schnarrt (gleichsetzen, sagt die Tafel):',
-    physiksaal: 'Ein Kreide-Geist knirscht (der Scheitel, sagt die Wurfmaschine):',
-    turnhalle: 'Ein Geodreieck-Wächter dröhnt (am Scheitel, sagt die Anzeigetafel):'
+    physiksaal: 'Ein Kreide-Geist knirscht (der Scheitel):',
+    turnhalle: 'Ein Geodreieck-Wächter dröhnt (am Scheitel):'
   };
 
   // --- Sprites (16x16, ein Frame; Bewegung ueber Wippen) ---------------------

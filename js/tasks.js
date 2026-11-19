@@ -218,7 +218,7 @@ var Tasks = (function () {
     } while (xs === 0 && ys === 0);
     return {
       frage: 'Die Parabel y = a(x \u2212 xs)\u00b2 + ys hat den Streckfaktor a = ' + fmt(a) +
-        ' und den Scheitel S(' + fmt(xs) + '|' + fmt(ys) + '). Gib xs und ys der Scheitelform an.',
+        ' und den Scheitel S(' + fmt(xs) + '|' + fmt(ys) + '). Gib xs und ys an.',
       felder: [{ key: 'xs', label: 'xs' }, { key: 'ys', label: 'ys' }],
       loesung: [xs, ys],
       loesungstext: spfText(a, xs, ys) + ', also xs = ' + fmt(xs) + ' und ys = ' + fmt(ys),
@@ -255,8 +255,8 @@ var Tasks = (function () {
     var auf = a > 0;
     var grenze = auf ? 'kleinste' : 'gr\u00f6\u00dfte';
     return {
-      frage: 'Die Parabel ' + spfText(a, xs, ys) + ' ist nach ' + (auf ? 'oben' : 'unten') +
-        ' ge\u00f6ffnet. Gib die ' + grenze + ' y-Koordinate der Wertemenge an und dazu die zugeh\u00f6rige x-Koordinate.',
+      frage: 'Die nach ' + (auf ? 'oben' : 'unten') + ' geöffnete Parabel ' + spfText(a, xs, ys) + ': Gib die ' + grenze +
+        ' y-Koordinate und die zugehörige x-Koordinate an.',
       felder: [{ key: 'y', label: 'y' }, { key: 'x', label: 'x' }],
       loesung: [ys, xs],
       loesungstext: 'Der Scheitel S(' + fmt(xs) + '|' + fmt(ys) + ') gibt die ' +
@@ -461,7 +461,13 @@ var Tasks = (function () {
       else if (m === -1) s += '-x';
       else s += fmt(m) + 'x';
     }
-    if (t !== 0) s += (s && t > 0 ? ' + ' : s ? ' \u2212 ' : '') + fmt(Math.abs(t));
+    // Bei leerem s (m = 0) und t < 0 das Minus nicht verlieren
+    if (t !== 0) {
+      if (s && t > 0) s += ' + ' + fmt(t);
+      else if (s) s += ' \u2212 ' + fmt(Math.abs(t));
+      else if (t > 0) s += fmt(t);
+      else s += '\u2212' + fmt(Math.abs(t));
+    }
     if (!s) s = '0';
     return 'y = ' + s;
   }
@@ -478,7 +484,7 @@ var Tasks = (function () {
     var b = m - (x1 + x2);
     var c = x1 * x2 + t;
     return {
-      frage: 'Bestimme die x-Koordinaten der Schnittpunkte der Parabel ' + allgText(1, b, c) +
+      frage: 'Schnittpunkte der Parabel ' + allgText(1, b, c) +
         ' mit der Geraden ' + geradeText(m, t) + '. Gib x1 < x2 an.',
       felder: [{ key: 'x1', label: 'x1' }, { key: 'x2', label: 'x2' }],
       loesung: [x1, x2],
@@ -495,15 +501,10 @@ var Tasks = (function () {
     var a = pick(rng, [-0.5, -1, -2]);
     var d = randInt(rng, 1, 5);
     var ys = -a * d * d;
-    var paar = pick(rng, [
-      ['Ball', 'geworfen'],
-      ['Speer', 'abgeschossen'],
-      ['Wasserstrahl', 'gespritzt']
-    ]);
-    var Ding = paar[0];
+    var Ding = pick(rng, ['Ball', 'Speer', 'Wasserstrahl']);
     var hoch = rng() < 0.5;
-    var bahn = 'Ein ' + Ding + ' wird ' + paar[1] + ' und fliegt auf der Flugbahn ' +
-      spfText(a, d, ys) + '. Die Angaben sind in Metern.';
+    var bahn = 'Ein ' + Ding + ' fliegt auf ' + spfText(a, d, ys) +
+      ' (in m).';
     if (hoch) {
       return {
         frage: bahn + ' Gib die maximale Höhe in m an.',
@@ -531,7 +532,7 @@ var Tasks = (function () {
     var x = U / 4;
     var A = x * x;
     return {
-      frage: 'Mit einem Zaun der Länge ' + U + ' m wird ein rechteckiges Beet abgesteckt. Bei welcher Seitenlänge x (in m) ist der Flächeninhalt am größten, und wie groß ist er (in m²)?',
+      frage: 'Zaun ' + U + ' m, rechteckiges Beet: Welche Seitenlänge x (in m) gibt die größte Fläche, und wie groß ist sie (in m²)?',
       felder: [{ key: 'x', label: 'x' }, { key: 'A', label: 'A' }],
       loesung: [x, A],
       loesungstext: 'U = 2x + 2b mit b = ' + fmt(U / 2) + ' \u2212 x. A(x) = x \u00b7 (' + (U / 2) + ' \u2212 x) hat den Scheitel bei x = ' + fmt(x) +
@@ -704,14 +705,14 @@ var Tasks = (function () {
       hinweis: 'Setze gleich: x\u00b2 \u2212 1 = x + 1, bringe alles auf eine Seite und loese.'
     },
     {
-      frage: 'Ein Ball wird geworfen und fliegt auf der Flugbahn y = \u22120,5(x \u2212 3)\u00b2 + 4,5. Die Angaben sind in Metern. Gib die Wurfweite in m an.',
+      frage: 'Ein Ball fliegt auf der Bahn y = \u22120,5(x \u2212 3)\u00b2 + 4,5 (Angaben in m). Gib die Wurfweite in m an.',
       felder: [{ key: 'x', label: 'x' }],
       loesung: [6],
       loesungstext: 'y = 0 gibt \u22120,5(x \u2212 3)\u00b2 + 4,5 = 0, also (x \u2212 3)\u00b2 = 9. Wurfweite = 6 m.',
       hinweis: 'Setze y = 0. Eine Nullstelle ist der Start bei x = 0, die andere die Landestelle.'
     },
     {
-      frage: 'Mit einem Zaun der Länge 24 m wird ein rechteckiges Beet abgesteckt. Bei welcher Seitenlänge x (in m) ist der Flächeninhalt am größten, und wie groß ist er (in m²)?',
+      frage: 'Zaun 24 m, rechteckiges Beet: Welche Seitenlänge x (in m) gibt die größte Fläche, und wie groß ist sie (in m²)?',
       felder: [{ key: 'x', label: 'x' }, { key: 'A', label: 'A' }],
       loesung: [6, 36],
       loesungstext: 'A(x) = x \u00b7 (12 \u2212 x), Scheitel bei x = 6: A = 36 m\u00b2.',
