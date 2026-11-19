@@ -72,6 +72,7 @@
     chestDone = st.chests || (st.chest ? { ruine: true } : {});
     if (chestDone.ruine) World.setChestOpen(1, 'ruine');
     if (chestDone.klippen) World.setChestOpen(1, 'klippen');
+    if (chestDone.oase) World.setChestOpen(1, 'oase');
     if (st.sword) Sword.give();
     Merkbuch.load(st.merk);
     var bossesSt = st.bosses || (st.boss ? { dboss: true } : {});   // alte Staende nur mit 'boss'

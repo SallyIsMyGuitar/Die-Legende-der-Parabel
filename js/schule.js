@@ -89,7 +89,7 @@
     signs: [
       {
         // Schild am Weg zur Ruine
-        tiles: [[10, 8]], x: 10 * 16, y: 8 * 16, name: 'Schild',
+        tiles: [[11, 8]], x: 11 * 16, y: 8 * 16, name: 'Schild',
         texts: ['Zerstörte Schule. Graf Gerade hält die Lehrkräfte gefangen.']
       },
       {

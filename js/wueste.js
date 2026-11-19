@@ -2,10 +2,10 @@
 // Nullstellen und quadratische Gleichungen)
 // Drei Bildschirme westlich des Dorfes, Wuesten-Optik: Sand (= Wegkacheln
 // 'P', die sandfarben gezeichnet werden), Felsen ('V'), Kakteen ('K') und
-// trockene Buesche ('B'). Am Ende liegt die Oase mit Rastquelle und
-// Rätsel-Truhe vor dem Sandtempel ('E'), laut Plan folgen Erklaer-NPCs
-// (Karawanenfuehrerin, Sterndeuter, Brunnenhueterin) in einem spaeteren
-// Schritt. Angemeldet per World.addScreen().
+// trockene Buesche ('B'). Am Ende liegt die Oase mit Rastquelle,
+// Rätsel-Truhe und Sandtempel-Tuer ('E'). Die Erklär-NPCs
+// (Karawanenführerin, Sterndeuter, Brunnenhüterin) stehen auf
+// den drei Bildschirmen. Angemeldet per World.addScreen().
 (function () {
   'use strict';
 
@@ -56,11 +56,11 @@
   // Steppe: erster Wuesten-Bildschirm (leicht, Karawanenfuehrerin folgt)
   World.addScreen('steppe', {
     map: [
-      'PPPPPPPPPPPPPPPP',
-      'PPKPPPVPPPPKPPPP',
-      'PPPPPPPPPBPPPPPP',
+      'PPPPPPPPPPPPPPPV',
+      'PPKPPPVPPPPKPPPV',
+      'PPPPPPPPPBPPPPPV',
       'PVPPPPPPPPPPPVPP',
-      'PPPPPBPPPPPPPPPP',
+      'PPPPPBPPPPPPPPPV',
       'PPPPPPPPPPPPPPPP',
       'PPKPPPPVPPPPPPPP',
       'PPPPPPPPPPPKPPPP',
@@ -68,8 +68,8 @@
       'PPPPVPPPKPPPPPPP',
       'PPPPPPPPPPPPPPPP',
       'PPKPPPPPPBVPPPPP',
-      'PPPPPBPPKPPPPPPP',
-      'PPPPPPPVPPPPKPPP'
+      'PPPPPBPPKPPPPPPV',
+      'PPPPPPPVPPPPKPPV'
     ],
     buildings: [],
     npcs: [
