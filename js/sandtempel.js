@@ -229,7 +229,8 @@
       '################'
     ],
     mats: {
-      '8,1': { room: 'splatten', x: 10 * TILE, y: 11 * TILE, facing: 'up' },
+      // Ankunft links neben der Steintafel ('k' blockiert, siehe PLATTEN)
+      '8,1': { room: 'splatten', x: 8 * TILE, y: 11 * TILE, facing: 'up' },
       '8,12': { room: 'seingang', x: 8 * TILE, y: 2 * TILE, facing: 'down' }
     },
     torches: [[4, 1], [11, 1], [4, 12], [11, 12]],
