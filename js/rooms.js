@@ -211,7 +211,14 @@
           'Und solltest du einmal alle Herzen verlieren, kommst du an der Quelle wieder zu dir, an der du zuletzt getrunken hast.'
         ],
         // Zusatzseite nach dem ersten Wappen (freigegeben)
-        later: { wappen: 1, texts: ['Ich wusste es! Wer einen Wächter befreien kann, der baut auch die Schule wieder auf.'] }
+        // Weitere Stufen je Wappen und nach dem Finale (Texte vorläufig)
+        later: [
+          { wappen: 1, texts: ['Ich wusste es! Wer einen Wächter befreien kann, der baut auch die Schule wieder auf.'] },
+          { wappen: 2, texts: ['Vom Fenster aus sehe ich den Leuchtturm wieder strahlen. Mein Gefühl hat mich nicht getäuscht!'] },
+          { wappen: 3, texts: ['Schon drei Wächter befreit? Ich hätte nie gedacht, dass Parabeln so viel bewirken können.'] },
+          { wappen: 4, texts: ['Das Schultor ist offen! Vielleicht höre ich die Schulglocke bald wieder.'] },
+          { finale: true, texts: ['Die Lehrkräfte sind frei! Jetzt fehlt nur noch die Schulglocke – und die läutet bestimmt bald wieder.'] }
+        ]
       },
       // Schaukeln im Schaukelstuhl
       frame: function (t) {
@@ -370,7 +377,17 @@
           'Na ja … ehrlich gesagt vermisse ich sogar Mathe. Schau mal, mein Parabel-Poster!'
         ],
         // Zusatzseite nach dem ersten Wappen (freigegeben)
-        later: { wappen: 1, texts: ['Du hast einen Wächter mit Parabeln besiegt? Krass! Ich sag ja: Mathe ist eine Superkraft.'] }
+        // Weitere Stufen je Wappen und nach dem Finale (Texte vorläufig)
+        later: [
+          { wappen: 1, texts: ['Du hast einen Wächter mit Parabeln besiegt? Krass! Ich sag ja: Mathe ist eine Superkraft.'] },
+          { wappen: 2, texts: ['Schon zwei Wächter? Ich lerne heimlich die Scheitelform – nur für den Fall, dass du Hilfe brauchst.'] },
+          { wappen: 3, texts: ['Allgemeine Form, Scheitelform … Ich habe alles auf mein Poster geschrieben. Gar nicht so schwer!'] },
+          { wappen: 4, texts: ['Das Schultor ist offen? Dann sitzt Graf Gerade da drin. Zeig ihm, was eine Parabel kann!'] },
+          { finale: true, replace: true, texts: [
+            'Du hast Graf Gerade besiegt? Krass! Die Lehrkräfte sind frei.',
+            'Ehrlich gesagt freue ich mich sogar auf die erste Mathestunde. Aber sag das niemandem!'
+          ] }
+        ]
       },
       // leichtes Wippen auf den Fußspitzen
       frame: function (t) {
@@ -542,7 +559,17 @@
           'Ohne Schule kauft leider kaum jemand etwas. Kaufen geht noch nicht.'
         ],
         // Zusatzseite nach dem ersten Wappen (freigegeben)
-        later: { wappen: 1, texts: ['Man erzählt sich, du hast den Wächter der Höhle befreit! Wenn die Schule wieder öffnet, gibt es Hefte zum halben Preis.'] }
+        // Weitere Stufen je Wappen und nach dem Finale (Texte vorläufig)
+        later: [
+          { wappen: 1, texts: ['Man erzählt sich, du hast den Wächter der Höhle befreit! Wenn die Schule wieder öffnet, gibt es Hefte zum halben Preis.'] },
+          { wappen: 2, texts: ['Seit der Leuchtturm wieder leuchtet, kommen ab und zu Fischer vorbei und kaufen Bleistifte.'] },
+          { wappen: 3, texts: ['Neulich hat jemand ein Heft gekauft, nur um Parabeln hineinzuzeichnen. Das liegt bestimmt an dir!'] },
+          { wappen: 4, texts: ['Das Schultor steht offen? Dann räume ich schon mal neue Hefte ins Regal.'] },
+          { finale: true, replace: true, texts: [
+            'Willkommen! Die Lehrerinnen und Lehrer sind frei – bald brauchen alle neue Hefte, Stifte und Bücher.',
+            'Sobald die Schule wieder aufgebaut ist, gibt es Hefte zum halben Preis. Versprochen! Kaufen geht aber noch nicht.'
+          ] }
+        ]
       },
       frame: function (t) {
         return { i: blinkFrame(t, 3100, 0), dx: Math.sin(t * 0.0012) > 0.6 ? 1 : 0, dy: 0 };

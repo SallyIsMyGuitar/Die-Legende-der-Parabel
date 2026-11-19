@@ -416,7 +416,17 @@ var Interior = (function () {
           'Nur wer alle Dungeons löst, kann das Schloss befreien. Pass auf dich auf!'
         ],
         // Zusatzseite nach dem ersten Wappen (freigegeben)
-        later: { wappen: 1, texts: ['Graf Gerade? Von dem habe ich noch nie gehört … Aber du hast den ersten Wächter befreit! Ich bin so stolz auf dich.'] }
+        // Weitere Stufen je Wappen und nach dem Finale (Texte vorläufig, Nutzer passt sie an)
+        later: [
+          { wappen: 1, texts: ['Graf Gerade? Von dem habe ich noch nie gehört … Aber du hast den ersten Wächter befreit! Ich bin so stolz auf dich.'] },
+          { wappen: 2, texts: ['Ich habe gesehen, dass der Leuchtturm wieder leuchtet! Dieser Graf Gerade ist also wirklich da draußen … Pass gut auf dich auf.'] },
+          { wappen: 3, texts: ['Im Dorf erzählt man, das Wasser im Osten fließt wieder in sanften Wellen. Warst du das etwa auch?'] },
+          { wappen: 4, texts: ['Das Schultor steht offen? Und das Schloss war die ganze Zeit unsere Schule … Sei vorsichtig da drin!'] },
+          { finale: true, replace: true, texts: [
+            'Du hast es geschafft! Die Lehrerinnen und Lehrer sind frei – das ganze Dorf spricht von nichts anderem.',
+            'Graf Gerade ist fort, und bald wird die Schule wieder aufgebaut. Ich bin so stolz auf dich!'
+          ] }
+        ]
       },
       // Mutter wiegt sich beim Rühren leicht hin und her
       frame: function (t) { var f = Math.floor(t / 350) % 2; return { i: f, dx: f, dy: 0 }; }

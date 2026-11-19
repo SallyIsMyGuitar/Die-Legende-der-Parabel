@@ -59,6 +59,7 @@
       bossIntro: bossIntroDone,
       wappen: wappens,
       spaeth: spaethDone,
+      dietl: dietlRewards,
       stats: stats
     };
   }
@@ -97,6 +98,7 @@
     wappens = st.wappen || 0;
     if (st.spaeth) { spaethDone = true; placeSpaethNpc(); }
     if (st.stats) stats = { right: st.stats.right || 0, wrong: st.stats.wrong || 0 };
+    dietlRewards = st.dietl || 0;   // aeltere Staende: noch keine Belohnung
     World.setScreen(lastRest.screen);
     Player.setPosition(lastRest.x, lastRest.y, lastRest.facing);
     Hud.fill();
@@ -104,16 +106,28 @@
 
   // Texte einer Figur: nach dem ersten Wappen kommen Zusatzseiten dazu
   // (later.replace = true ersetzt die bisherigen Seiten)
+  // later darf auch eine Liste von Stufen sein (z. B. Wappen 1, 2, 3, 4,
+  // Finale): Es gilt die LETZTE Stufe, deren Bedingung erfuellt ist.
+  function laterMatches(l) {
+    if (l.wappen && wappens < l.wappen) return false;
+    if (l.solved && !Raetsel.isSolved()) return false;
+    if (l.spiegel && !Spiegel.isSolved()) return false;
+    if (l.gezeiten && !Gezeiten.isSolved()) return false;
+    if (l.platten && !Platten.isSolved()) return false;
+    if (l.school && !World.isSchoolGateOpen()) return false;
+    if (l.finale && !finaleDone) return false;   // Endboss Graf Gerade besiegt
+    return true;
+  }
+
   function textsFor(target) {
     var l = target.later;
     if (!l) return target.texts;
-    if (l.wappen && wappens < l.wappen) return target.texts;
-    if (l.solved && !Raetsel.isSolved()) return target.texts;
-    if (l.spiegel && !Spiegel.isSolved()) return target.texts;
-    if (l.gezeiten && !Gezeiten.isSolved()) return target.texts;
-    if (l.platten && !Platten.isSolved()) return target.texts;
-    if (l.school && !World.isSchoolGateOpen()) return target.texts;
-    return l.replace ? l.texts : target.texts.concat(l.texts);
+    var stufen = Array.isArray(l) ? l : [l];
+    for (var i = stufen.length - 1; i >= 0; i--) {
+      var s = stufen[i];
+      if (laterMatches(s)) return s.replace ? s.texts : target.texts.concat(s.texts);
+    }
+    return target.texts;
   }
 
   // --- Bann von Graf Gerade: Ausgang gesperrt, bis alle Wesen erlöst sind ---
@@ -236,7 +250,7 @@
       victory: [
         'Der Bann zerbricht in tausend gerade Splitter. Der Wächter atmet auf, und das Tor öffnet sich.',
         'Danke! Graf Gerade hat mich verzaubert. Er hasst alles, was sich krümmt – und Parabeln am allermeisten.',
-        'Darum ließ er eure Schule zerstören: Dort lernt man, wie Parabeln funktionieren. Er hat noch weitere Wächter … und ein Schloss.',
+        'Darum ließ er eure Schule zerstören: Dort lernt man, wie Parabeln funktionieren. Er hat noch weitere Wächter … und hält die Lehrkräfte an einem Ort gefangen, den man im Dorf das Schloss nennt.',
         'Du erhältst das erste Wappen: das Wappen der Normalparabel. Kehre ins Dorf zurück und erzähle, was du erfahren hast.'
       ],
       // nach dem Sieg: der Felsen am Suedausgang loest sich auf
@@ -287,7 +301,7 @@
         'Der Bann zerbricht, und der Sand rieselt willenlos in sanften Bögen.',
         'Ich bin die Sanduhr des Tempels, verzaubert vom Grafen. Er glaubte, selbst die Zeit müsse gradlinig verfallen.',
         'Das Schloss, von dem im Dorf geflüstert wird, ist die zerstörte Schule im Norden: Dort hat Graf Gerade sich verschanzt und hält die Lehrerinnen und Lehrer gefangen. Das Schultor öffnet sich nun.',
-        'Du erhältst das Wappen der Nullstellen. Der Sand weht dir den Weg.'
+        'Du erhältst das Wappen der Nullstellen. Der Sand weht dir den Weg frei.'
       ],
       // nach dem Sieg: Das Schultor im Dorf oeffnet sich (Dungeon 5: Finale)
       onWin: function () { World.setSchoolGateOpen(true); }
@@ -297,7 +311,7 @@
       kontext: 'Graf Gerade fragt:',
       intro: [
         'So weit kommst du also. Ich bin Graf Gerade! Ich dulde nichts, was sich krümmt \u2013 und Parabeln hasse ich am meisten.',
-        'Solange in dieser Schule eine einzige Kurve gelehrt wird, bleiben die Lehrerinnen und Lehrer gefangen. Vier Fragen \u2013 dein Schwert hilft dir nicht.'
+        'Solange es hier noch jemanden gibt, der Kurven lehrt, bleiben die Lehrerinnen und Lehrer gefangen. Vier Fragen \u2013 dein Schwert hilft dir nicht.'
       ],
       victory: [
         'Seine starren Linien biegen sich \u2013 eine nach der anderen wird zur Parabel. Der Bann über dem Land zerbricht.',
@@ -439,6 +453,56 @@
         } }
       ]);
     }, 'R\u00e4tsel der Truhe:', { abortable: true, attempt: chestAttempts[screen] });
+  }
+
+  // --- Herr Dietl im Versteck: Frage zur Spielwelt, Belohnung Herz/Schwert ---
+  // Höchstens Dietl.MAX Belohnungen. Falsche Antworten kosten kein Herz und
+  // zählen nicht in die Fehlerstatistik (keine Mathe-Aufgabe).
+  var dietlRewards = 0;        // bisher erhaltene Belohnungen
+  var dietlQuizPending = false; // nach dem Gespräch folgt die Frage
+  var dietlMet = false;         // in dieser Sitzung schon vorgestellt
+
+  // Was Herr Dietl gerade geben kann: Herz nur, wenn eines fehlt; Schwert nur,
+  // wenn keines getragen wird
+  function dietlChoices() {
+    var c = [];
+    if (Hud.getHearts() < Config.HEARTS_MAX) c.push('herz');
+    if (!Sword.has()) c.push('schwert');
+    return c;
+  }
+
+  function talkDietl() {
+    var T = Dietl.TEXTE;
+    var rest = Dietl.MAX - dietlRewards;
+    var texts = [];
+    if (finaleDone) texts.push(T.finale);
+    if (rest <= 0) {
+      texts = texts.concat(T.alle);
+    } else if (!dietlChoices().length) {
+      texts = texts.concat(dietlMet ? [] : T.erstes, T.voll);
+    } else {
+      texts = texts.concat(dietlMet || dietlRewards > 0 ? T.wieder(rest) : T.erstes);
+      dietlQuizPending = true;   // nach dem Gespräch: Frage stellen
+    }
+    dietlMet = true;
+    Dialog.open('Herr Dietl', texts);
+  }
+
+  function startDietlQuiz() {
+    TaskUi.openFixed(Dietl.frage(), function (solved, errors) {
+      if (!solved) {
+        if (errors > 0) Dialog.open('Herr Dietl', Dietl.TEXTE.falsch);   // mit B abgebrochen: nichts
+        return;
+      }
+      var c = dietlChoices();
+      if (!c.length) return;
+      var gabe = c[Math.floor(Math.random() * c.length)];
+      if (gabe === 'herz') Hud.heal(1);
+      else Sword.give();   // Schwert wandert in den Slot im HUD
+      dietlRewards++;
+      saveGame();
+      Dialog.open('Herr Dietl', gabe === 'herz' ? Dietl.TEXTE.herz : Dietl.TEXTE.schwert);
+    }, { abortable: true, attempt: 1 });
   }
 
   // Schwert steigt aus der Truhe auf, mit kurzem Funkeln
@@ -917,6 +981,9 @@
       updateSeq(dt);
     } else if (spaethPhase === 'talk') {
       spaethAside();   // Gespräch ist beendet
+    } else if (dietlQuizPending) {
+      dietlQuizPending = false;
+      startDietlQuiz();   // Gespräch mit Herrn Dietl beendet: jetzt die Frage
     } else if (turnedNpc && !Dialog.isActive()) {
       // Gespräch beendet: Figur dreht sich zurück
       turnedNpc.facing = turnedNpc.baseFacing || 'down';
@@ -955,6 +1022,10 @@
             openChest();       // Rätsel-Truhe mit dem Schwert
           } else if (target.action === 'torch') {
             lightTorch(target.torch);   // Fackel-Rätsel vor dem Boss
+          } else if (target.action === 'dietl') {
+            target.npc.facing = faceToward(target.npc, Player.getX(), Player.getY());
+            turnedNpc = target.npc;
+            talkDietl();                // Herr Dietl im Versteck
           } else {
             if (target.action === 'rest') useRest(target);   // Rastquelle
             if (target.npc) {

@@ -154,7 +154,7 @@
           texts: [
             'Willkommen an der Oase! Trink aus der Quelle, solange sie noch sprudelt. Jenseits des Teichs wartet der Sandtempel.',
             'Die Sandschlangen stehen unter dem Bann des Grafen. Wer sie erlösen will, braucht die Lösungsformel.',
-            'Mein Merksatz: Lösungsformel: x1,2 = (−b ± √D) : (2a). Beispiel: x² − 2x − 8 = 0 hat D = 36, also x1,2 = (2 ± 6) : 2 und L = {4; −2}.'
+            'Mein Merksatz: Lösungsformel: x1,2 = (−b ± √D) : (2a). Beispiel: x² − 2x − 8 = 0 hat D = 36, also x1,2 = (2 ± 6) : 2 und L = {−2; 4}.'
           ],
           merk: { id: 'loesungsformel', name: 'Lösungsformel', text: 'x1,2 = (−b ± √D) : (2a). Beispiel: x² − 2x − 8 = 0: D = 36, also x1,2 = (2 ± 6) : 2, L = {−2; 4}.' }
         }

@@ -97,7 +97,7 @@ var Tasks = (function () {
       felder: [{ key: 'xs', label: 'xs' }, { key: 'ys', label: 'ys' }],
       loesung: [xs, ys],
       loesungstext: 'S(' + fmt(xs) + '|' + fmt(ys) + ')',
-      hinweis: 'Forme in die Scheitelform um: y = a(x - xs)² + ys.'
+      hinweis: 'Es gilt xs = −b : (2a). Setze xs in die Gleichung ein, dann erhältst du ys.'
     };
   }
 
@@ -206,9 +206,10 @@ var Tasks = (function () {
     };
   }
 
-  // --- Typ 8 (Felder, leicht): Scheitelform aus Streckfaktor und Scheitel ---
-  // Passt zum Tipp der Gaertnerin: aus S(xs|ys) und a die Klammer bzw.
-  // die Verschiebung richtig lesen (Vorzeichen!).
+  // --- Typ 8 (Felder, leicht): a, xs und ys aus der Scheitelform ablesen ---
+  // Passt zum Tipp der Gaertnerin: Die Gleichung steht da, gesucht sind
+  // Streckfaktor und Scheitel (Vorzeichen in der Klammer beachten!).
+  // Bei a = 1 steht kein Faktor vor der Klammer - auch das muss man erkennen.
   function spfAusS(rng) {
     var a = pick(rng, [0.5, 1, 2, -0.5, -1, -2]);
     var xs, ys;
@@ -217,12 +218,11 @@ var Tasks = (function () {
       ys = randInt(rng, -5, 5);
     } while (xs === 0 && ys === 0);
     return {
-      frage: 'Die Parabel y = a(x \u2212 xs)\u00b2 + ys hat den Streckfaktor a = ' + fmt(a) +
-        ' und den Scheitel S(' + fmt(xs) + '|' + fmt(ys) + '). Gib xs und ys an.',
-      felder: [{ key: 'xs', label: 'xs' }, { key: 'ys', label: 'ys' }],
-      loesung: [xs, ys],
-      loesungstext: spfText(a, xs, ys) + ', also xs = ' + fmt(xs) + ' und ys = ' + fmt(ys),
-      hinweis: 'Bei S(xs|ys) steht in der Klammer (x \u2212 xs). Achtung Vorzeichen: S(\u22122|3) hei\u00dft (x + 2)\u00b2 + 3.'
+      frage: 'Lies aus der Scheitelform a, xs und ys ab: ' + spfText(a, xs, ys),
+      felder: [{ key: 'a', label: 'a' }, { key: 'xs', label: 'xs' }, { key: 'ys', label: 'ys' }],
+      loesung: [a, xs, ys],
+      loesungstext: 'a = ' + fmt(a) + ', S(' + fmt(xs) + '|' + fmt(ys) + '), also xs = ' + fmt(xs) + ' und ys = ' + fmt(ys),
+      hinweis: 'a steht vor der Klammer (ohne Zahl: a = 1). Achtung Vorzeichen: (x + 2)\u00b2 hei\u00dft xs = \u22122.'
     };
   }
 
@@ -259,9 +259,9 @@ var Tasks = (function () {
         ' y-Koordinate und die zugehörige x-Koordinate an.',
       felder: [{ key: 'y', label: 'y' }, { key: 'x', label: 'x' }],
       loesung: [ys, xs],
-      loesungstext: 'Der Scheitel S(' + fmt(xs) + '|' + fmt(ys) + ') gibt die ' +
-        (auf ? 'kleinste' : 'gr\u00f6\u00dfte') + ' y-Koordinate: ' + fmt(ys) + ' bei x = ' + fmt(xs) + '.',
-      hinweis: 'Der y-Wert des Scheitels grenzt die Wertemenge ein: Bei a > 0 gibt es nichts darunter, bei a < 0 nichts dar\u00fcber.'
+      loesungstext: 'S(' + fmt(xs) + '|' + fmt(ys) + '), also ' + (auf ? 'kleinster' : 'gr\u00f6\u00dfter') +
+        ' y-Wert ' + fmt(ys) + ' bei x = ' + fmt(xs),
+      hinweis: 'Der Scheitel ist bei a > 0 der tiefste, bei a < 0 der h\u00f6chste Punkt der Parabel.'
     };
   }
 
@@ -499,7 +499,8 @@ var Tasks = (function () {
   // Hoehe (= ys) oder die Wurfweite (= 2d).
   function wurfparabel(rng) {
     var a = pick(rng, [-0.5, -1, -2]);
-    var d = randInt(rng, 1, 5);
+    // bei a = -2 nur kurze Wuerfe, sonst wird die Bahn unrealistisch steil
+    var d = randInt(rng, 1, a === -2 ? 3 : 5);
     var ys = -a * d * d;
     var Ding = pick(rng, ['Ball', 'Speer', 'Wasserstrahl']);
     var hoch = rng() < 0.5;
@@ -518,8 +519,7 @@ var Tasks = (function () {
       frage: bahn + ' Gib die Wurfweite in m an.',
       felder: [{ key: 'x', label: 'x' }],
       loesung: [2 * d],
-      loesungstext: 'Die Flugbahn endet wieder bei y = 0, also bei x = ' + fmt(2 * d) +
-        ' m. Wurfweite = ' + fmt(2 * d) + ' m.',
+      loesungstext: 'Nullstellen x = 0 und x = ' + fmt(2 * d) + ', also Wurfweite ' + fmt(2 * d) + ' m',
       hinweis: 'Setze y = 0 und löse. Eine Nullstelle ist der Start bei x = 0, die andere ist die Landestelle.'
     };
   }
@@ -532,12 +532,11 @@ var Tasks = (function () {
     var x = U / 4;
     var A = x * x;
     return {
-      frage: 'Zaun ' + U + ' m, rechteckiges Beet: Welche Seitenlänge x (in m) gibt die größte Fläche, und wie groß ist sie (in m²)?',
+      frage: U + ' m Zaun ringsum um ein rechteckiges Beet: Welche Seite x (in m) gibt die größte Fläche A (in m²)?',
       felder: [{ key: 'x', label: 'x' }, { key: 'A', label: 'A' }],
       loesung: [x, A],
-      loesungstext: 'U = 2x + 2b mit b = ' + fmt(U / 2) + ' \u2212 x. A(x) = x \u00b7 (' + (U / 2) + ' \u2212 x) hat den Scheitel bei x = ' + fmt(x) +
-        '. A = ' + fmt(x) + ' \u00b7 ' + fmt(x) + ' = ' + fmt(A) + '.',
-      hinweis: 'Die zweite Seite ist ' + (U / 2) + ' \u2212 x. Setze in A = x \u00b7 (zweite Seite) ein; das größte Rechteck ist das Quadrat mit x = U : 4.'
+      loesungstext: 'A(x) = x \u00b7 (' + (U / 2) + ' \u2212 x), Scheitel bei x = ' + fmt(x) + ', A = ' + fmt(A),
+      hinweis: 'Zweite Seite: ' + (U / 2) + ' \u2212 x, also A = x \u00b7 (' + (U / 2) + ' \u2212 x). Am Scheitel ist A am größten: x = U : 4.'
     };
   }
 
@@ -552,7 +551,7 @@ var Tasks = (function () {
     { id: 'aBestimmen', name: 'Streckfaktor a bestimmen', make: aBestimmen },
     { id: 'spfAufstellen', name: 'Scheitelform aufstellen', make: spfAufstellen },
     { id: 'verschiebung', name: 'Verschiebung (Truhe)', make: verschiebung },
-    { id: 'spfAusS', name: 'Scheitelform aus S und a', make: spfAusS },
+    { id: 'spfAusS', name: 'a, xs, ys ablesen (Scheitelform)', make: spfAusS },
     { id: 'spfAusSP', name: 'Scheitelform aus S und P', make: spfAusSP },
     { id: 'wertemenge', name: 'Wertemenge am Scheitel', make: wertemenge },
     { id: 'wertemengeAuswahl', name: 'Wertemenge (Auswahl)', make: wertemengeAuswahl },
@@ -620,11 +619,11 @@ var Tasks = (function () {
       hinweis: 'Bei (x − 2) ist xs = 2.'
     },
     {
-      frage: 'Die Parabel hat den Scheitel S(1|2) und geht durch P(3|10). Gib den Streckfaktor a an.',
+      frage: 'Die Parabel hat den Scheitel S(2|\u22121) und geht durch P(4|5). Gib den Streckfaktor a an.',
       felder: [{ key: 'a', label: 'a' }],
-      loesung: [2],
-      loesungstext: '10 = a(3 − 1)² + 2, also 8 = 4a, a = 2',
-      hinweis: 'Setze P ein: 10 = a(3 − 1)² + 2.'
+      loesung: [1.5],
+      loesungstext: '5 = a(4 \u2212 2)\u00b2 \u2212 1, also 6 = 4a, a = 1,5',
+      hinweis: 'Setze P ein: 5 = a(4 \u2212 2)\u00b2 \u2212 1.'
     },
     {
       frage: 'Stelle die Parabel mit S(−1|4) ein, die durch P(1|0) geht.',
@@ -642,11 +641,11 @@ var Tasks = (function () {
   // Umformen, den Streckfaktor und das Aufstellen aus drei Punkten.
   var BOSS_WASSER = [
     {
-      frage: 'Gib den Scheitelpunkt der Parabel y = x\u00b2 \u2212 6x + 8 an.',
+      frage: 'Gib den Scheitelpunkt der Parabel y = x\u00b2 + 4x + 1 an.',
       felder: [{ key: 'xs', label: 'xs' }, { key: 'ys', label: 'ys' }],
-      loesung: [3, -1],
-      loesungstext: 'y = (x \u2212 3)\u00b2 \u2212 1, also S(3|\u22121)',
-      hinweis: 'Forme um: y = (x \u2212 3)\u00b2 \u2212 1.'
+      loesung: [-2, -3],
+      loesungstext: 'y = (x + 2)\u00b2 \u2212 3, also S(\u22122|\u22123)',
+      hinweis: 'xs = \u2212b : (2a) = \u22124 : 2 = \u22122. Setze xs ein, um ys zu berechnen.'
     },
     {
       frage: 'Die Parabel hat den Scheitel S(\u22122|5) und geht durch P(2|\u22123). Gib den Streckfaktor a an.',
@@ -656,7 +655,7 @@ var Tasks = (function () {
       hinweis: 'Setze P ein: \u22123 = a(2 + 2)\u00b2 + 5.'
     },
     {
-      frage: 'Eine Parabel geht durch P1(0|3), P2(\u22121|2) und P3(2|\u22121). Stelle sie in der Scheitelform auf.',
+      frage: 'Stelle die Parabel durch P1(0|3), P2(\u22121|2) und P3(2|\u22121) ein.',
       felder: [{ key: 'a', label: 'a' }, { key: 'xs', label: 'xs' }, { key: 'ys', label: 'ys' }],
       loesung: [-1, 0, 3],
       loesungstext: 'y = \u2212x\u00b2 + 3 = \u2212(x \u2212 0)\u00b2 + 3',
@@ -681,14 +680,14 @@ var Tasks = (function () {
       auswahl: ['zwei Lösungen', 'genau eine Lösung', 'keine Lösung'],
       felder: [],
       loesung: 1,
-      loesungstext: 'D = 4\u00b2 \u2212 4 \u00b7 2 \u00b7 2 = 16 \u2212 16 = 0, also genau eine Lösung.',
+      loesungstext: 'D = 4\u00b2 \u2212 4 \u00b7 2 \u00b7 2 = 0, also genau eine Lösung',
       hinweis: 'Berechne D = b\u00b2 \u2212 4ac und schau, ob D gr\u00f6\u00dfer, gleich oder kleiner als 0 ist.'
     },
     {
       frage: 'Bestimme die Lösungsmenge L von x\u00b2 + 2x \u2212 8 = 0. Gib x1 < x2 an.',
       felder: [{ key: 'x1', label: 'x1' }, { key: 'x2', label: 'x2' }],
       loesung: [-4, 2],
-      loesungstext: 'D = 2\u00b2 \u2212 4 \u00b7 1 \u00b7 (\u22128) = 36, also x1,2 = (\u22122 \u00b1 6) : 2. L = {\u22124; 2}',
+      loesungstext: 'D = 36, x1,2 = (\u22122 \u00b1 6) : 2, also L = {\u22124; 2}',
       hinweis: 'Erst D = b\u00b2 \u2212 4ac, dann x1,2 = (\u2212b \u00b1 \u221aD) : (2a).'
     }
   ];
@@ -702,28 +701,28 @@ var Tasks = (function () {
       felder: [{ key: 'x1', label: 'x1' }, { key: 'x2', label: 'x2' }],
       loesung: [-1, 2],
       loesungstext: 'x\u00b2 \u2212 1 = x + 1 gibt x\u00b2 \u2212 x \u2212 2 = 0, also L = {\u22121; 2}',
-      hinweis: 'Setze gleich: x\u00b2 \u2212 1 = x + 1, bringe alles auf eine Seite und loese.'
+      hinweis: 'Setze gleich: x\u00b2 \u2212 1 = x + 1, bringe alles auf eine Seite und löse.'
     },
     {
       frage: 'Ein Ball fliegt auf der Bahn y = \u22120,5(x \u2212 3)\u00b2 + 4,5 (Angaben in m). Gib die Wurfweite in m an.',
       felder: [{ key: 'x', label: 'x' }],
       loesung: [6],
-      loesungstext: 'y = 0 gibt \u22120,5(x \u2212 3)\u00b2 + 4,5 = 0, also (x \u2212 3)\u00b2 = 9. Wurfweite = 6 m.',
+      loesungstext: '(x \u2212 3)\u00b2 = 9 gibt x = 0 und x = 6, Wurfweite 6 m',
       hinweis: 'Setze y = 0. Eine Nullstelle ist der Start bei x = 0, die andere die Landestelle.'
     },
     {
-      frage: 'Zaun 24 m, rechteckiges Beet: Welche Seitenlänge x (in m) gibt die größte Fläche, und wie groß ist sie (in m²)?',
+      frage: '24 m Zaun ringsum um ein rechteckiges Beet: Welche Seite x (in m) gibt die größte Fläche A (in m²)?',
       felder: [{ key: 'x', label: 'x' }, { key: 'A', label: 'A' }],
       loesung: [6, 36],
       loesungstext: 'A(x) = x \u00b7 (12 \u2212 x), Scheitel bei x = 6: A = 36 m\u00b2.',
-      hinweis: 'Die zweite Seite ist 12 \u2212 x. Das groesste Rechteck ist das Quadrat: x = 24 : 4.'
+      hinweis: 'Die zweite Seite ist 12 \u2212 x. Das größte Rechteck ist das Quadrat: x = 24 : 4.'
     },
     {
       frage: 'Wie viele gemeinsame Punkte haben die Parabel y = x\u00b2 und die Gerade y = 2x \u2212 1?',
       auswahl: ['zwei gemeinsame Punkte', 'genau ein gemeinsamer Punkt', 'kein gemeinsamer Punkt'],
       felder: [],
       loesung: 1,
-      loesungstext: 'x\u00b2 = 2x \u2212 1 gibt (x \u2212 1)\u00b2 = 0, also D = 0: genau ein Punkt, der Ber\u00fchrpunkt B(1|1).',
+      loesungstext: 'x\u00b2 \u2212 2x + 1 = 0 hat D = 0: genau ein Punkt, B(1|1)',
       hinweis: 'Setze gleich und berechne D von x\u00b2 \u2212 2x + 1 = 0.'
     }
   ];

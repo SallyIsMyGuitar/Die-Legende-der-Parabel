@@ -87,6 +87,23 @@
     r.px(x + 10, y + 5, 2, 1, '#3a4a5a');
   }
 
+  // Muscheltafel in der Wand der Pumpenkammer: drei markierte Punkte
+  // (Merksatz: Parabel durch drei Punkte aufstellen)
+  function muscheltafel(r) {
+    var x = 3 * TILE, y = 1 * TILE;   // linke Wand (rechts oben liegt das HUD)
+    r.px(x + 1, y + 2, 14, 12, '#4a3a5a');
+    r.px(x + 2, y + 3, 12, 10, '#c8b0c8');
+    r.px(x + 2, y + 3, 12, 1, '#e4d0e0');
+    // drei Punkte auf einem kleinen Bogen
+    r.px(x + 4, y + 6, 2, 2, '#f0c040');
+    r.px(x + 7, y + 10, 2, 2, '#f0c040');
+    r.px(x + 10, y + 6, 2, 2, '#f0c040');
+    r.px(x + 5, y + 8, 1, 1, '#4a3a5a');
+    r.px(x + 6, y + 9, 1, 1, '#4a3a5a');
+    r.px(x + 9, y + 9, 1, 1, '#4a3a5a');
+    r.px(x + 10, y + 8, 1, 1, '#4a3a5a');
+  }
+
   // Blaue Vignette, ueber der Spielfigur (Unterwasser-Licht)
   function vignette(r) {
     var ctx = r.getCtx();
@@ -168,7 +185,7 @@
         name: 'Netzweber',
         texts: [
           'Willkommen in der Tiefe! Ich webe die Netze des Wasserreichs – doch seit dem Bann zittern alle Fäden so gerade wie Lineale.',
-          'Zum Umformen einer Parabel y = ax² + bx + c nutze die Scheitelform: y = a(x − xs)² + ys. Darin liest du den Scheitel direkt ab.',
+          'Forme y = ax² + bx + c in die Scheitelform y = a(x − xs)² + ys um. Dann liest du den Scheitel direkt ab.',
           'Beispiel: y = x² − 4x + 5 = (x − 2)² + 1 mit dem Scheitel S(2|1).'
         ],
         merk: { id: 'umformen', name: 'Umformen in die Scheitelform', text: 'y = ax² + bx + c in die Scheitelform umformen: y = a(x − xs)² + ys. Beispiel: y = x² − 4x + 5 = (x − 2)² + 1 mit S(2|1).' }
@@ -201,6 +218,7 @@
     },
     bakeExtra: function (r) {
       bildtafel(r);
+      muscheltafel(r);
       Buildings.well(r, 9, 5);   // Quelle sieht aus wie der Dorfbrunnen
     },
     objects: [
@@ -214,6 +232,18 @@
           'Darunter ein Beispiel: y = x² − 6x + 8. Hier ist xs = 3, und ys = 8 − 9 = −1, also S(3|−1).'
         ],
         merk: { id: 'scheitelallgemein', name: 'Scheitel aus der allgemeinen Form', text: 'Bei y = ax² + bx + c gilt xs = −b : (2a), dann ys einsetzen. Beispiel: y = x² − 6x + 8 mit S(3|−1).' }
+      },
+      {
+        // Erklaer-Objekt: Merksatz zur Parabel durch drei Punkte
+        tiles: [[3, 1]],
+        x: 3 * TILE, y: 1 * TILE,
+        name: 'Muscheltafel',
+        texts: [
+          'In Perlmutt geritzt: Geht eine Parabel durch drei Punkte, setze jeden Punkt in y = ax² + bx + c ein.',
+          'Liegt ein Punkt auf der y-Achse, kennst du c sofort. Aus den beiden anderen Punkten berechnest du a und b.',
+          'Beispiel: P1(0|1), P2(1|2), P3(−1|2). Aus P1 folgt c = 1. Dann gilt a + b = 1 und a − b = 1, also a = 1, b = 0 und y = x² + 1.'
+        ],
+        merk: { id: 'dreiPunkte', name: 'Parabel durch drei Punkte', text: 'Jeden Punkt in y = ax² + bx + c einsetzen. Ein Punkt auf der y-Achse liefert c sofort, die anderen beiden a und b.' }
       },
       {
         // Rastquelle: heilt alle Herzen, speichert die Ruecksprung-Stelle

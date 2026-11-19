@@ -281,6 +281,17 @@ var People = (function () {
   }
 
   // Hausmeister (Schulhof): graues Haar, dunkelblaue Arbeitskleidung
+  // Herr Dietl: Lehrer im Versteck, leicht braune Haut, schwarze Haare,
+  // oranger Pullover, blaue Jeans, dunkelbraune Schuhe
+  function dietl() {
+    return dirs(pal({
+      s: '#d0a070', S: '#a87648',
+      h: '#16161c', H: '#34343e',
+      t: '#ec7a26', T: '#f8a050', D: '#b4561a',
+      p: '#3a5c9c', B: '#3c2616'
+    }));
+  }
+
   function hausmeister() {
     return dirs(pal({
       h: '#8a8a8a', H: '#b0b0b0',
@@ -307,6 +318,7 @@ var People = (function () {
     karawanenfuehrerin: karawanenfuehrerin,
     sterndeuter: sterndeuter,
     brunnenhueterin: brunnenhueterin,
-    hausmeister: hausmeister
+    hausmeister: hausmeister,
+    dietl: dietl
   };
 })();

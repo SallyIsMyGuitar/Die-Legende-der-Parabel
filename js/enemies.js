@@ -30,8 +30,8 @@ var Enemies = (function () {
     kueste: 'wertemenge',        // Turmwaerter: Wertemenge am Scheitel
     leingang: 'spfAusSP',         // Tuermerin (Turm): Scheitelform aus S und P
     lmitte: 'wertemengeAuswahl',   // Alte Turmuhr: Wertemenge als Auswahl
-    weingang: 'scheitelAllgemein', // Netzweber (Wasser): Scheitel aus allgemeiner Form
-    wmitte: 'umformen',             // Alte Bildtafel: Umformen in die Scheitelform
+    weingang: 'umformen',           // Netzweber (Wasser): Umformen in die Scheitelform
+    wmitte: 'scheitelAllgemein',    // Alte Bildtafel: xs = -b : (2a), dann ys
     steppe: 'diskriminante',        // Karawanenfuehrerin: D = b^2 - 4ac
     duenen: 'anzahlLoesungen',      // Sterndeuter: Anzahl der Loesungen
     oase: 'loesungsformel',         // Brunnenhueterin: Loesungsformel
@@ -57,7 +57,7 @@ var Enemies = (function () {
     weingang: 'Ein Quallengeist fragt:',
     wmitte: 'Ein Muschelgeist murmelt:',
     steppe: 'Ein Sandkäfer zirpt (denk an die Diskriminante der Karawanenführerin):',
-    duenen: 'Ein Staubgeist huscht vorbei (drei Faelle, sagt der Sterndeuter):',
+    duenen: 'Ein Staubgeist huscht vorbei (drei Fälle, sagt der Sterndeuter):',
     oase: 'Eine Sandschlange zischt (die Lösungsformel, sagt die Brunnenhüterin):',
     seingang: 'Ein Mumienkäfer raschelt (erst D, sagt die Wandinschrift):',
     smitte: 'Ein Wüstengeist seufzt (y = 0, sagt die Steinerne Waage):',

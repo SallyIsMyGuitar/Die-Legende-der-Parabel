@@ -82,7 +82,13 @@
             'Dahinter, in der Ruine, hält er die Lehrerinnen und Lehrer gefangen. Alles folgt seinen starren, geraden Linien.',
             'Mein Merksatz: Schnittpunkte von Parabel und Gerade: beide Terme gleichsetzen und die quadratische Gleichung lösen.'
           ],
-          merk: { id: 'schnittGerade', name: 'Schnittpunkte Parabel/Gerade', text: 'Schnittpunkte von Parabel und Gerade: beide Terme gleichsetzen und die quadratische Gleichung lösen.' }
+          merk: { id: 'schnittGerade', name: 'Schnittpunkte Parabel/Gerade', text: 'Schnittpunkte von Parabel und Gerade: beide Terme gleichsetzen und die quadratische Gleichung lösen.' },
+          // nach dem Finale: kein Versteck mehr (Texte vorläufig)
+          later: { finale: true, replace: true, texts: [
+            'Du hast es geschafft! Der Graf ist fort, und ich muss mich nicht mehr hinter den Tonnen verstecken.',
+            'Jetzt räume ich endlich auf. Bis die Schule wieder steht, dauert es aber noch ein bisschen.',
+            'Mein Merksatz: Schnittpunkte von Parabel und Gerade: beide Terme gleichsetzen und die quadratische Gleichung lösen.'
+          ] }
         }
       }
     ],
@@ -90,7 +96,8 @@
       {
         // Schild am Weg zur Ruine
         tiles: [[11, 8]], x: 11 * 16, y: 8 * 16, name: 'Schild',
-        texts: ['Zerstörte Schule. Graf Gerade hält die Lehrkräfte gefangen.']
+        texts: ['Zerstörte Schule. Graf Gerade hält die Lehrkräfte gefangen.'],
+        later: { finale: true, replace: true, texts: ['Zerstörte Schule. Die Lehrkräfte sind frei – bald wird sie wieder aufgebaut.'] }
       },
       {
         // Rastquelle vor dem Eingang der Ruine (sieht aus wie der Dorfbrunnen)
@@ -329,7 +336,7 @@
         name: 'Alte Wurfmaschine',
         texts: [
           'Die Maschine warf einst weiter als jede lineale Wache: Der Scheitel einer Wurfparabel ist der höchste Punkt der Flugbahn.',
-          'Bei y = a(x − xs)² + ys mit a < 0 liegt dieser Punkt bei S(xs|ys). Vom Scheitel bis zur Landung ist es genau halb so weit wie die ganze Wurfweite.'
+          'Bei y = a(x − xs)² + ys mit a < 0 liegt dieser Punkt bei S(xs|ys). Startet und landet der Wurf auf gleicher Höhe, liegt der Scheitel genau in der Mitte der Wurfweite.'
         ],
         merk: { id: 'wurfscheitel', name: 'Scheitel einer Wurfparabel', text: 'Der Scheitel einer Wurfparabel ist der höchste Punkt der Flugbahn: S(xs|ys) bei y = a(x − xs)² + ys mit a < 0.' }
       },

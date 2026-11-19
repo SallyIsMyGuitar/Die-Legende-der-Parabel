@@ -175,7 +175,7 @@
           'Endlich jemand! Ich hüte diesen Turm, seit das Licht erloschen ist. Alles hier drin folgt der Scheitelform.',
           'Sie lautet: y = a(x − xs)² + ys. Darin ist S(xs|ys) der Scheitel – der Punkt, um den die Parabel symmetrisch ist.'
         ],
-        merk: { id: 'scheitelform', name: 'Scheitelform', text: 'Scheitelform: y = a(x − xs)² + ys mit dem Scheitel S(xs|ys).' }
+        merk: { id: 'scheitelformTurm', name: 'Scheitelform (Turm)', text: 'Scheitelform: y = a(x − xs)² + ys mit dem Scheitel S(xs|ys).' }
       },
       frame: function (t) { var f = Math.floor(t / 400) % 2; return { i: 0, dx: 0, dy: f }; }
     }

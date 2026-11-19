@@ -214,7 +214,7 @@ var World = (function () {
             name: 'Turmwärter',
             texts: [
               'Siehst du den dunklen Leuchtturm? Sein Licht entsteht in einem parabolischen Spiegel – einem gekrümmten Spiegel, der die Strahlen bündelt.',
-              'Graf Gerade hasst genau diese Krümmung. Seit seinem Bann ist das Licht erloschen, und die Krabbengeister bewachen die Tür.',
+              'Graf Gerade hasst genau diese Krümmung. Seit seinem Bann ist das Licht erloschen, und die Krabbengeister treiben sich vor der Tür herum.',
               'Die Parabel y = 0,5(x − 2)² + 3 hat den Scheitel S(2|3). Weil sie nach oben geöffnet ist, ist der Scheitel der tiefste Punkt: Alle y-Werte ab 3 kommen vor. Der kleinste y-Wert ist also ys.'
             ],
             merk: { id: 'wertemenge', name: 'Wertemenge am Scheitel', text: 'Der Scheitel S(xs|ys) grenzt die Wertemenge ein: Bei a > 0 ist ys der kleinste y-Wert, bei a < 0 der größte.' }
@@ -269,7 +269,7 @@ var World = (function () {
         {
           tiles: [[6, 7]], x: 6 * TILE, y: 7 * TILE,
           name: 'Schild',
-          texts: ['Versunkenes Wasserreich. Das Siegel des Grafen verschliesst das Tor.']
+          texts: ['Versunkenes Wasserreich. Das Siegel des Grafen verschließt das Tor.']
         }
       ],
       dungeon: 'weingang',
@@ -302,7 +302,7 @@ var World = (function () {
             name: 'Wanderin',
             texts: [
               'Hallo! Seit die Schule zerstört ist, liegt ein seltsamer Bann über dem Land. Sogar die Pilzwesen hier sind verzaubert.',
-              'Sie lassen nur durch, wer die Normalparabel kennt: y = x². Ihr Scheitel liegt im Ursprung, also bei S(0|0).',
+              'Wer sie erlösen will, muss die Normalparabel kennen: y = x². Ihr Scheitel liegt im Ursprung, also bei S(0|0).',
               'Ein Punkt liegt auf der Normalparabel, wenn y = x² gilt. Zum Beispiel P(3|9), denn 3² = 9. Aber auch P(−3|9), denn (−3)² = 9!'
             ],
             merk: { id: 'normalparabel', name: 'Normalparabel', text: 'Die Normalparabel hat die Gleichung y = x² und den Scheitel S(0|0). P(x|y) liegt auf ihr, wenn y = x² gilt, z. B. P(−3|9).' }
@@ -405,7 +405,8 @@ var World = (function () {
       ],
       // Der dunkle Eingang ('E') f\u00fchrt in die H\u00f6hle der Parabeln
       dungeon: 'dhalle',
-      exits: { west: 'wald' }
+      // Ostausgang: Lücke in der Baumreihe (Zeile 5) zum Versteck von Herrn Dietl (dietl.js)
+      exits: { west: 'wald', east: 'dietl' }
     }
   };
 
@@ -555,7 +556,7 @@ var World = (function () {
     for (var k = 0; k < npcs.length; k++) {
       var n = npcs[k];
       if (Math.floor(n.x / TILE) === tx && Math.floor(n.y / TILE) === ty) {
-        return { name: n.talk.name, texts: n.talk.texts, merk: n.talk.merk, later: n.talk.later, hintX: n.x + 8, hintY: n.y, npc: n };
+        return { name: n.talk.name, texts: n.talk.texts, merk: n.talk.merk, later: n.talk.later, action: n.talk.action, hintX: n.x + 8, hintY: n.y, npc: n };
       }
     }
     return null;
