@@ -295,7 +295,7 @@
       '#W............W#',
       '#W..S.......S.W#',
       '#W............W#',
-      '#W........k...W#',
+      '#W..........k.W#',   // Tafel rechts neben dem Ausgang (10,12), nicht davor
       '#WWWWWWWWWMWWWW#',
       '################'
     ],
@@ -314,7 +314,7 @@
     },
     objects: [
       {
-        tiles: [[10, 11]], x: 10 * TILE, y: 11 * TILE,
+        tiles: [[12, 11]], x: 12 * TILE, y: 11 * TILE,
         name: 'Steintafel',
         texts: [
           'Tritt auf die Druckplatten der beiden Nullstellen der Parabel ' + Platten.FORMEL + '. Dann hebt sich das Gitter.',

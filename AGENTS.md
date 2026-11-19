@@ -239,7 +239,7 @@ Gebaut wird immer nur der Meilenstein, den der Nutzer freigibt, mit Test nach je
 Nach der Durchsicht des gesamten Spiels wurden am 13 Funden behoben (Details im Prüfbericht):
 
 - **Ladezeit (kritisch):** Die Script-Tags `wueste.js`, `platten.js`, `sandtempel.js`, `schule.js` stehen jetzt hinter `world.js` in `index.html`, weil beide neue Dateien ihre Bildschirme zur Ladezeit per `World.addScreen` anmelden (zuvor ReferenceError, Wüste und Schule wurden nie registriert).
-- **Softlock im Plattenraum (kritisch):** Der Übergang smitte → splatten setzt die Figur jetzt auf Kachel (8,11) neben der Steintafel, nicht mehr auf die blockierende Tafel-Kachel (10,11).
+- **Softlock im Plattenraum (kritisch):** Der Übergang smitte → splatten setzt die Figur jetzt auf Kachel (8,11) neben der Steintafel, nicht mehr auf die blockierende Tafel-Kachel (10,11). Nachtrag: Die Steintafel stand direkt vor dem Ausgang zurück (10,12) und versperrte ihn; sie steht jetzt auf (12,11).
 - **Vorzeichen in `schnittGerade` (kritisch):** `geradeText` gibt bei m = 0 und t < 0 korrekt „y = −t“ aus (vorher fehlte das Minus, sodass falsche Antworten als richtig gewertet wurden).
 - **Fragetexte in der Aufgabenbox (hoch):** Die Fragen von `schnittGerade`, `wurfparabel`, `extremwert` und `wertemenge` sowie die Graf-Gerade-Aufgabe 3 wurden gekürzt; die Kontexte der Kreide-Geister und Geodreieck-Wächter heißen jetzt „(der Scheitel):“ bzw. „(am Scheitel):“. Damit passen alle 19 Typen mit Kontext in die drei Zeilen der Aufgabenbox (per Skript verifiziert, 800 Stichproben).
 - **Schulhof-Schild (mittel):** Sprechziel liegt jetzt auf der sichtbaren `i`-Kachel (11,8).
