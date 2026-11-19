@@ -574,8 +574,35 @@ var Tasks = (function () {
     }
   ];
 
+  // ---Boss des Sandtempels: feste, von der Lehrkraft gepruefte Aufgaben ---
+  // Thema des Dungeons: Nullstellen und quadratische Gleichungen.
+  var BOSS_SANDTEMPEL = [
+    {
+      frage: 'Berechne die Diskriminante D der Gleichung x\u00b2 \u2212 6x + 5 = 0.',
+      felder: [{ key: 'D', label: 'D' }],
+      loesung: [16],
+      loesungstext: 'D = (\u22126)\u00b2 \u2212 4 \u00b7 1 \u00b7 5 = 36 \u2212 20 = 16',
+      hinweis: 'Setze a = 1, b = \u22126, c = 5 in D = b\u00b2 \u2212 4ac ein.'
+    },
+    {
+      frage: 'Wie viele Lösungen hat die Gleichung 2x\u00b2 + 4x + 2 = 0?',
+      auswahl: ['zwei Lösungen', 'genau eine Lösung', 'keine Lösung'],
+      felder: [],
+      loesung: 1,
+      loesungstext: 'D = 4\u00b2 \u2212 4 \u00b7 2 \u00b7 2 = 16 \u2212 16 = 0, also genau eine Lösung.',
+      hinweis: 'Berechne D = b\u00b2 \u2212 4ac und schau, ob D gr\u00f6\u00dfer, gleich oder kleiner als 0 ist.'
+    },
+    {
+      frage: 'Bestimme die Lösungsmenge L von x\u00b2 + 2x \u2212 8 = 0. Gib x1 < x2 an.',
+      felder: [{ key: 'x1', label: 'x1' }, { key: 'x2', label: 'x2' }],
+      loesung: [-4, 2],
+      loesungstext: 'D = 2\u00b2 \u2212 4 \u00b7 1 \u00b7 (\u22128) = 36, also x1,2 = (\u22122 \u00b1 6) : 2. L = {\u22124; 2}',
+      hinweis: 'Erst D = b\u00b2 \u2212 4ac, dann x1,2 = (\u2212b \u00b1 \u221aD) : (2a).'
+    }
+  ];
+
   // Feste Boss-Aufgaben je Dungeon (Schluessel = Boss-Raum)
-  var BOSS_FEST = { dboss: BOSS_HOEHLE, lboss: BOSS_TURM, wboss: BOSS_WASSER };
+  var BOSS_FEST = { dboss: BOSS_HOEHLE, lboss: BOSS_TURM, wboss: BOSS_WASSER, sboss: BOSS_SANDTEMPEL };
 
   function bossTasks(room) {
     return (BOSS_FEST[room] || []).slice();

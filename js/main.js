@@ -100,6 +100,8 @@
     if (l.solved && !Raetsel.isSolved()) return target.texts;
     if (l.spiegel && !Spiegel.isSolved()) return target.texts;
     if (l.gezeiten && !Gezeiten.isSolved()) return target.texts;
+    if (l.platten && !Platten.isSolved()) return target.texts;
+    if (l.school && !World.isSchoolGateOpen()) return target.texts;
     return l.replace ? l.texts : target.texts.concat(l.texts);
   }
 
@@ -108,10 +110,13 @@
   // freiwillige Übung. Der Bann gilt nur noch INNERHALB der Dungeons
   // ('warp' = Öffnung nach vorn ist gesperrt, bis alle Wesen des Raums erlöst sind).
   var BANN = { dhalle: 'warp', dmittel: 'warp', leingang: 'warp', lmitte: 'warp',
-               weingang: 'warp', wmitte: 'warp' };
+               weingang: 'warp', wmitte: 'warp', seingang: 'warp', smitte: 'warp',
+               klassenzimmer: 'warp', physiksaal: 'warp', turnhalle: 'warp' };
   var FORWARD = { dhalle: 'dmittel', dmittel: 'draetsel',
                   leingang: 'lmitte', lmitte: 'lraetsel',
-                  weingang: 'wmitte', wmitte: 'wraetsel' };   // Öffnung nach vorn
+                  weingang: 'wmitte', wmitte: 'wraetsel',
+                  seingang: 'smitte', smitte: 'splatten',
+                  klassenzimmer: 'physiksaal', physiksaal: 'turnhalle', turnhalle: 'aula' };   // Öffnung nach vorn
 
   // --- Rätsel vor dem Boss: Fackeln (Höhle), Spiegel (Turm), Brunnen (Wasser) --
   // (Logik in raetsel.js, spiegel.js bzw. gezeiten.js)
@@ -184,6 +189,30 @@
   // --- Bosse der Dungeons: Texte und Ablauf je Boss-Raum ------------------
   // Aufgaben je Boss liegen in tasks.js (bossTasks), Instanz in boss.js.
   // Die Texte des Wächters der Höhle sind freigegeben und bleiben unverändert.
+  // --- Platten-Raeetsel vor dem Wächter des Sandtempels (Dungeon 4) -----
+  // Die Druckplatten werden durch Betreten gedrueckt (ausgeloest pro Kachel-
+  // wechsel, nicht solange man auf derselben Platte stehen bleibt).
+  var lastPlateTile = null;
+  function stepOnPlate(screen) {
+    if (screen !== 'splatten' || Platten.isSolved()) return;
+    if (TaskUi.isActive() || Dialog.isActive() || seq) return;
+    var tx = (Player.getX() + 8) >> 4;
+    var ty = (Player.getY() + 8) >> 4;
+    if (tx === null) return;
+    if (lastPlateTile === tx + ',' + ty) return;   // steht noch auf derselben Platte
+    var x = Platten.plateAt(tx, ty);
+    if (x === null) { lastPlateTile = null; return; }   // neben den Platten merken
+    lastPlateTile = tx + ',' + ty;
+    var res = Platten.press(x);
+    if (res === 'wrong') {
+      Dialog.open('', ['Die Platte bei x = ' + Tasks.fmt(x) + ' versinkt \u2013 alle Platten kehren in den Boden zurück. Sie liegt nicht auf der Parabel ' + Platten.FORMEL + '. Das Gitter bleibt zu.']);
+    } else if (res === 'solved') {
+      saveGame();
+      Dialog.open('', ['Beide Platten der Nullstellen sind gedrückt. Mit lautem Ruck hebt sich das Gitter zum Wächter.']);
+    }
+    // 'pressed' und 'already': Platte bleibt gedrueckt, kein Text
+  }
+
   var BOSSES = {
     dboss: {
       name: 'Wächter der Höhle',
@@ -235,6 +264,22 @@
       // nach dem Sieg: Der Sandsturm im Westen loest sich auf
       // (Dungeon 4: Weg ueber Steppe, Duenen und Oase zum Sandtempel)
       onWin: function () { World.setSandstormOpen(true); }
+    },
+    sboss: {
+      name: 'Wächter des Sandtempels',
+      kontext: 'Der Wächter fragt:',
+      intro: [
+        'Halt! Graf Gerade hat den Sandtempel versiegelt: Im Sand verweht alles, was gerade ist \u2013 und jede Krümmung begräbt er!',
+        'Beantworte meine drei Fragen. Für jede richtige Antwort verliere ich ein Herz. Dein Schwert hilft dir hier nicht.'
+      ],
+      victory: [
+        'Der Bann zerbricht, und der Sand rieselt willenlos in sanften Bögen.',
+        'Ich bin die Sanduhr des Tempels, verzaubert vom Grafen. Er glaubte, selbst die Zeit müsse gradlinig verfallen.',
+        'Graf Gerade hat sich in der zerstörten Schule im Norden verschanzt. Dort hält er die Lehrerinnen und Lehrer gefangen. Das Schultor öffnet sich nun.',
+        'Du erhältst das Wappen der Nullstellen. Der Sand weht dir den Weg.'
+      ],
+      // nach dem Sieg: Das Schultor im Dorf oeffnet sich (Dungeon 5: Finale)
+      onWin: function () { World.setSchoolGateOpen(true); }
     }
   };
   var bossAttempts = 1;    // Versuche an der aktuellen Boss-Aufgabe
@@ -250,6 +295,7 @@
     var task = {
       frage: BOSSES[room].kontext + ' ' + def.frage,
       felder: def.felder,
+      auswahl: def.auswahl,
       loesung: def.loesung,
       loesungstext: def.loesungstext,
       hinweis: def.hinweis,
@@ -849,6 +895,8 @@
       turnedNpc = null;
     } else {
       Player.update(World, Input, dt);
+      // Platten-Raeetsel: Betreten einer Druckplatte drueckt sie
+      stepOnPlate(World.getScreen());
       // Gegner bewegen und Beruehrung pruefen (startet den Kampf)
       // (solange die Figur nach einem Fehler blinkt, startet kein Kampf)
       Enemies.update(World, dt, Player.getX(), Player.getY(),
@@ -924,6 +972,10 @@
             // Gitter zum Boss bleibt zu, bis alle Brunnen im Gezeitentakt sprudeln
             Player.setPosition(Player.getX(), 2 * 16 + 4, 'down');
             Dialog.open('Gitter', ['Ein schweres Gitter versperrt den Weg. Rege zuerst die richtigen Brunnen an.']);
+          } else if (here === 'splatten' && w.to.room === 'sboss' && !Platten.isSolved()) {
+            // Gitter zum Boss bleibt zu, bis beide Nullstellen-Platten gedrueckt sind
+            Player.setPosition(Player.getX(), 2 * 16 + 4, 'down');
+            Dialog.open('Gitter', ['Ein schweres Gitter versperrt den Weg. Tritt zuerst auf die Platten der Nullstellen.']);
           } else roomWarp(w);
         } else {
           var edge = World.checkEdge(Player.getX(), Player.getY());

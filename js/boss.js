@@ -341,3 +341,85 @@ var Boss = (function () {
     drawDying: drawDying
   });
 })();
+
+// ---Waechter des Sandtempels, die goldene Sanduhr (Dungeon 4, 'sboss') -------
+// Schwebende Sanduhr aus Gold: im oberen Glas der gerade Sand, unten waechst
+// der Bannhaufe. Nach dem Sieg rieselt der Sand in sanften Boegen.
+(function () {
+  'use strict';
+
+  var X = 102, Y = 60;     // linke obere Ecke; Bildmitte (112, 72), Punkte (112, 74)
+
+  function drawLiving(r, def, inst, now, alpha) {
+    var ctx = r.getCtx();
+    var hp = def.maxHp - inst.index();
+    var bob = Math.round(Math.sin(now / 500) * 2);
+    var x = X, y = Y + bob;
+    if (alpha !== undefined) ctx.globalAlpha = alpha;
+
+    // warmer Lichtschein auf dem Tempelboden
+    ctx.globalAlpha = (alpha === undefined ? 1 : alpha) * (0.16 + 0.04 * (Math.floor(now / 250) % 2));
+    r.ellipse(112, 92, 16, 5, '#f0b050');
+    ctx.globalAlpha = alpha === undefined ? 1 : alpha;
+
+    // Augen ueber dem oberen Glas
+    var eye = hp > 1 ? '#6ae0f0' : '#e8443a';
+    r.px(x + 6, y + 1, 2, 2, eye);
+    r.px(x + 16, y + 1, 2, 2, eye);
+
+    // Rahmen der Sanduhr: zwei Kegelstummel aus Gold
+    var gold = hp > 1 ? '#e8c04a' : '#c89838';
+    var hell = hp > 1 ? '#f8e088' : '#e0b858';
+    // oberes Glas
+    r.px(x + 4, y + 3, 16, 2, gold);
+    r.px(x + 5, y + 5, 14, 2, hell);
+    r.px(x + 7, y + 7, 10, 2, gold);
+    r.px(x + 9, y + 9, 6, 1, hell);
+    // Hals
+    r.px(x + 11, y + 10, 2, 3, gold);
+    // unteres Glas (mehr Sand je nach restlichen Herzen)
+    r.px(x + 9, y + 13, 6, 1, hell);
+    r.px(x + 7, y + 14, 10, 2, gold);
+    r.px(x + 5, y + 16, 14, 3, hell);
+    r.px(x + 4, y + 19, 16, 3, gold);
+    // Sand: oben weniger, unten mehr (Sand fliesst pro verlorener Aufgabe)
+    var oben = hp, unten = def.maxHp - hp + 2;
+    for (var i = 0; i < oben; i++) r.px(x + 6 + i * 2, y + 5, 1, 1, '#f6e8c0');
+    for (var j = 0; j < unten; j++) r.px(x + 6 + j * 2, y + 16, 1, 2, '#f6e8c0');
+    // fallender Sandfaden im Hals
+    var fl = Math.floor(now / 150) % 2;
+    r.px(x + 11, y + 12 + fl, 2, 1, '#f6e8c0');
+    // Risse im Gold bei Schaden
+    if (hp <= 2) r.px(x + 7, y + 8, 1, 4, '#8a6434');
+    if (hp === 1) r.px(x + 15, y + 15, 1, 5, '#8a6434');
+
+    ctx.globalAlpha = 1;
+  }
+
+  // Besiegt-Animation: Die Sanduhr dreht sich, der Sand rieselt in Boegen davon
+  function drawDying(r, def, inst, now) {
+    var t = (now - inst.dieStart()) / 1000;
+    if (t > 1.4) return;
+    var ctx = r.getCtx();
+    var p = Math.min(1, t / 1.2);
+    drawLiving(r, def, inst, inst.dieStart() + 1, Math.max(0, 1 - p));   // einfrieren, abblenden
+    // Sandkoerner ziehen in sanften Boegen davon
+    ctx.globalAlpha = Math.max(0, 0.8 - p * 0.8);
+    for (var i = 0; i < 8; i++) {
+      var sx = 100 + i * 4;
+      var sy = 66 + p * 28 + Math.sin(i + p * 5) * 5 * p;
+      r.px(sx, sy, 1, 1, '#f6e8c0');
+      r.px(sx + 1, sy + 1, 1, 1, '#e8c04a');
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  Boss.register('sboss', {
+    maxHp: 3,          // eine feste Aufgabe = ein Herz
+    x: X, y: Y,        // linke obere Ecke der Zeichnung (Rueckstoss)
+    cx: 112, cy: 74,   // Bildmitte fuer die Beruehrung
+    hearts: { x: 100, y: 94 },
+    drawLiving: drawLiving,
+    drawDying: drawDying
+  });
+})();
