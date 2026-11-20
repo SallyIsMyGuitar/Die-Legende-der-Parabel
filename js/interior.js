@@ -29,7 +29,18 @@ var Interior = (function () {
 
   function isBlocked(room, tx, ty) {
     var c = cell(room, tx, ty);
+    if (guestAt(room, tx, ty)) return true;   // weitere Figuren blockieren ihre Kachel
     return c !== '.' && c !== 'M';
+  }
+
+  // Weitere Figuren im Raum (def.guests), z. B. Kundin und Schueler im Laden.
+  // Jede: { x, y, facing, sprites, talk } – sie drehen sich beim Gespraech um.
+  function guestAt(room, tx, ty) {
+    var gs = rooms[room].guests || [];
+    for (var i = 0; i < gs.length; i++) {
+      if (gs[i].x / TILE === tx && gs[i].y / TILE === ty) return gs[i];
+    }
+    return null;
   }
 
   function isExit(room, tx, ty) {
@@ -53,6 +64,10 @@ var Interior = (function () {
           };
         }
       }
+    }
+    var g = guestAt(room, tx, ty);
+    if (g) {
+      return { name: g.talk.name, texts: g.talk.texts, later: g.talk.later, hintX: g.x + 8, hintY: g.y, npc: g };
     }
     var npc = def.npc;
     if (!npc || !npc.talk) return null;
@@ -471,6 +486,7 @@ var Interior = (function () {
       var sp = def.npc.sprites();
       st.sprites = sp.down || sp;
     }
+    st.guestSprites = (def.guests || []).map(function (g) { return g.sprites(); });
     def.state = st;
     return st;
   }
@@ -493,6 +509,17 @@ var Interior = (function () {
       ctx.globalAlpha = 1;
       r.image(st.sprites[f.i], npc.x + (f.dx || 0), npc.y + (f.dy || 0));
     }
+    (def.guests || []).forEach(function (g, i) {
+      var set = st.guestSprites[i];
+      var dir = g.facing || 'down';
+      var arr = set[dir] || set.down;
+      var blinkI = dir === 'down' && (t + i * 1300) % 3800 < 180 ? 1 : 0;
+      var ctx = r.getCtx();
+      ctx.globalAlpha = 0.3;
+      r.ellipse(g.x + 8, g.y + 15, 6, 2, '#2a140a');
+      ctx.globalAlpha = 1;
+      r.image(arr[blinkI] || arr[0], g.x, g.y);
+    });
   }
 
   // Überlagerung (über der Spielfigur), z. B. Ladentheke, Dampf

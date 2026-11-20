@@ -65,6 +65,21 @@ var World = (function () {
           later: { boss: 'wboss', replace: true, texts: ['Der Sandsturm hat sich gelegt. Im Westen liegt die Wüste mit dem Sandtempel.'] }
         }
       ],
+      npcs: [
+        {
+          // Kind am Teich (flitscht Steine)
+          x: 4 * TILE, y: 8 * TILE, facing: 'left', baseFacing: 'left',
+          sprites: function () { return People.kind(); },
+          talk: {
+            name: 'Kind',
+            texts: [
+              'Ich übe Steine flitschen. Schau, wie der Stein in einem Bogen fliegt – fast wie eine Parabel!',
+              'Der höchste Punkt vom Bogen heißt Scheitel. Das hat mir mein großer Bruder erklärt.'
+            ],
+            later: { finale: true, texts: ['Morgen ist wieder Schule. Ich freu mich sogar ein bisschen.'] }
+          }
+        }
+      ],
       exits: { west: 'steppe', east: 'ost' }
     },
     ost: {
@@ -111,6 +126,41 @@ var World = (function () {
           name: 'Schild',
           texts: ['Der Weg nach Süden ist durch einen Felsen versperrt. Vielleicht löst er sich, sobald der Wächter der Höhle besiegt ist.'],
           later: { boss: 'dboss', replace: true, texts: ['Der Felsen ist fort. Im Süden wartet der Leuchtturm.'] }
+        }
+      ],
+      // Weitere Dorfbewohner (Texte freigegeben, Rollenbezeichnungen)
+      npcs: [
+        {
+          // Postbotin vor dem blauen Haus der Nachbarin
+          x: 5 * TILE, y: 5 * TILE, facing: 'down', baseFacing: 'down',
+          sprites: function () { return People.postbotin(); },
+          talk: {
+            name: 'Postbotin',
+            texts: [
+              'Seit die Schule zu ist, trage ich kaum noch Briefe aus. Keine Elternbriefe, keine Zeugnisse …',
+              'Und nach Süden komme ich auch nicht mehr. Da liegt ein riesiger Felsen auf dem Weg.'
+            ],
+            later: [
+              { boss: 'dboss', replace: true, texts: [
+                'Seit die Schule zu ist, trage ich kaum noch Briefe aus. Keine Elternbriefe, keine Zeugnisse …',
+                'Der Felsen im Süden ist weg! Endlich kann ich wieder zur Küste.'
+              ] },
+              { finale: true, replace: true, texts: ['Heute habe ich den ersten Elternbrief seit Langem ausgetragen. Was für ein schönes Gefühl!'] }
+            ]
+          }
+        },
+        {
+          // Opa links neben dem Brunnen
+          x: 5 * TILE, y: 7 * TILE, facing: 'right', baseFacing: 'right',
+          sprites: function () { return People.opa(); },
+          talk: {
+            name: 'Opa',
+            texts: [
+              'Weißt du, warum der Wasserstrahl eines Brunnens so schön gebogen ist? Das ist eine Parabel.',
+              'Früher haben wir sie mit Kreide an die Tafel gemalt. Gerade Linien fand ich immer langweilig.'
+            ],
+            later: { finale: true, texts: ['Die Schulglocke läutet wieder! Da fühle ich mich gleich zwanzig Jahre jünger.'] }
+          }
         }
       ],
       exits: { west: 'start', east: 'wiese', south: 'felder' }

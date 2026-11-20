@@ -41,7 +41,7 @@ Ein Mathe-Übungsspiel als Top-Down-Abenteuer im Stil eines modernen 2D-Zelda (O
   - `merkbuch.js`: Merkbuch (Sammlung und Ansicht)
   - `render.js`: Canvas-Skalierung (ganzzahlig, scharfe Pixel), Zeichenhilfen, Ebenen, Sprites, Farbhilfen
   - `font.js`: eigene Pixelschrift für Dialoge (Groß-/Kleinbuchstaben, ä, ö, ü, ß, Ziffern, Satzzeichen)
-  - `people.js`: Sprites der Dorfbewohner und Erklär-NPCs (Wanderin, Förster, Einsiedler, Forscherin, Herr Späth)
+  - `people.js`: Sprites der Dorfbewohner und Erklär-NPCs (Wanderin, Förster, Einsiedler, Forscherin, Herr Späth, Postbotin, Opa, Kind, Kundin, Schüler)
   - `buildings.js`: Häuser, Laden, Schule, Zaun, Tor, Brunnen, Tür-Animation
   - `interior.js`: Raum-Rahmen für Innenräume, gemeinsame Möbel, Elternhaus
   - `rooms.js`: weitere Innenräume (Nachbarin, Freund, Laden)
@@ -274,6 +274,13 @@ Nach der Durchsicht des gesamten Spiels wurden am 13 Funden behoben (Details im 
 - Normalparabel-Lösung ohne Klammer bei positiven Zahlen; Wertemenge: „Die Parabel … ist nach oben geöffnet. Gib den kleinsten y-Wert …“; Diskriminante mit Zwischenschritt („D = 3² − 4 · 1 · 4 = 9 − 16 = −7“); Nullstellen aus Scheitelform: „(x + 3)² = 9, also x + 3 = ±3. L = {…}“.
 - Schule: „Berechne die x-Werte x1 < x2 der Schnittpunkte von … und ….“, „Ein Ball fliegt auf der Bahn … (in m). Gib die Wurfweite an.“, Zaun: „… Gib die Seite x (in m) und die größte Fläche A (in m²) an.“ (Graf 3: „… Gib die Seite x (in m) für die größte Fläche und diese Fläche A (in m²) an.“), Lösung mit Einheit m².
 - Platz-Check per Skript (2000 Stichproben je Typ mit Kontext): 0 Überläufe.
+
+## Weitere Dorfbewohner (freigegeben)
+
+- Ohne Merksätze, nur Rollenbezeichnungen, eigene Sprites in `people.js` (Kinder per `dirs(p, true)` eine Zeile kleiner). Texte im Code, nur nach Go ändern.
+- *Dorfplatz (`ost`):* Postbotin 5/5 (nach `dboss`: Felsen-Zeile ersetzt; nach dem Finale nur noch die Elternbrief-Seite), Opa 5/7 links neben dem Brunnen (Finale-Zusatzseite).
+- *Startbildschirm:* Kind am Teich 4/8 (Finale-Zusatzseite).
+- *Laden:* Kundin 3/7 am Hefte-Tisch (Finale-Zusatzseite), Schüler 5/6 an der Theke (nach dem Finale ersetzt). Innenräume können dafür weitere Figuren als `guests` haben (`interior.js`: blockieren ihre Kachel, drehen sich beim Gespräch zur Spielfigur).
 
 ## Getroffene Entscheidungen zu Meilenstein 6 (gebaut, Texte vorläufig)
 

@@ -116,29 +116,39 @@ var People = (function () {
     return [Render.sprite(rows, p), Render.sprite(blink(rows), p)];
   }
 
-  // Blickrichtungen je Figur: down, up, left, right (down mit Blinzeln)
-  function dirs(p) {
-    var front = FRONT.slice();
+  // Kinder sind eine Zeile kleiner: eine Rumpfzeile faellt weg, oben
+  // kommt eine leere Zeile dazu (Fuesse bleiben auf derselben Hoehe)
+  function small(rows) {
+    var r = rows.slice();
+    r.splice(10, 1);
+    r.unshift('................');
+    return r;
+  }
+
+  // Blickrichtungen je Figur: down, up, left, right (down mit Blinzeln);
+  // kind = true zeichnet die Figur als Kind (etwas kleiner)
+  function dirs(p, kind) {
+    var front = kind ? small(FRONT) : FRONT.slice();
     return {
       down: [Render.sprite(front, p), Render.sprite(blink(front), p)],
-      up: [backSprite(p)],
-      left: [sideSprite(p, true)],
-      right: [sideSprite(p, false)]
+      up: [backSprite(p, kind)],
+      left: [sideSprite(p, true, kind)],
+      right: [sideSprite(p, false, kind)]
     };
   }
 
   // Rückenansicht: Haare statt Gesicht
-  function backSprite(p) {
+  function backSprite(p, kind) {
     var rows = FRONT.slice();
     rows[4] = '..ohhhhhhhhhho..';
     rows[5] = '..ohhhhhhhhhho..';
     rows[6] = '..oHhhhhhhhhHo..';
     rows[7] = '..oShhhhhhhhSo..';
-    return Render.sprite(rows, p);
+    return Render.sprite(kind ? small(rows) : rows, p);
   }
 
   // Seitenansicht nach rechts; mirror = true heißt Blick nach links
-  function sideSprite(p, mirror) {
+  function sideSprite(p, mirror, kind) {
     // Zeilen 1–3 mit '.' auf 16 Zeichen aufgefüllt (vorher 15 Zeichen und
     // Konsolen-Warnung); das letzte Pixel war schon durchsichtig, das Bild bleibt gleich
     var rows = [
@@ -159,7 +169,7 @@ var People = (function () {
       '...oBBo..oBBo...',
       '...oBBo..oBBo...'
     ];
-    return Render.sprite(rows, p, mirror === true);
+    return Render.sprite(kind ? small(rows) : rows, p, mirror === true);
   }
 
   // Wanderin: dunkle Haare, orangefarbenes Oberteil, feste Schuhe
@@ -300,7 +310,59 @@ var People = (function () {
     }));
   }
 
+  // --- Weitere Dorfbewohner (nur Rollenbezeichnungen) -------------------
+
+  // Postbotin: dunkelblonde Haare, gelbe Postjacke, blaue Hose
+  function postbotin() {
+    return dirs(pal({
+      h: '#a8844a', H: '#c8a466',
+      t: '#f0c030', T: '#f8dc6a', D: '#b48a14',
+      p: '#2e4a7a', B: '#2a2420'
+    }));
+  }
+
+  // Opa: weisses Haar, brauner Strickpulli, graue Hose
+  function opa() {
+    return dirs(pal({
+      h: '#e8e8e4', H: '#ffffff',
+      t: '#8a5a3a', T: '#a8764e', D: '#5e3c24',
+      p: '#6a6a72', B: '#3a2a20'
+    }));
+  }
+
+  // Kind am Teich: rote Haare, hellblaues T-Shirt, kurze Hose (kleiner)
+  function kind() {
+    return dirs(pal({
+      h: '#c8542a', H: '#e87a44',
+      t: '#6aaee0', T: '#9acdf0', D: '#3e7eb0',
+      p: '#5a6a3a', B: '#e8e4dc'
+    }), true);
+  }
+
+  // Kundin im Laden: dunkle Haare, violetter Mantel, schwarze Schuhe
+  function kundin() {
+    return dirs(pal({
+      h: '#3a2430', H: '#5a3a48',
+      t: '#7a4a9a', T: '#9a6ab8', D: '#54306e',
+      p: '#3a3a4a', B: '#1c1c22'
+    }));
+  }
+
+  // Schueler im Laden: braune Haare, roter Kapuzenpulli, Jeans (Kind)
+  function schueler() {
+    return dirs(pal({
+      h: '#6a4428', H: '#8a5e3a',
+      t: '#d0443c', T: '#ec6a5a', D: '#962a26',
+      p: '#3a5c9c', B: '#f4f4f4'
+    }), true);
+  }
+
   return {
+    postbotin: postbotin,
+    opa: opa,
+    kind: kind,
+    kundin: kundin,
+    schueler: schueler,
     researcher: researcher,
     hermit: hermit,
     mother: mother,

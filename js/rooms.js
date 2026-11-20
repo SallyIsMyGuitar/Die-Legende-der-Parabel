@@ -574,7 +574,36 @@
       frame: function (t) {
         return { i: blinkFrame(t, 3100, 0), dx: Math.sin(t * 0.0012) > 0.6 ? 1 : 0, dy: 0 };
       }
-    }
+    },
+    // Weitere Figuren im Laden (Texte freigegeben)
+    guests: [
+      {
+        // Kundin beim Auslagetisch mit den Heften
+        x: 3 * TILE, y: 7 * TILE, facing: 'down', baseFacing: 'down',
+        sprites: function () { return People.kundin(); },
+        talk: {
+          name: 'Kundin',
+          texts: [
+            'Ich suche Karopapier. Zum Zeichnen von Parabeln gibt es nichts Besseres.',
+            'Die Wertetabelle zuerst, dann die Punkte eintragen und verbinden – so habe ich es gelernt.'
+          ],
+          later: { finale: true, texts: ['Jetzt kaufen alle wieder Hefte. Ich muss mich beeilen, bevor das Karopapier ausverkauft ist!'] }
+        }
+      },
+      {
+        // Schueler an der Theke (links, die Mitte bleibt fuer den Verkaeufer frei)
+        x: 5 * TILE, y: 6 * TILE, facing: 'up', baseFacing: 'up',
+        sprites: function () { return People.schueler(); },
+        talk: {
+          name: 'Schüler',
+          texts: [
+            'Ich habe mein Geodreieck verloren. Ohne kann ich keine sauberen Achsen zeichnen.',
+            'Hoffentlich hat es nicht der Graf geholt. Der mag ja nur gerade Kanten …'
+          ],
+          later: { finale: true, replace: true, texts: ['Ich habe ein neues Geodreieck! Jetzt bin ich bereit für die Schule.'] }
+        }
+      }
+    ]
   });
 
 })();
