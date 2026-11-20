@@ -268,6 +268,13 @@ Nach der Durchsicht des gesamten Spiels wurden am 13 Funden behoben (Details im 
 - Schilder zeigen nach dem passenden Boss-Sieg eine eigene Fassung (neue `later`-Bedingung `boss: '<raum>'`, unabhängig vom Wappenzähler): Felsen am Dorfplatz (`dboss`: „Der Felsen ist fort. Im Süden wartet der Leuchtturm.“), Sandsturm (`wboss`: „Der Sandsturm hat sich gelegt. Im Westen liegt die Wüste mit dem Sandtempel.“), Küste („Leuchtturm. Sein Licht ist erloschen, seit der Graf den Spiegel gebannt hat.“ / `lboss`: „Leuchtturm. Er leuchtet wieder.“), Lagune (`lboss`: „Versunkenes Wasserreich. Das Siegel ist gebrochen, das Tor steht offen.“), Oase (`sboss`: „Sandtempel. Sein Wächter ist erlöst.“).
 - Tor im Höhlen-Bossraum nach dem Sieg: „… Der Felsen am Dorfplatz ist verschwunden – der Weg nach Süden ist frei.“ Steintafeln: „fünf“ statt „fuenf“.
 
+## Überarbeitung Schreibweisen in Aufgaben (freigegeben)
+
+- „Scheitel S“ statt „Scheitelpunkt“ (auch Boss-Aufgabe 1 von Höhle, Turm, Wasser). „Die Parabel hat den Scheitel S(…) und geht durch P(…)“; im Graph-Modus „Stelle die Parabel mit S(…) ein, die durch P(…) geht.“
+- Normalparabel-Lösung ohne Klammer bei positiven Zahlen; Wertemenge: „Die Parabel … ist nach oben geöffnet. Gib den kleinsten y-Wert …“; Diskriminante mit Zwischenschritt („D = 3² − 4 · 1 · 4 = 9 − 16 = −7“); Nullstellen aus Scheitelform: „(x + 3)² = 9, also x + 3 = ±3. L = {…}“.
+- Schule: „Berechne die x-Werte x1 < x2 der Schnittpunkte von … und ….“, „Ein Ball fliegt auf der Bahn … (in m). Gib die Wurfweite an.“, Zaun: „… Gib die Seite x (in m) und die größte Fläche A (in m²) an.“ (Graf 3: „… Gib die Seite x (in m) für die größte Fläche und diese Fläche A (in m²) an.“), Lösung mit Einheit m².
+- Platz-Check per Skript (2000 Stichproben je Typ mit Kontext): 0 Überläufe.
+
 ## Getroffene Entscheidungen zu Meilenstein 6 (gebaut, Texte vorläufig)
 
 **Schritt 1 – Abspann (gebaut, Texte vorläufig):**

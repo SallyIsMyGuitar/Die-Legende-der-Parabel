@@ -76,7 +76,7 @@ var Tasks = (function () {
     var xs = randInt(rng, -5, 5);
     var ys = randInt(rng, -5, 5);
     return {
-      frage: 'Gib den Scheitelpunkt an: ' + spfText(a, xs, ys),
+      frage: 'Gib den Scheitel S der Parabel ' + spfText(a, xs, ys) + ' an.',
       felder: [{ key: 'xs', label: 'xs' }, { key: 'ys', label: 'ys' }],
       loesung: [xs, ys],
       loesungstext: 'S(' + fmt(xs) + '|' + fmt(ys) + ')',
@@ -93,7 +93,7 @@ var Tasks = (function () {
     var b = -2 * a * xs;
     var c = a * xs * xs + ys;
     return {
-      frage: 'Gib den Scheitelpunkt an: ' + allgText(a, b, c),
+      frage: 'Gib den Scheitel S der Parabel ' + allgText(a, b, c) + ' an.',
       felder: [{ key: 'xs', label: 'xs' }, { key: 'ys', label: 'ys' }],
       loesung: [xs, ys],
       loesungstext: 'S(' + fmt(xs) + '|' + fmt(ys) + ')',
@@ -115,7 +115,8 @@ var Tasks = (function () {
     } while (Math.abs(yp) > 5);
     var xp = xs + abstand;
     return {
-      frage: 'Die Parabel geht durch S(' + fmt(xs) + '|' + fmt(ys) + ') und P(' + fmt(xp) + '|' + fmt(yp) + '). Stelle sie mit a, xs und ys ein.',
+      // Graph-Modus: hoechstens zwei Zeilen (Formulierung wie beim Boss)
+      frage: 'Stelle die Parabel mit S(' + fmt(xs) + '|' + fmt(ys) + ') ein, die durch P(' + fmt(xp) + '|' + fmt(yp) + ') geht.',
       felder: [{ key: 'a', label: 'a' }, { key: 'xs', label: 'xs' }, { key: 'ys', label: 'ys' }],
       loesung: [a, xs, ys],
       graph: true,
@@ -136,7 +137,7 @@ var Tasks = (function () {
     var xp = xs + abstand;
     var yp = a * abstand * abstand + ys;
     return {
-      frage: 'Die Parabel geht durch S(' + fmt(xs) + '|' + fmt(ys) + ') und P(' + fmt(xp) + '|' + fmt(yp) + '). Gib den Streckfaktor a an.',
+      frage: 'Die Parabel hat den Scheitel S(' + fmt(xs) + '|' + fmt(ys) + ') und geht durch P(' + fmt(xp) + '|' + fmt(yp) + '). Gib den Streckfaktor a an.',
       felder: [{ key: 'a', label: 'a' }],
       loesung: [a],
       loesungstext: 'a = ' + fmt(a),
@@ -155,7 +156,7 @@ var Tasks = (function () {
         frage: 'Der Punkt P(' + fmt(x) + '|y) liegt auf der Normalparabel y = x². Gib y an.',
         felder: [{ key: 'y', label: 'y' }],
         loesung: [y],
-        loesungstext: 'y = (' + fmt(x) + ')² = ' + fmt(y),
+        loesungstext: 'y = ' + (x < 0 ? '(' + fmt(x) + ')' : fmt(x)) + '² = ' + fmt(y),
         hinweis: 'Setze x in y = x² ein. Achtung: (−3)² = 9.'
       };
     }
@@ -236,7 +237,7 @@ var Tasks = (function () {
     var xp = xs + abstand;
     var yp = a * abstand * abstand + ys;
     return {
-      frage: 'Die Parabel geht durch S(' + fmt(xs) + '|' + fmt(ys) + ') und P(' + fmt(xp) + '|' + fmt(yp) +
+      frage: 'Die Parabel hat den Scheitel S(' + fmt(xs) + '|' + fmt(ys) + ') und geht durch P(' + fmt(xp) + '|' + fmt(yp) +
         '). Stelle die Scheitelform auf: Gib a, xs und ys an.',
       felder: [{ key: 'a', label: 'a' }, { key: 'xs', label: 'xs' }, { key: 'ys', label: 'ys' }],
       loesung: [a, xs, ys],
@@ -255,8 +256,8 @@ var Tasks = (function () {
     var auf = a > 0;
     var grenze = auf ? 'kleinste' : 'gr\u00f6\u00dfte';
     return {
-      frage: 'Die nach ' + (auf ? 'oben' : 'unten') + ' geöffnete Parabel ' + spfText(a, xs, ys) + ': Gib die ' + grenze +
-        ' y-Koordinate und die zugehörige x-Koordinate an.',
+      frage: 'Die Parabel ' + spfText(a, xs, ys) + ' ist nach ' + (auf ? 'oben' : 'unten') + ' geöffnet. Gib den ' + grenze +
+        'n y-Wert und die zugehörige x-Koordinate an.',
       felder: [{ key: 'y', label: 'y' }, { key: 'x', label: 'x' }],
       loesung: [ys, xs],
       loesungstext: 'S(' + fmt(xs) + '|' + fmt(ys) + '), also ' + (auf ? 'kleinster' : 'gr\u00f6\u00dfter') +
@@ -369,7 +370,9 @@ var Tasks = (function () {
       frage: 'Berechne die Diskriminante D von ' + glText(a, b, c) + '.',
       felder: [{ key: 'D', label: 'D' }],
       loesung: [d],
-      loesungstext: 'D = b\u00b2 \u2212 4ac = ' + kl(b) + '\u00b2 \u2212 4 \u00b7 ' + kl(a) + ' \u00b7 ' + kl(c) + ' = ' + fmt(d),
+      // mit Zwischenschritt, z. B. D = 3² − 4 · 1 · 4 = 9 − 16 = −7
+      loesungstext: 'D = ' + kl(b) + '\u00b2 \u2212 4 \u00b7 ' + kl(a) + ' \u00b7 ' + kl(c) + ' = ' +
+        fmt(b * b) + ' \u2212 ' + kl(4 * a * c) + ' = ' + fmt(d),
       hinweis: 'Setze in D = b\u00b2 \u2212 4ac ein: a = ' + fmt(a) + ', b = ' + fmt(b) + ', c = ' + fmt(c) + '.'
     };
   }
@@ -446,9 +449,11 @@ var Tasks = (function () {
       frage: 'Bestimme die Nullstellen von ' + spfText(a, xs, ys) + '. Gib x1 < x2 an.',
       felder: [{ key: 'x1', label: 'x1' }, { key: 'x2', label: 'x2' }],
       loesung: [x1, x2],
-      loesungstext: 'y = 0 gibt ' + klammerX(xs) + ' = ' + kl(-ys) + ' : ' + kl(a) +
-        ' = ' + fmt(d) + '\u00b2. L = {' + fmt(x1) + '; ' + fmt(x2) + '}',
-      hinweis: 'Setze y = 0 und löse ' + klammerX(xs) + ' = ' + kl(-ys) + ' : ' + kl(a) + '.'
+      // (x − xs)² = d², also x − xs = ±d (bei xs = 0: x² = d², also x = ±d)
+      loesungstext: klammerX(xs) + ' = ' + fmt(d * d) + ', also ' +
+        (xs === 0 ? 'x' : klammerX(xs).slice(1, -2)) + ' = \u00b1' + fmt(d) +
+        '. L = {' + fmt(x1) + '; ' + fmt(x2) + '}',
+      hinweis: 'Setze y = 0 und stelle nach ' + klammerX(xs) + ' um.'
     };
   }
 
@@ -484,8 +489,8 @@ var Tasks = (function () {
     var b = m - (x1 + x2);
     var c = x1 * x2 + t;
     return {
-      frage: 'Schnittpunkte der Parabel ' + allgText(1, b, c) +
-        ' mit der Geraden ' + geradeText(m, t) + '. Gib x1 < x2 an.',
+      frage: 'Berechne die x-Werte x1 < x2 der Schnittpunkte von ' + allgText(1, b, c) +
+        ' und ' + geradeText(m, t) + '.',
       felder: [{ key: 'x1', label: 'x1' }, { key: 'x2', label: 'x2' }],
       loesung: [x1, x2],
       loesungstext: 'Gleichsetzen: ' + glText(1, b - m, c - t) + ', also L = {' + fmt(x1) + '; ' + fmt(x2) + '}',
@@ -504,11 +509,11 @@ var Tasks = (function () {
     var ys = -a * d * d;
     var Ding = pick(rng, ['Ball', 'Speer', 'Wasserstrahl']);
     var hoch = rng() < 0.5;
-    var bahn = 'Ein ' + Ding + ' fliegt auf ' + spfText(a, d, ys) +
+    var bahn = 'Ein ' + Ding + ' fliegt auf der Bahn ' + spfText(a, d, ys) +
       ' (in m).';
     if (hoch) {
       return {
-        frage: bahn + ' Gib die maximale Höhe in m an.',
+        frage: bahn + ' Gib die maximale Höhe an.',
         felder: [{ key: 'y', label: 'y' }],
         loesung: [ys],
         loesungstext: 'Der Scheitel ist S(' + fmt(d) + '|' + fmt(ys) + '), also ymax = ' + fmt(ys) + ' m.',
@@ -516,7 +521,7 @@ var Tasks = (function () {
       };
     }
     return {
-      frage: bahn + ' Gib die Wurfweite in m an.',
+      frage: bahn + ' Gib die Wurfweite an.',
       felder: [{ key: 'x', label: 'x' }],
       loesung: [2 * d],
       loesungstext: 'Nullstellen x = 0 und x = ' + fmt(2 * d) + ', also Wurfweite ' + fmt(2 * d) + ' m',
@@ -532,10 +537,10 @@ var Tasks = (function () {
     var x = U / 4;
     var A = x * x;
     return {
-      frage: U + ' m Zaun ringsum um ein rechteckiges Beet: Welche Seite x (in m) gibt die größte Fläche A (in m²)?',
+      frage: U + ' m Zaun ringsum um ein rechteckiges Beet: Gib die Seite x (in m) und die größte Fläche A (in m²) an.',
       felder: [{ key: 'x', label: 'x' }, { key: 'A', label: 'A' }],
       loesung: [x, A],
-      loesungstext: 'A(x) = x \u00b7 (' + (U / 2) + ' \u2212 x), Scheitel bei x = ' + fmt(x) + ', A = ' + fmt(A),
+      loesungstext: 'A(x) = x \u00b7 (' + (U / 2) + ' \u2212 x), Scheitel bei x = ' + fmt(x) + ', A = ' + fmt(A) + ' m\u00b2',
       hinweis: 'Zweite Seite: ' + (U / 2) + ' \u2212 x, also A = x \u00b7 (' + (U / 2) + ' \u2212 x). Am Scheitel ist A am größten: x = U : 4.'
     };
   }
@@ -583,7 +588,7 @@ var Tasks = (function () {
   // Sie verbinden alles, was auf dem Weg geuebt wurde (freigegeben).
   var BOSS_HOEHLE = [
     {
-      frage: 'Gib den Scheitelpunkt der Parabel y = −0,5(x + 2)² + 3 an.',
+      frage: 'Gib den Scheitel S der Parabel y = −0,5(x + 2)² + 3 an.',
       felder: [{ key: 'xs', label: 'xs' }, { key: 'ys', label: 'ys' }],
       loesung: [-2, 3],
       loesungstext: 'S(−2|3)',
@@ -612,7 +617,7 @@ var Tasks = (function () {
   // und im Turm geuebt wurde (Scheitel ablesen, a bestimmen, aufstellen).
   var BOSS_TURM = [
     {
-      frage: 'Gib den Scheitelpunkt der Parabel y = 1,5(x − 2)² − 3 an.',
+      frage: 'Gib den Scheitel S der Parabel y = 1,5(x − 2)² − 3 an.',
       felder: [{ key: 'xs', label: 'xs' }, { key: 'ys', label: 'ys' }],
       loesung: [2, -3],
       loesungstext: 'S(2|−3)',
@@ -641,7 +646,7 @@ var Tasks = (function () {
   // Umformen, den Streckfaktor und das Aufstellen aus drei Punkten.
   var BOSS_WASSER = [
     {
-      frage: 'Gib den Scheitelpunkt der Parabel y = x\u00b2 + 4x + 1 an.',
+      frage: 'Gib den Scheitel S der Parabel y = x\u00b2 + 4x + 1 an.',
       felder: [{ key: 'xs', label: 'xs' }, { key: 'ys', label: 'ys' }],
       loesung: [-2, -3],
       loesungstext: 'y = (x + 2)\u00b2 \u2212 3, also S(\u22122|\u22123)',
@@ -711,7 +716,7 @@ var Tasks = (function () {
       hinweis: 'Setze y = 0. Eine Nullstelle ist der Start bei x = 0, die andere die Landestelle.'
     },
     {
-      frage: '24 m Zaun ringsum um ein rechteckiges Beet: Welche Seite x (in m) gibt die größte Fläche A (in m²)?',
+      frage: '24 m Zaun ringsum um ein rechteckiges Beet: Gib die Seite x (in m) für die größte Fläche und diese Fläche A (in m²) an.',
       felder: [{ key: 'x', label: 'x' }, { key: 'A', label: 'A' }],
       loesung: [6, 36],
       loesungstext: 'A(x) = x \u00b7 (12 \u2212 x), Scheitel bei x = 6: A = 36 m\u00b2.',
