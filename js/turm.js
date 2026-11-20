@@ -161,7 +161,7 @@
     ],
     mats: {
       '8,1': { room: 'lmitte', x: 8 * TILE, y: 11 * TILE, facing: 'up' },
-      '8,12': { screen: 'kueste', x: 10 * TILE, y: 12 * TILE, facing: 'down' }
+      '8,12': { screen: 'kueste', x: 8.5 * TILE, y: 12 * TILE, facing: 'down' }
     },
     windows: [[3, 1], [12, 1]],
     lamps: [[5, 1], [10, 1], [5, 12], [10, 12]],
