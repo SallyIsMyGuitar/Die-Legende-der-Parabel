@@ -142,6 +142,8 @@
     if (l.platten && !Platten.isSolved()) return false;
     if (l.school && !World.isSchoolGateOpen()) return false;
     if (l.finale && !finaleDone) return false;   // Endboss Graf Gerade besiegt
+    // bestimmter Boss besiegt (z. B. boss: 'lboss'), unabhaengig vom Wappenzaehler
+    if (l.boss && !(Boss.of(l.boss) && Boss.of(l.boss).isDefeated())) return false;
     return true;
   }
 
@@ -465,7 +467,7 @@
     World.addSign(screen, {
       tiles: tiles, x: tiles[0][0] * 16, y: tiles[0][1] * 16,
       name: 'Steintafel',
-      texts: ['Eine alte Steintafel mit fuenf Wappen-Vertiefungen. Sie schl\u00e4ft noch \u2026'],
+      texts: ['Eine alte Steintafel mit f\u00fcnf Wappen-Vertiefungen. Sie schl\u00e4ft noch \u2026'],
       action: 'repeat', dungeon: dungeonKey
     });
   }

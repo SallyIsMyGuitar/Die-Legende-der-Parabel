@@ -320,7 +320,7 @@
         name: 'Steintafel',
         texts: ['Verschlossen. Erst wenn der W\u00e4chter der H\u00f6hle der Parabeln besiegt ist, \u00f6ffnet sich dieses Tor.'],
         // nach dem ersten Wappen ersetzt dieser Text den obigen
-        later: { wappen: 1, replace: true, texts: ['Das Tor steht offen, doch dahinter ist der Gang verschüttet. Der Weg zum nächsten Wächter muss woanders beginnen.'] }
+        later: { wappen: 1, replace: true, texts: ['Das Tor steht offen, doch dahinter ist der Gang verschüttet. Der Felsen am Dorfplatz ist verschwunden – der Weg nach Süden ist frei.'] }
       }
     ]
   };

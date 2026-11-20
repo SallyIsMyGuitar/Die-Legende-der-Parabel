@@ -263,6 +263,11 @@ Nach der Durchsicht des gesamten Spiels wurden am 13 Funden behoben (Details im 
 - **Dorf nach Fortschritt (Texte vorläufig):** `later` darf eine Liste von Stufen sein; es gilt die letzte erfüllte Stufe (neue Bedingung `finale`). Mama, Nachbarin, Freund und Verkäufer haben Zusatzseiten nach Wappen 1 (unverändert), 2, 3 und 4 sowie nach dem Finale (Mama, Freund und Verkäufer ersetzen dann ihre Grundtexte, die Nachbarin ergänzt). Hausmeister und Schild am Schulhof haben eine Finale-Fassung.
 - **Herr Dietl (Regeln vom Nutzer bestätigt, Texte und Fragen vorläufig):** Bildschirm `dietl` (dichter Wald mit Lichtung) östlich der Ruine, erreichbar durch die Baumlücke in Zeile 5. Aussehen: leicht braune Haut, schwarze Haare, oranger Pullover, blaue Jeans, dunkelbraune Schuhe. Nach dem Gespräch stellt er eine Auswahlfrage (A–C) zur Spielwelt (Wissen bis zur Ruine, zehn Fragen, nie zweimal dieselbe hintereinander). Richtig: zufällig ein Herz (nur wenn eines fehlt) oder ein Schwert (nur ohne Schwert); höchstens 4 Belohnungen (gespeichert als `dietl`). Falsch oder Abbruch mit B: kein Herzverlust, keine Fehlerstatistik, neue Frage beim nächsten Gespräch. Sind die Herzen voll und das Schwert vorhanden, stellt er keine Frage.
 
+## Überarbeitung Schilder (freigegeben)
+
+- Schilder zeigen nach dem passenden Boss-Sieg eine eigene Fassung (neue `later`-Bedingung `boss: '<raum>'`, unabhängig vom Wappenzähler): Felsen am Dorfplatz (`dboss`: „Der Felsen ist fort. Im Süden wartet der Leuchtturm.“), Sandsturm (`wboss`: „Der Sandsturm hat sich gelegt. Im Westen liegt die Wüste mit dem Sandtempel.“), Küste („Leuchtturm. Sein Licht ist erloschen, seit der Graf den Spiegel gebannt hat.“ / `lboss`: „Leuchtturm. Er leuchtet wieder.“), Lagune (`lboss`: „Versunkenes Wasserreich. Das Siegel ist gebrochen, das Tor steht offen.“), Oase (`sboss`: „Sandtempel. Sein Wächter ist erlöst.“).
+- Tor im Höhlen-Bossraum nach dem Sieg: „… Der Felsen am Dorfplatz ist verschwunden – der Weg nach Süden ist frei.“ Steintafeln: „fünf“ statt „fuenf“.
+
 ## Getroffene Entscheidungen zu Meilenstein 6 (gebaut, Texte vorläufig)
 
 **Schritt 1 – Abspann (gebaut, Texte vorläufig):**

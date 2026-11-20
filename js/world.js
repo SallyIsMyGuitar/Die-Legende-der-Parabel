@@ -61,7 +61,8 @@ var World = (function () {
         {
           // Schild am Sandsturm: West-Ausgang des Dorfes
           tiles: [[1, 6]], x: 1 * 16, y: 6 * 16, name: 'Schild',
-          texts: ['Ein Sandsturm versperrt den Weg nach Westen. Er trägt das Siegel des Grafen.']
+          texts: ['Ein Sandsturm versperrt den Weg nach Westen. Er trägt das Siegel des Grafen.'],
+          later: { boss: 'wboss', replace: true, texts: ['Der Sandsturm hat sich gelegt. Im Westen liegt die Wüste mit dem Sandtempel.'] }
         }
       ],
       exits: { west: 'steppe', east: 'ost' }
@@ -108,7 +109,8 @@ var World = (function () {
           // Schild am Felsen: Weg nach Süden (erster Felsen aus „Felsen, Wasser, Sandsturm, Burgtor“)
           tiles: [[10, 12]], x: 10 * 16, y: 12 * 16,
           name: 'Schild',
-          texts: ['Der Weg nach Süden ist durch einen Felsen versperrt. Vielleicht löst er sich, sobald der Wächter der Höhle besiegt ist.']
+          texts: ['Der Weg nach Süden ist durch einen Felsen versperrt. Vielleicht löst er sich, sobald der Wächter der Höhle besiegt ist.'],
+          later: { boss: 'dboss', replace: true, texts: ['Der Felsen ist fort. Im Süden wartet der Leuchtturm.'] }
         }
       ],
       exits: { west: 'start', east: 'wiese', south: 'felder' }
@@ -233,7 +235,8 @@ var World = (function () {
         {
           tiles: [[13, 4]], x: 13 * 16, y: 4 * 16,
           name: 'Schild',
-          texts: ['Leuchtturm. Ohne die Krümmung des Spiegels kein Licht.']
+          texts: ['Leuchtturm. Sein Licht ist erloschen, seit der Graf den Spiegel gebannt hat.'],
+          later: { boss: 'lboss', replace: true, texts: ['Leuchtturm. Er leuchtet wieder.'] }
         },
         {
           // Rastquelle vor dem Leuchtturm
@@ -277,7 +280,8 @@ var World = (function () {
         {
           tiles: [[6, 7]], x: 6 * TILE, y: 7 * TILE,
           name: 'Schild',
-          texts: ['Versunkenes Wasserreich. Das Siegel des Grafen verschließt das Tor.']
+          texts: ['Versunkenes Wasserreich. Das Siegel des Grafen verschließt das Tor.'],
+          later: { boss: 'lboss', replace: true, texts: ['Versunkenes Wasserreich. Das Siegel ist gebrochen, das Tor steht offen.'] }
         }
       ],
       dungeon: 'weingang',

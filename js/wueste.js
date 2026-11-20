@@ -164,7 +164,8 @@
       {
         // Schild vor dem Tempel
         tiles: [[9, 4]], x: 9 * 16, y: 4 * 16, name: 'Schild',
-        texts: ['Sandtempel. Sein Wächter steht im Bann des Grafen.']
+        texts: ['Sandtempel. Sein Wächter steht im Bann des Grafen.'],
+        later: { boss: 'sboss', replace: true, texts: ['Sandtempel. Sein Wächter ist erlöst.'] }
       },
       {
         // Rastquelle vor dem Eingang des Sandtempels (sieht aus wie der Dorfbrunnen)
