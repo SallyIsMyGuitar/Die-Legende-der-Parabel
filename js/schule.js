@@ -1,8 +1,8 @@
 // schule.js: Die zerstoerte Schule - Dungeon 5, das Finale
 // (Schnittpunkte und Anwendungen)
-// Ein Bildschirm der Auenwelt (Schulhof mit Ruine des Schulgebaudes,
-// Hausmeister hinter Muelltonnen, Rastquelle vor dem Eingang, starre
-// gerade Lichtlinien als Zeichen des Grafen) und vier Raeume:
+// Eingang ist die Tuer der Schule auf dem Startbildschirm (Hausmeister
+// hinter Muelltonnen und Rastquelle davor, Lichtlinien in world.js).
+// Vier Raeume:
 // Klassenzimmer (Zerbrochene Tafel), Physiksaal (Alte Wurfmaschine,
 // Rastquelle auf halber Strecke), Turnhalle (Anzeigetafel), Aula (Endboss
 // Graf Gerade, boss.js). Raeume angemeldet per Interior.register().
@@ -15,106 +15,41 @@
   var TILE = 16;
   var hash = Render.hash;
 
-  // ---Schulhof (Auenwelt-Bildschirm, noerdlich vom Dorf) -------------------
-
-  // Muelltonnen hinter denen sich der Hausmeister versteckt
-  function bakeBins(r) {
-    var x = 4 * TILE, y = 6 * TILE;
-    r.ellipse(x + 8, y + 30, 8, 2, 'rgba(20,40,20,0.4)');
-    // zwei Tonnen mit Raedern, seitlich versetzt
-    r.px(x + 1, y + 6, 12, 12, '#2e4a5e');
-    r.px(x + 2, y + 7, 10, 10, '#3e6a84');
-    r.px(x + 2, y + 7, 10, 1, '#587f9c');
-    r.px(x + 1, y + 5, 12, 2, '#24404f');
-    r.px(x + 3, y + 12, 2, 2, '#1c2024');   // Rollen
-    r.px(x + 14, y + 12, 12, 12, '#3a3a44');
-    r.px(x + 15, y + 13, 10, 11, '#55555e');
-    r.px(x + 15, y + 13, 10, 1, '#6c6c75');
-    r.px(x + 14, y + 12, 12, 2, '#2e2e36');
-    // verstreutes Papier
-    r.px(x + 4, y + 18, 3, 2, '#d8d8d0');
-    r.px(x + 28, y + 8, 3, 2, '#d8d8d0');
-  }
-
-  // Starre gerade Lichtlinien des Grafen ueber dem Hof (bis der Endboss
-  // besiegt ist), leicht pulsierend, ohne jede Kurve
-  function grafLines(r, t) {
-    var ctx = r.getCtx();
-    if (typeof Boss !== 'undefined' && Boss.of('aula') && Boss.of('aula').isDefeated()) return;
-    var x = 0;
-    ctx.globalAlpha = 0.10 + 0.05 * (Math.floor(t / 400) % 2);
-    for (var i = 0; i < 7; i++) {
-      x = 10 + i * 36;
-      r.px(x, 16, 1, 88, '#b8c8f8');
-      r.px(x + 1, 100, 22, 1, '#b8c8f8');
-      r.px(x + 22, 100, 1, 50, '#b8c8f8');
+  // ---Schule im Dorf (Startbildschirm) -----------------------------------
+  // Dungeon 5 liegt im Schulgebaeude selbst: Nach dem Sieg ueber Dungeon 4
+  // oeffnet sich das Schultor, die Tuer der Schule fuehrt ins Klassenzimmer.
+  // Links vor dem Zaun versteckt sich der Hausmeister hinter den
+  // Muelltonnen ('U'), darueber steht die Rastquelle vor der Schule.
+  World.addNpc('start', {
+    x: 7 * TILE, y: 9 * TILE, baseFacing: 'down', sprites: function () { return People.hausmeister(); },
+    // erst sichtbar, wenn das Schultor offen ist (vorher verriete er zu frueh,
+    // dass die Lehrkraefte in der Schule gefangen sind)
+    when: function () { return World.isSchoolGateOpen(); },
+    talk: {
+      name: 'Hausmeister',
+      texts: [
+        'Psst, hier drüben! Ich bin der Hausmeister der Schule – seit der Graf sein Heer aus Linealen schickte, halte ich mich hinter den Tonnen versteckt.',
+        'Dahinter, in der Ruine, hält er die Lehrerinnen und Lehrer gefangen. Alles folgt seinen starren, geraden Linien.',
+        'Seltsam ist nur: Kurz bevor der Graf kam, verschwand das große Tafellineal aus dem Matheraum. Keiner weiß, wohin.',
+        'Mein Merksatz: Schnittpunkte von Parabel und Gerade: beide Terme gleichsetzen und die quadratische Gleichung lösen.'
+      ],
+      merk: { id: 'schnittGerade', name: 'Schnittpunkte Parabel/Gerade', text: 'Schnittpunkte von Parabel und Gerade: beide Terme gleichsetzen und die quadratische Gleichung lösen.' },
+      // nach dem Finale: kein Versteck mehr (Texte vorläufig)
+      later: { finale: true, replace: true, texts: [
+        'Du hast es geschafft! Der Graf ist fort, und ich muss mich nicht mehr hinter den Tonnen verstecken.',
+        'Jetzt räume ich endlich auf. Bis die Schule wieder steht, dauert es aber noch ein bisschen.',
+        'Und das alte Tafellineal hänge ich wieder an die Tafel. Aber ab jetzt zeichnen wir damit nur noch Achsen für Parabeln!',
+        'Mein Merksatz: Schnittpunkte von Parabel und Gerade: beide Terme gleichsetzen und die quadratische Gleichung lösen.'
+      ] }
     }
-    ctx.globalAlpha = 1;
-  }
+  });
 
-  World.addScreen('schulhof', {
-    map: [
-      'TTTTTTTTTTTTTTTT',
-      'T...RRRRRRRRR..T',
-      'T...RRRRRRRRR..T',
-      'T...RRRREERRR..T',
-      'T......i.......T',
-      'T.........q....T',
-      'T..............T',
-      'T..............T',
-      'T..........i...T',
-      'T...V..........T',
-      'T..........V...T',
-      'T..............T',
-      'T..............T',
-      'TTTTT..TTTTTTTTT'
-    ],
-    buildings: [],
-    bakeExtra: function (r) { bakeBins(r); },
-    anim: function (r, t) { grafLines(r, t); },
-    npcs: [
-      {
-        x: 3 * TILE, y: 7 * TILE, sprites: function () { return People.hausmeister(); },
-        talk: {
-          name: 'Hausmeister',
-          texts: [
-            'Psst, hier drüben! Ich bin der Hausmeister der Schule – seit der Graf sein Heer aus Linealen schickte, halte ich mich hinter den Tonnen versteckt.',
-            'Dahinter, in der Ruine, hält er die Lehrerinnen und Lehrer gefangen. Alles folgt seinen starren, geraden Linien.',
-            'Seltsam ist nur: Kurz bevor der Graf kam, verschwand das große Tafellineal aus dem Matheraum. Keiner weiß, wohin.',
-            'Mein Merksatz: Schnittpunkte von Parabel und Gerade: beide Terme gleichsetzen und die quadratische Gleichung lösen.'
-          ],
-          merk: { id: 'schnittGerade', name: 'Schnittpunkte Parabel/Gerade', text: 'Schnittpunkte von Parabel und Gerade: beide Terme gleichsetzen und die quadratische Gleichung lösen.' },
-          // nach dem Finale: kein Versteck mehr (Texte vorläufig)
-          later: { finale: true, replace: true, texts: [
-            'Du hast es geschafft! Der Graf ist fort, und ich muss mich nicht mehr hinter den Tonnen verstecken.',
-            'Jetzt räume ich endlich auf. Bis die Schule wieder steht, dauert es aber noch ein bisschen.',
-            'Und das alte Tafellineal hänge ich wieder an die Tafel. Aber ab jetzt zeichnen wir damit nur noch Achsen für Parabeln!',
-            'Mein Merksatz: Schnittpunkte von Parabel und Gerade: beide Terme gleichsetzen und die quadratische Gleichung lösen.'
-          ] }
-        }
-      }
-    ],
-    signs: [
-      {
-        // Schild am Weg zur Ruine
-        tiles: [[11, 8]], x: 11 * 16, y: 8 * 16, name: 'Schild',
-        texts: ['Zerstörte Schule. Graf Gerade hält die Lehrkräfte gefangen.'],
-        later: { finale: true, replace: true, texts: ['Zerstörte Schule. Die Lehrkräfte sind frei – bald wird sie wieder aufgebaut.'] }
-      },
-      {
-        // Rastquelle vor dem Eingang der Ruine (sieht aus wie der Dorfbrunnen)
-        tiles: [[10, 5]], x: 10 * 16, y: 5 * 16, name: 'Quelle',
-        texts: ['Du trinkst vom klaren Wasser. Deine Herzen sind wieder voll.'],
-        action: 'rest',
-        spawn: { x: 10 * 16, y: 6 * 16, facing: 'up' }
-      }
-    ],
-    // Nach dem Finale (Schritt 2) zeichnet world.js die intakte Fassade,
-    // gezeichnet mit Buildings.schoolIntact statt der Ruinenwand ('R').
-    // Der Eingang bleibt das Kachel-'E' bei (8,3).
-    school: { x: 4, y: 1, w: 9, h: 3, door: 4, doorFrame: false, intactOnly: true },
-    dungeon: 'klassenzimmer',
-    exits: { south: 'start' }
+  World.addSign('start', {
+    // Rastquelle vor der Schule (sieht aus wie der Dorfbrunnen)
+    tiles: [[7, 6]], x: 7 * TILE, y: 6 * TILE, name: 'Quelle',
+    texts: ['Du trinkst vom klaren Wasser. Deine Herzen sind wieder voll.'],
+    action: 'rest',
+    spawn: { x: 7 * TILE, y: 7 * TILE, facing: 'up' }
   });
 
   // ---Schul-Optik (Innenraeume) --------------------------------------------
@@ -292,7 +227,7 @@
     ],
     mats: {
       '8,1': { room: 'physiksaal', x: 8 * TILE, y: 11 * TILE, facing: 'up' },
-      '8,12': { screen: 'schulhof', x: 8 * TILE, y: 4 * TILE, facing: 'down' }
+      '8,12': { screen: 'start', x: 11.5 * TILE, y: 10 * TILE, facing: 'down' }
     },
     bakeExtra: function (r) { zerbrocheneTafel(r); },
     objects: [

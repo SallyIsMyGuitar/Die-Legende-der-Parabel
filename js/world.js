@@ -15,7 +15,7 @@ var World = (function () {
   var ROWS = 14;
   var W = COLS * TILE;
   var H = ROWS * TILE;
-  var BLOCKING = 'THDFGSW~REiCqVLKBZN';
+  var BLOCKING = 'THDFGSW~REiCqVLKBZU';
   var lighthouseLit = false;   // Leuchtturm leuchtet wieder (Sieg ueber Dungeon 2)
   var waterGateOpen = false;  // Wassertor der Lagune offen (Sieg ueber Dungeon 2)
   var sandstormOpen = false;  // Sandsturm im Westen aufgeloest (Sieg ueber Dungeon 3)
@@ -24,17 +24,17 @@ var World = (function () {
   var SCREENS = {
     start: {
       map: [
-        'TTTTTNNTTTTTTTTT',
+        'TTTTTTTTTTTTTTTT',
         'T..............T',
         'T..TT..........T',
         'T..T...........T',
         'T..T.PPPPPPPPPPP',
         'Z....P..........',
-        'Zi...P..FSSSSSST',
+        'Zi...P.qFSSSSSST',
         'Z.~~.P..FSSSSSST',
         'Z.~~.P..FSSSSSST',
-        'Z....P..FSSSSSST',
-        'Z....P..FSSSSSST',
+        'Z....P..FSSEESST',
+        'Z....PUUFi.....T',
         'Z....P..FFFGGFFT',
         'T....PPPPPPPP..T',
         'TTTTTTTTTTTTTTTT'
@@ -42,13 +42,21 @@ var World = (function () {
       buildings: [
         { x: 8, y: 2, w: 4, h: 2, door: 9, room: 'eltern', style: 'red', windows: [3], barrel: 0, lantern: true }
       ],
-      school: { x: 9, y: 6, w: 6, h: 5 },
+      // Schule = Dungeon 5 (Finale): Tuer 'E' bei 11/12 in Reihe 9, davor der
+      // Schulhof in Reihe 10 (begehbar, sobald das Schultor offen ist).
+      // sortRow 9: Die Fassade endet in Reihe 9, Figuren im Hof stehen davor.
+      school: { x: 9, y: 6, w: 6, h: 5, door: 2, doorFrame: true, sortRow: 9 },
+      dungeon: 'klassenzimmer',
+      anim: function (r, t) { grafLines(r, t); },
       signs: [
         {
           tiles: [[11, 11], [12, 11]], x: 12 * 16, y: 11 * 16,
           name: 'Schild',
           texts: ['GESPERRT. Die Schule bleibt geschlossen, bis die Lehrkräfte zurück sind.'],
-          later: { school: true, replace: true, texts: ['Das Tor steht offen. Der Weg zur zerstörten Schule im Norden ist frei.'] }
+          later: [
+            { school: true, replace: true, texts: ['Das Tor steht offen. Der Eingang der zerstörten Schule ist frei.'] },
+            { finale: true, replace: true, texts: ['Die Schule ist wieder aufgebaut. Die Lehrkräfte sind zurück.'] }
+          ]
         },
         {
           // Schild am Sandsturm: West-Ausgang des Dorfes
@@ -56,7 +64,7 @@ var World = (function () {
           texts: ['Ein Sandsturm versperrt den Weg nach Westen. Er trägt das Siegel des Grafen.']
         }
       ],
-      exits: { west: 'steppe', north: 'schulhof', east: 'ost' }
+      exits: { west: 'steppe', east: 'ost' }
     },
     ost: {
       map: [
@@ -488,6 +496,7 @@ var World = (function () {
     // Außen-NPCs blockieren ihre Kachel
     var npcs = states[current].def.npcs || [];
     for (var i = 0; i < npcs.length; i++) {
+      if (!npcShown(npcs[i])) continue;
       if (Math.floor(npcs[i].x / TILE) === tx && Math.floor(npcs[i].y / TILE) === ty) return true;
     }
     return false;
@@ -555,6 +564,7 @@ var World = (function () {
     var npcs = states[current].def.npcs || [];
     for (var k = 0; k < npcs.length; k++) {
       var n = npcs[k];
+      if (!npcShown(n)) continue;
       if (Math.floor(n.x / TILE) === tx && Math.floor(n.y / TILE) === ty) {
         return { name: n.talk.name, texts: n.talk.texts, merk: n.talk.merk, later: n.talk.later, action: n.talk.action, hintX: n.x + 8, hintY: n.y, npc: n };
       }
@@ -578,6 +588,12 @@ var World = (function () {
   function rebake(name) {
     var st = states[name];
     if (st) st.ground = null;
+  }
+
+  // Optionale Bedingung n.when(): NPC erscheint erst, wenn sie erfuellt ist
+  // (z. B. der Hausmeister erst, wenn das Schultor offen ist)
+  function npcShown(n) {
+    return !n.when || n.when();
   }
 
   // NPC zur Laufzeit in einen Bildschirm einfügen (z. B. nach einer Szene)
@@ -638,13 +654,12 @@ var World = (function () {
     if (p) swapTiles('start', 'Z', 'P');
   }
 
-  // Schultor oeffnet sich (Sieg ueber Dungeon 4): Suedtor wird offen
-  // begehbar ('O'), das Gitter am Nordausgang weicht
+  // Schultor oeffnet sich (Sieg ueber Dungeon 4): Tor wird offen begehbar
+  // ('O'), der Schulhof und die Tuer der Schule sind erreichbar
   function setSchoolGateOpen(p) {
     schoolGateOpen = !!p;
     if (p) {
       swapTiles('start', 'G', 'O');
-      swapTiles('start', 'N', 'P');
     }
   }
 
@@ -995,29 +1010,6 @@ var World = (function () {
     r.px(x + 11, y + 13, 1, 2, '#5e4626');
   }
 
-  // Schultor-Gitter am Nordausgang (Kartenzeichen 'N', zu solange das Tor zu ist)
-  function drawSchoolGate(r, gx, gy) {
-    var x = gx * TILE, y = gy * TILE, w = 2 * TILE, i;
-    // Zaunpfosten oben und unten
-    r.px(x - 2, y - 2, 4, 18, '#3a3434');
-    r.px(x + w - 2, y - 2, 4, 18, '#3a3434');
-    r.px(x - 2, y - 2, 4, 1, '#6a6262');
-    r.px(x + w - 2, y - 2, 4, 1, '#6a6262');
-    // Eisenstaebe
-    r.px(x + 2, y + 1, w - 4, 2, '#2e2e36');
-    r.px(x + 2, y + 13, w - 4, 2, '#2e2e36');
-    for (i = x + 3; i < x + w - 3; i += 3) r.px(i, y, 1, 15, '#3a3a44');
-    // Kette und Schloss (wie am suedlichen Schultor)
-    for (i = 0; i < w - 4; i += 2) {
-      var cy = y + 6 + Math.round(Math.abs(i - (w - 4) / 2) / 4);
-      r.px(x + 2 + i, cy, 2, 1, i % 4 ? '#c8ccd2' : '#7a8088');
-    }
-    r.px(x + w / 2 - 2, y + 7, 5, 5, '#2a2018');
-    r.px(x + w / 2 - 1, y + 8, 3, 3, '#d8b040');
-    r.px(x + w / 2 - 1, y + 5, 3, 2, '#7a8088');
-    r.px(x + w / 2, y + 9, 1, 1, '#2a2018');
-  }
-
   // Offenes Schultor (Kartenzeichen 'O', begehbar): Fluegel seitlich aufgeschlagen
   function drawSchoolGateOpen(r, gx, gy) {
     var x = gx * TILE, y = gy * TILE, w = 2 * TILE, i;
@@ -1157,6 +1149,39 @@ var World = (function () {
   // Nach dem Finale ist die Schule wieder aufgebaut: Dann wird statt der
   // zerstoerten Schule (Buildings.school) die intakte gezeichnet und die
   // Ruinen-Kacheln ('R') treten hinter der intakten Fassade zurueck.
+  // Grundzeile der Schule fuer die Tiefensortierung
+  function schoolRow(s) {
+    return s.sortRow !== undefined ? s.sortRow : s.y + s.h - 1;
+  }
+
+  // Muelltonne (Kartenzeichen 'U', blockiert): Versteck des Hausmeisters
+  function drawBin(r, tx, ty) {
+    var x = tx * TILE, y = ty * TILE, alt = tx % 2;
+    r.ellipse(x + 8, y + 15, 7, 2, 'rgba(20,40,20,0.4)');
+    r.px(x + 2, y + 2, 12, 13, alt ? '#3a3a44' : '#2e4a5e');
+    r.px(x + 3, y + 3, 10, 11, alt ? '#55555e' : '#3e6a84');
+    r.px(x + 3, y + 3, 10, 1, alt ? '#6c6c75' : '#587f9c');
+    r.px(x + 6, y + 5, 1, 8, alt ? '#45454e' : '#335a72');
+    r.px(x + 9, y + 5, 1, 8, alt ? '#45454e' : '#335a72');
+    r.px(x + 1, y + 1, 14, 2, alt ? '#2e2e36' : '#24404f');   // Deckel
+    r.px(x + 6, y, 4, 1, '#1c2024');                           // Griff
+  }
+
+  // Starre gerade Lichtlinien des Grafen ueber der Schule (bis der Endboss
+  // besiegt ist), leicht pulsierend, ohne jede Kurve
+  function grafLines(r, t) {
+    if (typeof Boss === 'undefined' || !Boss.of('aula') || Boss.of('aula').isDefeated()) return;
+    var ctx = r.getCtx();
+    ctx.globalAlpha = 0.12 + 0.05 * (Math.floor(t / 400) % 2);
+    for (var i = 0; i < 3; i++) {
+      var x = 9 * TILE + 10 + i * 30;
+      r.px(x, 4 * TILE, 1, 40, '#b8c8f8');
+      r.px(x + 1, 4 * TILE + 40, 18, 1, '#b8c8f8');
+      r.px(x + 18, 4 * TILE + 40, 1, 30, '#b8c8f8');
+    }
+    ctx.globalAlpha = 1;
+  }
+
   function schoolIsIntact(st) {
     return !!(st.def.school && typeof Boss !== 'undefined' &&
       Boss.of('aula') && Boss.of('aula').isDefeated());
@@ -1200,7 +1225,7 @@ var World = (function () {
         } else {
           c = grassColor(x, y);
           if (id === 'T') c = lerp(c, C.grassDark, 0.25);
-          if (id === 'S' || id === 'F' || id === 'G' || id === 'R' || id === 'E' || id === 'i' || id === 'C' || id === 'q' || id === 'V' || id === 'L' || id === 'K' || id === 'B' || id === 'Z' || id === 'N' || id === 'O') c = lerp(c, C.dry, 0.35);
+          if (id === 'S' || id === 'F' || id === 'G' || id === 'R' || id === 'E' || id === 'i' || id === 'C' || id === 'q' || id === 'V' || id === 'L' || id === 'K' || id === 'B' || id === 'Z' || id === 'U' || id === 'O') c = lerp(c, C.dry, 0.35);
           if (adjacent(st.pathMask, k) || adjacent(st.waterMask, k) || adjacent(st.bankMask, k)) {
             c = lerp(c, C.grassDark, 0.55);
           }
@@ -1315,15 +1340,17 @@ var World = (function () {
           // das Wassertor der Lagune ist zu, bis das Siegel bricht
           if (st.def.seagate) drawWasserTor(Render, x, y);
           else if (st.def.lighthouse) { /* Tuer zeichnet drawLighthouse mit */ }
+          else if (st.def.school && !st.def.school.intactOnly) { /* Tuer zeichnet die Schule mit */ }
           else drawRuinDoor(Render, x, y);
         });
         else if (tt === 'i') obj(cy, function () { drawSign(Render, x, y); });
         else if (tt === 'C') obj(cy, function () { drawChest(Render, x, y); });
         else if (tt === 'V') obj(cy, function () { drawRock(Render, x, y); });
+        else if (tt === 'U') obj(cy, function () { drawBin(Render, x, y); });
       }
       // intactOnly (Schulhof): vor dem Finale zeichnet allein die Ruine ('R')
-      if (s && cy === s.y && (!s.intactOnly || schoolIsIntact(st))) obj(s.y + s.h - 1, function () {
-        schoolIsIntact(st) ? Buildings.schoolIntact(Render, s) : Buildings.school(Render, s);
+      if (s && cy === s.y && (!s.intactOnly || schoolIsIntact(st))) obj(schoolRow(s), function () {
+        schoolIsIntact(st) ? Buildings.schoolIntact(Render, s) : Buildings.school(Render, s, schoolGateOpen);
       });
       var lt = st.def.lighthouse;
       if (lt && cy === lt.y + lt.h - 1) obj(lt.y + lt.h - 1, function () { drawLighthouse(Render, lt); });
@@ -1354,10 +1381,10 @@ var World = (function () {
   // Hat die Grundzeile row mindestens ein Objekt?
   function rowHasObjects(st, row) {
     for (var cx = 0; cx < COLS; cx++) {
-      if ('WqREiVCFKBNO'.indexOf(tileAt(cx, row)) >= 0) return true;
+      if ('WqREiVCFKBOU'.indexOf(tileAt(cx, row)) >= 0) return true;
     }
     var s = st.def.school;
-    if (s && s.y + s.h - 1 === row) return true;
+    if (s && schoolRow(s) === row) return true;
     var lt = st.def.lighthouse;
     if (lt && lt.y + lt.h - 1 === row) return true;
     return st.def.buildings.some(function (b) { return b.y + b.h - 1 === row; });
@@ -1500,6 +1527,7 @@ var World = (function () {
     var ctx = r.getCtx();
     for (var i = 0; i < npcs.length; i++) {
       var n = npcs[i];
+      if (!npcShown(n)) continue;
       ctx.globalAlpha = 0.3;
       r.ellipse(n.x + 8, n.y + 15, 6, 2, '#2a140a');
       ctx.globalAlpha = 1;

@@ -216,7 +216,9 @@ var Buildings = (function () {
 
   // --- Verlassene Schule -------------------------------------------------
   // s = { x, y, w, h } in Kacheln (Gebäude oben, unterste Reihe ist der Hof)
-  function school(r, s) {
+  // open = true: Schultor ist offen, die Bretter vor der Tuer sind
+  // abgerissen und der dunkle Eingang ist frei (Dungeon 5)
+  function school(r, s, open) {
     var X0 = s.x * TILE, Y0 = s.y * TILE, W = s.w * TILE;
     var by = (s.y + s.h - 1) * TILE;        // Unterkante Gebäude
     var cx = X0 + W / 2;
@@ -253,8 +255,16 @@ var Buildings = (function () {
     r.px(dx - 1, dy - 1, dw + 2, by - dy + 1, '#2a2018');
     r.px(dx, dy, dw, by - dy, '#5a3a2a');
     r.px(dx + dw / 2, dy, 1, by - dy, '#2a2018');
-    plank(r, dx - 2, dy + 4, dw + 4, 1);
-    plank(r, dx - 2, dy + 12, dw + 4, -1);
+    if (open) {
+      // aufgebrochener Eingang: dunkles Inneres, ein loses Brett lehnt daneben
+      r.px(dx, dy, dw, by - dy, '#14100c');
+      r.px(dx + 1, dy + 1, dw - 2, 2, '#241c14');
+      r.px(dx - 5, dy + 6, 3, by - dy - 6, '#8a6a44');
+      r.px(dx - 5, dy + 6, 1, by - dy - 6, '#a8865a');
+    } else {
+      plank(r, dx - 2, dy + 4, dw + 4, 1);
+      plank(r, dx - 2, dy + 12, dw + 4, -1);
+    }
     r.px(dx - 3, by - 2, dw + 6, 2, '#8a8478');                      // Stufe
     r.px(dx - 3, by - 2, dw + 6, 1, '#a8a294');
     // verblichenes Schild "SCHULE"

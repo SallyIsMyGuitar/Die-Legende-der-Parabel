@@ -72,6 +72,9 @@
   // Gespeicherten Stand uebernehmen; Start an der letzten Rastquelle
   function applyState(st) {
     if (st.rest && st.rest.screen) lastRest = st.rest;
+    // aeltere Staende: Der Schulhof-Bildschirm ist entfallen, seine Quelle
+    // steht jetzt vor der Schule im Dorf
+    if (lastRest.screen === 'schulhof') lastRest = { screen: 'start', x: 7 * 16, y: 7 * 16, facing: 'up' };
     Enemies.setDefeated(st.defeated);
     chestDone = st.chests || (st.chest ? { ruine: true } : {});
     if (chestDone.ruine) World.setChestOpen(1, 'ruine');
@@ -359,38 +362,37 @@
       abspannDone = true;
       placeTeachers();                       // befreite Lehrkraefte (Schritt 2)
       World.rebake('start');                 // Schule im Dorf: intakt zeichnen
-      World.rebake('schulhof');
       World.setScreen('start');
       Player.setPosition(11 * 16, 12 * 16, 'up');   // vor dem Schultor
       saveGame();
     });
   }
 
-  // Befreite Lehrkraefte auf dem Schulhof (Schritt 2, Texte vorlaeufig).
+  // Befreite Lehrkraefte vor der Schule im Dorf (Texte vorlaeufig).
   // Nur Rollenbezeichnungen, keine Namen; Herr Spaeth und Herr Dietl stehen
   // weiter dort, wo sie schon stehen.
   var teachersPlaced = false;
   function placeTeachers() {
     if (teachersPlaced) return;
     teachersPlaced = true;
-    World.addNpc('schulhof', {
-      x: 6 * 16, y: 6 * 16, baseFacing: 'down',
+    World.addNpc('start', {
+      x: 10 * 16, y: 10 * 16, baseFacing: 'down',
       sprites: function () { return People.netzweber(); },
       talk: { name: 'Lehrerin', texts: [
         'Wir sind frei! Danke, dass du die Schule gerettet hast.',
         'Ab jetzt üben wir wieder Parabeln – jeden Tag ein bisschen.'
       ] }
     });
-    World.addNpc('schulhof', {
-      x: 10 * 16, y: 6 * 16, baseFacing: 'down',
+    World.addNpc('start', {
+      x: 14 * 16, y: 10 * 16, baseFacing: 'down',
       sprites: function () { return People.tuemerin(); },
       talk: { name: 'Lehrerin', texts: [
         'Der Bann ist zerbrochen. Uebung macht den Meister!',
         'Die Steintafel neben dem Eingang startet eine Wiederholung.'
       ] }
     });
-    World.addNpc('schulhof', {
-      x: 11 * 16, y: 10 * 16, baseFacing: 'left',
+    World.addNpc('start', {
+      x: 6 * 16, y: 8 * 16, baseFacing: 'right',
       sprites: function () { return People.sterndeuter(); },
       talk: { name: 'Lehrer', texts: [
         'Fünf Wappen und ein freies Land. Gut gemacht!',
@@ -471,7 +473,7 @@
   addStele('kueste', [[11, 12]], 'turm');
   addStele('lagune', [[10, 6]], 'wasser');
   addStele('oase', [[9, 5]], 'sand');
-  addStele('schulhof', [[7, 4]], 'schule');
+  addStele('start', [[9, 10]], 'schule');
   World.addSign('ost', {
     tiles: [[6, 3]], x: 6 * 16, y: 3 * 16,
     name: 'Erinnerungstafel',
