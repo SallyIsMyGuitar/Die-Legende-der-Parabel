@@ -245,7 +245,25 @@ var People = (function () {
     }));
   }
 
-  // Netzweber (Wasserreich, Dungeon 3): schwarze Haare, tuerkiser Umhang
+  // Maschinistin (Wasserkraftwerk, Dungeon 3): gelber Schutzhelm,
+  // blauer Arbeitsanzug, schwarze Sicherheitsschuhe
+  function maschinistin() {
+    var p = pal({
+      h: '#f0c030', H: '#fae070', k: '#b48a14', q: '#5a3a24',
+      t: '#2e5a9a', T: '#4a7ac0', D: '#1e3e70',
+      p: '#2e5a9a', B: '#1a1a20'
+    });
+    var d = dirs(p);
+    // Vorderansicht mit Helmkrempe (k) und dunklem Haaransatz (q)
+    var front = FRONT.slice();
+    front[3] = '.okkkkkkkkkkkko.';
+    front[4] = '..oqqsssssqqqo..';
+    d.down = [Render.sprite(front, p), Render.sprite(blink(front), p)];
+    return d;
+  }
+
+  // Netzweber (frueher Erklaer-NPC im Dungeon 3, jetzt Sprite einer
+  // befreiten Lehrerin): schwarze Haare, tuerkiser Umhang
   function netzweber() {
     return dirs(pal({
       h: '#1e1a2a', H: '#3a3448',
@@ -377,6 +395,7 @@ var People = (function () {
     turmwaerter: turmwaerter,
     tuemerin: tuemerin,
     netzweber: netzweber,
+    maschinistin: maschinistin,
     karawanenfuehrerin: karawanenfuehrerin,
     sterndeuter: sterndeuter,
     brunnenhueterin: brunnenhueterin,

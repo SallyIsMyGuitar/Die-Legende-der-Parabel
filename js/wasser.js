@@ -180,11 +180,11 @@
     // Erklaer-NPC: Merksatz zum Umformen in die Scheitelform
     npc: {
       x: 3 * TILE, y: 2 * TILE,
-      sprites: function () { return People.netzweber(); },
+      sprites: function () { return People.maschinistin(); },
       talk: {
-        name: 'Netzweber',
+        name: 'Maschinistin',
         texts: [
-          'Willkommen in der Tiefe! Ich webe die Netze des Wasserreichs – doch seit dem Bann zittern alle Fäden so gerade wie Lineale.',
+          'Willkommen im Kraftwerk! Seit dem Bann laufen alle Leitungen so gerade wie Lineale – und keine Turbine dreht sich mehr.',
           'Forme y = ax² + bx + c in die Scheitelform y = a(x − xs)² + ys um. Dann liest du den Scheitel direkt ab.',
           'Beispiel: y = x² − 4x + 5 = (x − 2)² + 1 mit dem Scheitel S(2|1).'
         ],
@@ -226,7 +226,7 @@
         // Erklaer-Objekt: Merksatz zum Scheitel aus der allgemeinen Form
         tiles: [[6, 1]],
         x: 6 * TILE, y: 1 * TILE,
-        name: 'Alte Bildtafel',
+        name: 'Alte Schalttafel',
         texts: [
           'Auf der Tafel steht: Bei y = ax² + bx + c liegt der Scheitel bei xs = −b : (2a). Dann ys ausrechnen.',
           'Darunter ein Beispiel: y = x² − 6x + 8. Hier ist xs = 3, und ys = 8 − 9 = −1, also S(3|−1).'
@@ -237,9 +237,9 @@
         // Erklaer-Objekt: Merksatz zur Parabel durch drei Punkte
         tiles: [[3, 1]],
         x: 3 * TILE, y: 1 * TILE,
-        name: 'Muscheltafel',
+        name: 'Messtafel',
         texts: [
-          'In Perlmutt geritzt: Geht eine Parabel durch drei Punkte, setze jeden Punkt in y = ax² + bx + c ein.',
+          'Auf der Messtafel steht: Geht eine Parabel durch drei Punkte, setze jeden Punkt in y = ax² + bx + c ein.',
           'Liegt ein Punkt auf der y-Achse, kennst du c sofort. Aus den beiden anderen Punkten berechnest du a und b.',
           'Beispiel: P1(0|1), P2(1|2), P3(−1|2). Aus P1 folgt c = 1. Dann gilt a + b = 1 und a − b = 1, also a = 1, b = 0 und y = x² + 1.'
         ],

@@ -435,7 +435,7 @@ var Interior = (function () {
         later: [
           { wappen: 1, texts: ['Graf Gerade? Von dem habe ich noch nie gehört … Aber du hast den ersten Wächter befreit! Ich bin so stolz auf dich.'] },
           { wappen: 2, texts: ['Ich habe gesehen, dass der Leuchtturm wieder leuchtet! Dieser Graf Gerade ist also wirklich da draußen … Pass gut auf dich auf.'] },
-          { wappen: 3, texts: ['Im Dorf erzählt man, das Wasser im Osten fließt wieder in sanften Wellen. Warst du das etwa auch?'] },
+          { wappen: 3, texts: ['Im Dorf erzählt man, das Kraftwerk im Osten läuft wieder. Warst du das etwa auch?'] },
           { wappen: 4, texts: ['Das Schultor steht offen? Und das Schloss war die ganze Zeit unsere Schule … Sei vorsichtig da drin!'] },
           { finale: true, replace: true, texts: [
             'Du hast es geschafft! Die Lehrerinnen und Lehrer sind frei – das ganze Dorf spricht von nichts anderem.',

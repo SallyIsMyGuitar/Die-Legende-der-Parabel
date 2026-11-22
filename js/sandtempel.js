@@ -4,7 +4,7 @@
 // "erst D, dann die Formel"), Mittelraum mit steinerner Waage und Quelle
 // (Rastquelle auf halber Strecke), Plattenraum (Platten-Raeetsel, platten.js),
 // Sanduhrraum (Boss "Waechter des Sandtempels", boss.js).
-// Aufbau wie Hoehle, Turm und Wasserreich: 16 x 14 Kacheln, angemeldet per
+// Aufbau wie Hoehle, Turm und Wasserkraftwerk: 16 x 14 Kacheln, angemeldet per
 // Interior.register(), Uebergaenge ueber mats.
 // Zeichen: '#' ausserhalb, 'W' Sandsteinwand, '.' Boden, 'S' Saeule (blockiert),
 //          'x' Steinschutt (blockiert), 'Q' Quelle (blockiert), 'M' Oeffnung

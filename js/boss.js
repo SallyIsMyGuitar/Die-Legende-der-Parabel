@@ -263,71 +263,77 @@ var Boss = (function () {
   });
 })();
 
-// --- Waechter des Wasserreichs, die Perle in der Muschel (Dungeon 3, 'wboss')
-// Schwebende Riesenmuschel mit leuchtender Perle. Nach dem Sieg kehrt die
-// Perle in die Bildtafel zurueck und das Wasser fliesst wieder in Kurven.
+// --- Waechter des Kraftwerks, das Turbinenrad (Dungeon 3, 'wboss') --------
+// Schwebendes Turbinenrad mit gebogenen Schaufeln. Im Bann des Grafen ruckelt
+// es nur stockend; nach dem Sieg dreht es frei und loest sich in Gischt auf.
 (function () {
   'use strict';
 
-  var X = 102, Y = 60;     // linke obere Ecke; Bildmitte (112, 72), Punkte (112, 74)
+  var X = 100, Y = 58;     // linke obere Ecke; Bildmitte (112, 72), Punkte (112, 74)
+  var CX = 112, CY = 72;   // Nabe
+
+  // Ein Pixelpunkt (ganzzahlig, damit die Pixel scharf bleiben)
+  function dot(r, x, y, w, col) { r.px(Math.round(x), Math.round(y), w, w, col); }
+
+  // Rad zeichnen: Drehwinkel ang, hp fuer Risse und Augenfarbe
+  function wheel(r, ang, hp, bob) {
+    var cy = CY + bob, i, k;
+    // Gehaeusering (Stahl)
+    for (k = 0; k < 48; k++) {
+      var a = k / 48 * Math.PI * 2;
+      dot(r, CX + Math.cos(a) * 12, cy + Math.sin(a) * 12, 2, '#4a5260');
+      dot(r, CX + Math.cos(a) * 11, cy + Math.sin(a) * 11, 1, '#8a94a4');
+    }
+    // sechs gebogene Schaufeln (wie Parabelboegen)
+    for (i = 0; i < 6; i++) {
+      var base = ang + i / 6 * Math.PI * 2;
+      for (k = 0; k <= 8; k++) {
+        var rad = 3 + k;
+        var a2 = base + k * k * 0.012;   // Kruemmung nimmt nach aussen zu
+        dot(r, CX + Math.cos(a2) * rad, cy + Math.sin(a2) * rad, 2, k > 6 ? '#c8d4e0' : '#9aa8b8');
+      }
+    }
+    // Nabe mit Augen
+    r.ellipse(CX, cy, 4, 4, '#3a4250');
+    r.ellipse(CX, cy, 3, 3, '#6a7888');
+    var eye = hp > 1 ? '#6ae0f0' : '#e8443a';
+    r.px(CX - 2, cy - 1, 1, 2, eye);
+    r.px(CX + 1, cy - 1, 1, 2, eye);
+    // Risse bei Schaden
+    if (hp <= 2) { r.px(CX + 6, cy - 9, 1, 4, '#2a2e36'); r.px(CX + 7, cy - 6, 2, 1, '#2a2e36'); }
+    if (hp === 1) { r.px(CX - 9, cy + 4, 4, 1, '#2a2e36'); r.px(CX - 6, cy + 5, 1, 3, '#2a2e36'); }
+  }
 
   function drawLiving(r, def, inst, now, alpha) {
     var ctx = r.getCtx();
     var hp = def.maxHp - inst.index();
     var bob = Math.round(Math.sin(now / 500) * 2);
-    var x = X, y = Y + bob;
-    if (alpha !== undefined) ctx.globalAlpha = alpha;
-
-    // welliger Lichtschein auf dem Boden
-    ctx.globalAlpha = (alpha === undefined ? 1 : alpha) * (0.2 + 0.05 * (Math.floor(now / 250) % 2));
+    var a0 = alpha === undefined ? 1 : alpha;
+    // Wasserschein auf dem Boden
+    ctx.globalAlpha = a0 * (0.2 + 0.05 * (Math.floor(now / 250) % 2));
     r.ellipse(112, 92, 16, 5, '#8ad8e8');
-    ctx.globalAlpha = alpha === undefined ? 1 : alpha;
-
-    // Rueckenschale der Muschel
-    r.px(x + 4, y + 2, 16, 14, '#7a6a8a');
-    r.px(x + 5, y + 3, 14, 12, '#9a8aaa');
-    r.px(x + 7, y + 4, 10, 1, '#b8aabc');
-    // Riffkanten an der Schale (mehr Risse bei Schaden)
-    r.px(x + 6, y + 7, 12, 1, '#6a5a7a');
-    r.px(x + 7, y + 11, 10, 1, '#6a5a7a');
-    if (hp <= 2) r.px(x + 9, y + 8, 1, 4, '#4a3a5a');
-    if (hp === 1) {
-      r.px(x + 14, y + 5, 1, 5, '#4a3a5a');
-      r.px(x + 11, y + 12, 4, 1, '#4a3a5a');
-    }
-
-    // Innenseite und leuchtende Perle (wird bei Schaden dunkler)
-    r.px(x + 6, y + 8, 12, 8, '#e8dce8');
-    var perl = hp > 1 ? '#f4f0f4' : '#c8b4c4';
-    r.ellipse(x + 12, y + 11, 4, 3, perl);
-    r.ellipse(x + 11, y + 10, 1, 1, '#ffffff');
-    // Perle leuchtet im Takt
-    ctx.globalAlpha = (alpha === undefined ? 1 : alpha) * (0.15 + 0.08 * (Math.floor(now / 300 + hp) % 2));
-    r.ellipse(x + 12, y + 11, 7, 5, '#f0e4f0');
-    ctx.globalAlpha = alpha === undefined ? 1 : alpha;
-
-    // Augen in der Schalenkante
-    var eye = hp > 1 ? '#6ae0f0' : '#e8443a';
-    r.px(x + 6, y + 5, 2, 2, eye);
-    r.px(x + 16, y + 5, 2, 2, eye);
-
+    ctx.globalAlpha = a0;
+    // stockende Drehung: ein kurzer Ruck alle 0,8 s (der Bann haelt das Rad fest)
+    var step = Math.floor(now / 800);
+    var ang = step * 0.35 + Math.min(1, (now % 800) / 120) * 0.35;
+    wheel(r, ang, hp, bob);
     ctx.globalAlpha = 1;
   }
 
-  // Besiegt-Animation: Die Muschel oeffnet sich ganz, die Perle loest sich
-  // und zerrinnt in Wasser, das in Kurven davonrieselt
+  // Besiegt-Animation: Das Rad dreht frei immer schneller, blendet aus,
+  // Wassertropfen spruehen in Boegen davon
   function drawDying(r, def, inst, now) {
     var t = (now - inst.dieStart()) / 1000;
     if (t > 1.4) return;
     var ctx = r.getCtx();
     var p = Math.min(1, t / 1.2);
-    drawLiving(r, def, inst, inst.dieStart() + 1, Math.max(0, 1 - p));   // einfrieren, abblenden
-    // Wassertropfen ziehen in Kurven davon
+    ctx.globalAlpha = Math.max(0, 1 - p);
+    wheel(r, t * t * 12, 1, 0);
     ctx.globalAlpha = Math.max(0, 0.8 - p * 0.8);
-    for (var i = 0; i < 6; i++) {
-      var cx = 104 + i * 4;
-      var cy = 70 + p * 26 + Math.sin(i + p * 5) * 4 * p;
-      r.ellipse(cx, cy, 2, 2, '#b8e0f0');
+    for (var i = 0; i < 8; i++) {
+      var a = i / 8 * Math.PI * 2;
+      var d = 6 + p * 20;
+      r.ellipse(CX + Math.cos(a) * d, CY + Math.sin(a) * d + p * p * 10, 1, 1, '#b8e0f0');
     }
     ctx.globalAlpha = 1;
   }

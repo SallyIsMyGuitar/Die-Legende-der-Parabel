@@ -55,7 +55,7 @@ Ein Mathe-Übungsspiel als Top-Down-Abenteuer im Stil eines modernen 2D-Zelda (O
   - `spiegel.js`: Spiegel-Rätsel vor dem Boss des Leuchtturms (Zustand, Prüfung, Zeichnen)
   - `gezeiten.js`: Gezeiten-Rätsel vor dem Boss des Wasserreichs (Zustand, Prüfung, Zeichnen)
   - `turm.js`: Leuchtturm-Dungeon (Dungeon 2, vier Räume, Turm-Optik, Quelle)
-  - `wasser.js`: Versunkenes Wasserreich (Dungeon 3, vier Räume, Grotten-Optik, Quelle)
+  - `wasser.js`: Wasserkraftwerk (Dungeon 3, vier Räume, Quelle)
   - `wueste.js`: Steppe, Dünen und Oase (Weg zu Dungeon 4) mit Sandtempel-Fassade
   - `platten.js`: Platten-Rätsel vor dem Boss des Sandtempels (Druckplatten auf der x-Achse)
   - `sandtempel.js`: Sandtempel (Dungeon 4, vier Räume, Sandstein-Optik, Quelle)
@@ -281,6 +281,14 @@ Nach der Durchsicht des gesamten Spiels wurden am 13 Funden behoben (Details im 
 - *Dorfplatz (`ost`):* Postbotin 5/5 (nach `dboss`: Felsen-Zeile ersetzt; nach dem Finale nur noch die Elternbrief-Seite), Opa 5/7 links neben dem Brunnen (Finale-Zusatzseite).
 - *Startbildschirm:* Kind am Teich 4/8 (Finale-Zusatzseite).
 - *Laden:* Kundin 3/7 am Hefte-Tisch (Finale-Zusatzseite), Schüler 5/6 an der Theke (nach dem Finale ersetzt). Innenräume können dafür weitere Figuren als `guests` haben (`interior.js`: blockieren ihre Kachel, drehen sich beim Gespräch zur Spielfigur).
+
+## Dungeon 3 wird zum Wasserkraftwerk (freigegeben)
+
+- **Name:** „Wasserkraftwerk“ statt „Versunkenes Wasserreich“. Texte: Schild Lagune („Wasserkraftwerk. Das Siegel des Grafen verschließt das Tor.“ / „… Das Siegel ist gebrochen, das Tor steht offen.“), Hinweis am verschlossenen Tor (Name „Tor“), Turm-Wächter Sieg Seite 3 („Hast du das Wasserkraftwerk im Osten gesehen? …“), Mama nach Wappen 3 („… das Kraftwerk im Osten läuft wieder …“).
+- **Figuren:** Erklär-NPC **Maschinistin** (gelber Helm mit Krempe, blauer Arbeitsanzug; Seite 1 „Willkommen im Kraftwerk! …“, Rest und Merksatz unverändert), **Alte Schalttafel** (vorher Alte Bildtafel), **Messtafel** (vorher Muscheltafel, „Auf der Messtafel steht: …“). Das Netzweber-Sprite bleibt für eine befreite Lehrerin.
+- **Gegner:** Funkengeist („Ein Funkengeist knistert:“, Vorhalle) und Rohrgeist („Ein Rohrgeist gluckert:“, Pumpenkammer), neue Sprites in `enemies.js`.
+- **Boss:** „Wächter des Kraftwerks“, ein Turbinenrad mit sechs gebogenen Schaufeln (ruckelt im Bann, dreht beim Sieg frei und versprüht Wasser). Intro Seite 1 und Sieg Seiten 1, 2, 4 neu (Wortlaut in `main.js`), Aufgaben unverändert.
+- **Geplant (freigegeben):** Außenansicht als Kraftwerk (Staumauer, Krafthaus, Druckrohre, Auslass, Strommast), Innenräume in Kraftwerk-Optik (Vorhalle, Pumpenkammer, Schaltwarte, Turbinenhalle), Rätsel „Schaltwarte“ mit Hebeln a, b, c und Startschalter (Parabel durch P1(0|−1), P2(1|−2), P3(3|2) → y = x² − 2x − 1; a ∈ {−2; −1; 1; 2}, b und c von −3 bis 3; falsch: Turbine stottert, kein Herzverlust; gespeichert als `schaltwarte`, alte Stände mit `gezeiten` gelten als gelöst). Danach je ein eigenes Innenraum-Konzept für Höhle, Turm, Sandtempel und Schule.
 
 ## Getroffene Entscheidungen zu Meilenstein 6 (gebaut, Texte vorläufig)
 

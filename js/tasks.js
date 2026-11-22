@@ -316,7 +316,7 @@ var Tasks = (function () {
     };
   }
 
-  // --- Typ 12 (Wasserreich): Umformen in die Scheitelform -----------------
+  // --- Typ 12 (Wasserkraftwerk): Umformen in die Scheitelform -----------------
   // Passt zum Merksatz des Netzwebers: Vorgegeben ist die allgemeine Form
   // y = ax² + bx + c, gesucht sind a, xs und ys der Scheitelform.
   // Nur "sch\u00f6ne" Werte: ganze Zahlen oder genau eine Nachkommastelle
@@ -641,7 +641,7 @@ var Tasks = (function () {
     }
   ];
 
-  // --- Boss des Wasserreichs: feste, von der Lehrkraft gepruefte Aufgaben ---
+  // --- Boss des Wasserkraftwerks: feste, von der Lehrkraft gepruefte Aufgaben ---
   // Thema des Dungeons: Allgemeine Form. Die drei Aufgaben verbinden das
   // Umformen, den Streckfaktor und das Aufstellen aus drei Punkten.
   var BOSS_WASSER = [

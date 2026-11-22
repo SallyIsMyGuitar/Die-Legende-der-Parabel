@@ -54,8 +54,8 @@ var Enemies = (function () {
     kueste: 'Ein Krabbengeist scharrt:',
     leingang: 'Ein Möwengeist kreischt:',
     lmitte: 'Ein Dampfgeist zischt:',
-    weingang: 'Ein Quallengeist fragt:',
-    wmitte: 'Ein Muschelgeist murmelt:',
+    weingang: 'Ein Funkengeist knistert:',
+    wmitte: 'Ein Rohrgeist gluckert:',
     steppe: 'Ein Sandkäfer zirpt (denk an die Diskriminante der Karawanenführerin):',
     duenen: 'Ein Staubgeist huscht vorbei (drei Fälle, sagt der Sterndeuter):',
     oase: 'Eine Sandschlange zischt (die Lösungsformel, sagt die Brunnenhüterin):',
@@ -293,48 +293,49 @@ var Enemies = (function () {
   ];
   var STEAM_COLORS = { o: '#3e4a56', s: '#b4c2d0', E: '#3e4a56', e: '#3e4a56' };
 
-  // Quallengeist (Hafenkaverne): rosa Schirm mit welligen Fäden
+  // Funkengeist (Kraftwerk, Vorhalle): knisternde Kugel aus Strom mit
+  // gezackten Blitzarmen
   var JELLY = [
     '................',
-    '.....jjjjjj.....',
-    '...jjJJJJJJjj...',
-    '..jJJwJJJJwJJj..',
-    '..jJJJJJJJJJJj..',
-    '...jJJJJJJJJj...',
-    '....eje..eje....',
-    '.....j....j.....',
-    '.....e....e.....',
-    '................',
-    '................',
-    '................',
+    '......y...y.....',
+    '.....y.yyy.y....',
+    '....yyYYYYYyy...',
+    '...yYYwwwwwYYy..',
+    '.y.yYwweweewYy.y',
+    '..yYYwwwwwwwYYy.',
+    '...yYYwwwwwYYy..',
+    '....yyYYYYYyy...',
+    '.....y.yyy.y....',
+    '....y...y...y...',
+    '...y.........y..',
     '................',
     '................',
     '................',
     '................'
   ];
-  var JELLY_COLORS = { j: '#d86a9a', J: '#f0a0c0', w: '#ffffff', e: '#5a1a3a' };
+  var JELLY_COLORS = { y: '#f0c830', Y: '#9ad8f8', w: '#f4fcff', e: '#1e3a5a' };
 
-  // Muschelgeist (Pumpenkammer): geöffnete Muschel mit Perlenschein
+  // Rohrgeist (Kraftwerk, Pumpenkammer): Rohrkruemmer mit Flansch,
+  // Augen und tropfendem Wasser
   var CLAM = [
     '................',
     '................',
-    '................',
-    '.....wwwww......',
-    '....wPPPPPw.....',
-    '...wPsssssPw....',
-    '...wPsssssssw...',
-    '...wPsssssssw...',
-    '...wPPsssssww...',
-    '....wwwwwwww....',
-    '...s.ww..ww.s...',
-    '..ss........ss..',
+    '..fffffff.......',
+    '..FRRRRRF.......',
+    '..fRwRwRf.......',
+    '..fRRRRRRRRRRf..',
+    '..fRRmmmRRRRRF..',
+    '..fRRRRRRRRRRf..',
+    '..ffffffffffff..',
+    '.......b.....b..',
+    '.......b........',
+    '..............b.',
     '................',
     '................',
     '................',
     '................'
   ];
-  var CLAM_COLORS = { s: '#c8a878', P: '#e8d8b8', w: '#8a6a48' };
-
+  var CLAM_COLORS = { f: '#4a5260', F: '#8a94a4', R: '#7a8898', w: '#ffffff', m: '#2a2e36', b: '#6ab0e8' };
 
   // Sandkaefer (Steppe): brauner Panzer mit Sandstreifen
   var SCARAB = [

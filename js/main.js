@@ -294,7 +294,7 @@
       victory: [
         'Mit einem heißen Aufblitzen kehrt das Licht in den Spiegel zurück. Der Bann über dem Turm zerbricht.',
         'Ich war die Laterne des Turms, verzaubert vom Grafen. Er fürchtet nichts mehr als einen leuchtenden Scheitelpunkt.',
-        'Hast du das Wasser im Osten gesehen? Es trägt sein Siegel. Erst wenn du es bannst, zeigt sich der nächste Wächter.',
+        'Hast du das Wasserkraftwerk im Osten gesehen? Sein Tor trägt das Siegel des Grafen. Erst wenn du es bannst, zeigt sich der nächste Wächter.',
         'Du erhältst das Wappen der Scheitelform. Das Licht des Turms sehnt sich nach dem Tag, an dem die Schule wieder steht.'
       ],
       // nach dem Sieg: der Leuchtturm draussen leuchtet wieder und
@@ -302,17 +302,17 @@
       onWin: function () { World.setLighthouseLit(true); World.setWaterGateOpen(true); }
     },
     wboss: {
-      name: 'Wächter des Wasserreichs',
+      name: 'Wächter des Kraftwerks',
       kontext: 'Der Wächter fragt:',
       intro: [
-        'Halt! Graf Gerade hat mir befohlen: Das Wasserreich bleibt gerade, starr und stumm!',
+        'Halt! Graf Gerade hat mir befohlen: Im Kraftwerk dreht sich nichts mehr – alles bleibt gerade, starr und stumm!',
         'Beantworte meine drei Fragen. Für jede richtige Antwort verliere ich ein Herz. Dein Schwert hilft dir hier nicht.'
       ],
       victory: [
-        'Die starren Wasserwände zerfließen in sanfte Wellen. Der Bann über dem Wasserreich zerbricht.',
-        'Ich bin die Perle des Reichs, verzaubert vom Grafen. In meiner Schale spiegelt sich jede Parabel – das konnte er nicht dulden.',
+        'Die Turbinen setzen sich in Bewegung, das Wasser rauscht wieder. Der Bann über dem Kraftwerk zerbricht.',
+        'Ich bin das Turbinenrad des Kraftwerks, verzaubert vom Grafen. Meine Schaufeln sind gebogen wie Parabeln – das konnte er nicht dulden.',
         'Hast du vom Sandsturm im Westen gehört? Er trägt sein Siegel. Erst wenn du ihn bannst, öffnet sich der Weg zum letzten Wächter.',
-        'Du erhältst das Wappen der allgemeinen Form. Die Gezeiten sagen voraus: Eure Schule wird wieder erstehen.'
+        'Du erhältst das Wappen der allgemeinen Form. Das Kraftwerk liefert wieder Strom – bald brennt auch in eurer Schule wieder Licht.'
       ],
       // nach dem Sieg: Der Sandsturm im Westen loest sich auf
       // (Dungeon 4: Weg ueber Steppe, Duenen und Oase zum Sandtempel)
@@ -455,7 +455,7 @@
   var DUNGEONS = {
     hoehle: { name: 'H\u00f6hle der Parabeln', rooms: ['dhalle', 'dmittel', 'draetsel', 'dboss'] },
     turm: { name: 'Leuchtturm', rooms: ['leingang', 'lmitte', 'lraetsel', 'lboss'] },
-    wasser: { name: 'Wasserreich', rooms: ['weingang', 'wmitte', 'wraetsel', 'wboss'] },
+    wasser: { name: 'Wasserkraftwerk', rooms: ['weingang', 'wmitte', 'wraetsel', 'wboss'] },
     sand: { name: 'Sandtempel', rooms: ['seingang', 'smitte', 'splatten', 'sboss'] },
     schule: { name: 'Schule', rooms: ['klassenzimmer', 'physiksaal', 'turnhalle', 'aula'] }
   };
@@ -1236,7 +1236,7 @@
           else if (w.room === 'weingang' && !World.isWaterGateOpen()) {
             // Wassertor der Lagune (Dungeon 3): zu, bis der Wächter des Turms besiegt ist
             Player.setPosition(Player.getX(), Player.getY(), 'down');
-            Dialog.open('Wassertor', ['Wasser wandert in geraden Wänden – das Siegel von Graf Gerade. Erst der Wächter des Turms kann es brechen.']);
+            Dialog.open('Tor', ['Das Tor des Kraftwerks ist versiegelt – starr wie ein Lineal. Erst der Wächter des Turms kann das Siegel brechen.']);
           }
           else enterDungeon(w.room);
         } else if (w && w.type === 'warp') {

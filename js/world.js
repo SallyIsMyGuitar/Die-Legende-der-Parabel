@@ -304,7 +304,7 @@ var World = (function () {
       openEast: [8, 9, 10, 11]
     },
 
-    // Lagune: Zugang zum versunkenen Wasserreich (Dungeon 3, allgemeine Form).
+    // Lagune: Gelaende des Wasserkraftwerks (Dungeon 3, allgemeine Form).
     // Das Wassertor in der Felswand tr\u00e4gt das Siegel von Graf Gerade und
     // \u00f6ffnet sich erst mit dem Sieg \u00fcber den W\u00e4chter des Turms.
     lagune: {
@@ -330,8 +330,8 @@ var World = (function () {
         {
           tiles: [[6, 7]], x: 6 * TILE, y: 7 * TILE,
           name: 'Schild',
-          texts: ['Versunkenes Wasserreich. Das Siegel des Grafen verschließt das Tor.'],
-          later: { boss: 'lboss', replace: true, texts: ['Versunkenes Wasserreich. Das Siegel ist gebrochen, das Tor steht offen.'] }
+          texts: ['Wasserkraftwerk. Das Siegel des Grafen verschließt das Tor.'],
+          later: { boss: 'lboss', replace: true, texts: ['Wasserkraftwerk. Das Siegel ist gebrochen, das Tor steht offen.'] }
         }
       ],
       dungeon: 'weingang',
