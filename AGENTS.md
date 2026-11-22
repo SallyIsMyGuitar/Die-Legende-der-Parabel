@@ -91,7 +91,7 @@ Ein Mathe-Übungsspiel als Top-Down-Abenteuer im Stil eines modernen 2D-Zelda (O
 
 - Spielstart im Elternhaus, direkt vor der Mutter, die am Herd kocht.
 - **Startdorf** (bisher zwei Bildschirme):
-  - *Start:* Elternhaus (rotes Dach), kleiner Teich, verwilderte und gesperrte Schule mit Zaun, verschlossenem Tor (Kette, Schloss, Schild „GESPERRT“). Die Schule ist nicht betretbar. Im Finale (Dungeon 5) wird das zerstörte Schulgebäude betreten (drei Räume, Endboss); danach wird sie im Abspann wiederaufgebaut und ist begehbar.
+  - *Start:* Elternhaus (rotes Dach), kleiner Teich, verwilderte und gesperrte Schule mit Zaun, verschlossenem Tor (Kette, Schloss, Schild „GESPERRT“). Nach dem Sieg über Dungeon 4 öffnet sich das Tor; die Schultür führt direkt in Dungeon 5 (drei Räume, Endboss). Danach wird die Schule im Abspann wiederaufgebaut. Dazu Hausmeister (ab offenem Tor), Rastquelle und Kind am Teich.
   - *Ost:* Dorfplatz mit Brunnen, Haus der Nachbarin (blaues Dach), Haus des Freundes (grünes Dach), Schreibwarenladen (Hefte, Stifte, Bücher).
   - Die Rastquelle im Startdorf ist der Brunnen auf dem Dorfplatz (Ost-Bildschirm), speichert automatisch.
 - **Häuser sind betretbar:** Tür berühren (nach oben gegen die Tür laufen) → Tür schwingt auf, Figur geht hinein, Abblende. Hinaus über die Fußmatte; die Figur tritt aus der Tür, die Tür schließt sich. Alle Innenräume haben denselben Grundriss.
@@ -157,14 +157,14 @@ Gebaut wird immer nur der Meilenstein, den der Nutzer freigibt, mit Test nach je
 2. Startdorf und Oberwelt mit Bildschirmwechsel. – **erledigt:** Startdorf (2 Bildschirme), Bildschirmwechsel, 4 betretbare Häuser mit Tür-Animation, Dialogsystem mit NPC-Texten, Spielstart im Elternhaus, Rastquelle am Brunnen (speichert automatisch), drei weitere Bildschirme mit Weg zum ersten Dungeon (Ruine), Szene am Ost-Ausgang mit Herrn Späth (hält die Spielfigur an, gibt einen Tipp, dreht sich beim Gespräch zur Spielfigur).
 3. Kampf- und Aufgabensystem mit Aufgabenvorlagen und Testseite. – **erledigt:** 4 Aufgabentypen, Aufgabenbox mit Zahlenblock und Graph-Modus (Parabel Live einstellen; Punkt P erst nach dem ersten Fehler sichtbar), gestufte Fehler (Herz, Hinweis, Lösung), Besiegt-Animation mit Herz-Drops, Schwert als Joker (E bzw. Slot-Antippen, kein Herz-Drop, Sperre bei Boss/Truhe/Probe), Testseite mit 10 Beispielen je Typ und Probeaufgabe.
 4. Erster kompletter Dungeon mit Erklär-NPCs, Merkbuch und Boss. – **erledigt** (überarbeitet: Speichern, Lernpfad, Bann, Story, siehe „Getroffene Entscheidungen“): Höhle der Parabeln mit drei Räumen (Eingangshalle, Mittelraum mit Quelle, Vorraum), Höhlen-Optik mit Fackeln, Gegner (Fledermäuse, Kristallgeister), Forscherin als Erklär-NPC, Merkbuch (M bzw. HUD-Symbol, jederzeit öffnen), Wächter-Boss mit 3 festen Aufgaben, Tor-Öffnung nach dem Sieg, Wappenzähler. Rastquellen: Brunnen (Dorf), Quelle vor der Ruine, Quelle im Mittelraum.
-5. Die weiteren vier Dungeons einzeln (Dungeon 5 ist das Finale in der Schule: betreten, drei Räume lösen, Endboss besiegen). – **erledigt:** Dungeon 2 (Leuchtturm), Dungeon 3 (Wasserreich), Dungeon 4 (Sandtempel/Wüste) und Dungeon 5 (Finale in der zerstörten Schule mit Endboss Graf Gerade) sind gebaut und vollständig begehbar.
+5. Die weiteren vier Dungeons einzeln (Dungeon 5 ist das Finale in der Schule: betreten, drei Räume lösen, Endboss besiegen). – **erledigt:** Dungeon 2 (Leuchtturm), Dungeon 3 (Wasserkraftwerk, früher Wasserreich), Dungeon 4 (Sandtempel/Wüste) und Dungeon 5 (Finale in der zerstörten Schule mit Endboss Graf Gerade) sind gebaut und vollständig begehbar.
 6. Abspann (inkl. Befreiung der Lehrkräfte und Wiederaufbau der Schule), Wiederholungsmodus, Feinschliff. – **erledigt** (Texte vorläufig, Details unter „Getroffene Entscheidungen zu Meilenstein 6“).
 
 ## Offene Fragen (vor der Umsetzung mit dem Nutzer klären)
 
 - **Ton:** bleibt vorerst offen (siehe „Plattform und Technik“).
-- **Vorläufige Texte:** Fragen und Texte von Herrn Dietl (`dietl.js`), die Stufentexte der Dorfbewohner nach Wappen 2–4 und nach dem Finale (`interior.js`, `rooms.js`), Hausmeister und Schulhof-Schild nach dem Finale sowie die Herkunft des Grafen (`schule.js`, `main.js`). Der Nutzer passt sie später an; bis dahin nicht umschreiben.
-- **Test auf dem iPad:** Weg durch die Baumlücke zu Herrn Dietl, Auswahl per Touch, neue Dorftexte und Muscheltafel sind noch nicht auf dem iPad geprüft.
+- **Vorläufige Texte:** Fragen und Texte von Herrn Dietl (`dietl.js`), die Stufentexte der Dorfbewohner nach Wappen 2–4 und nach dem Finale (`interior.js`, `rooms.js`), Hausmeister und Schild am Schultor nach dem Finale, Tafel der Schaltwarte sowie die Herkunft des Grafen (`schule.js`, `main.js`). Der Nutzer passt sie später an; bis dahin nicht umschreiben.
+- **Test auf dem iPad:** Weg durch die Baumlücke zu Herrn Dietl, Auswahl per Touch, neue Dorftexte und Messtafel, Hebel und Startschalter der Schaltwarte, Eingang der Schule vom Startbildschirm sowie die neuen Innenräume aller Dungeons sind noch nicht auf dem iPad geprüft.
 
 ## Getroffene Entscheidungen
 
@@ -265,7 +265,7 @@ Nach der Durchsicht des gesamten Spiels wurden am 13 Funden behoben (Details im 
 
 ## Überarbeitung Schilder (freigegeben)
 
-- Schilder zeigen nach dem passenden Boss-Sieg eine eigene Fassung (neue `later`-Bedingung `boss: '<raum>'`, unabhängig vom Wappenzähler): Felsen am Dorfplatz (`dboss`: „Der Felsen ist fort. Im Süden wartet der Leuchtturm.“), Sandsturm (`wboss`: „Der Sandsturm hat sich gelegt. Im Westen liegt die Wüste mit dem Sandtempel.“), Küste („Leuchtturm. Sein Licht ist erloschen, seit der Graf den Spiegel gebannt hat.“ / `lboss`: „Leuchtturm. Er leuchtet wieder.“), Lagune (`lboss`: „Versunkenes Wasserreich. Das Siegel ist gebrochen, das Tor steht offen.“), Oase (`sboss`: „Sandtempel. Sein Wächter ist erlöst.“).
+- Schilder zeigen nach dem passenden Boss-Sieg eine eigene Fassung (neue `later`-Bedingung `boss: '<raum>'`, unabhängig vom Wappenzähler): Felsen am Dorfplatz (`dboss`: „Der Felsen ist fort. Im Süden wartet der Leuchtturm.“), Sandsturm (`wboss`: „Der Sandsturm hat sich gelegt. Im Westen liegt die Wüste mit dem Sandtempel.“), Küste („Leuchtturm. Sein Licht ist erloschen, seit der Graf den Spiegel gebannt hat.“ / `lboss`: „Leuchtturm. Er leuchtet wieder.“), Lagune (`lboss`: „Wasserkraftwerk. Das Siegel ist gebrochen, das Tor steht offen.“, seit der Umbenennung), Oase (`sboss`: „Sandtempel. Sein Wächter ist erlöst.“).
 - Tor im Höhlen-Bossraum nach dem Sieg: „… Der Felsen am Dorfplatz ist verschwunden – der Weg nach Süden ist frei.“ Steintafeln: „fünf“ statt „fuenf“.
 
 ## Überarbeitung Schreibweisen in Aufgaben (freigegeben)
