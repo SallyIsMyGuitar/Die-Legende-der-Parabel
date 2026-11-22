@@ -15,65 +15,191 @@
   var hash = Render.hash;
 
   // ---Sandtempel-Optik -----------------------------------------------------
+  // Grosse Sandsteinplatten mit Sandverwehungen an den Waenden, Waende mit
+  // bemaltem Fries, Lichtstrahlen aus Deckenoeffnungen mit tanzendem Staub.
+  // Jeder Raum hat ein eigenes Thema (def.art): 'halle' Saeulenhalle,
+  // 'grab' Grabkammer, 'fries' Plattenraum, 'thron' Thronsaal des Waechters.
+  var mix = Render.mix;
 
-  // Sandsteinboden mit Fugen und feinen Kornsprenkeln
-  function sandFloor(r, tx, ty) {
-    var x = tx * TILE, y = ty * TILE;
-    var even = (tx + ty) % 2 === 0;
-    r.px(x, y, TILE, TILE, even ? '#d2ae72' : '#c8a266');
-    r.px(x, y, TILE, 1, '#ba9257');
-    r.px(x, y + 15, TILE, 1, '#b0884c');
-    r.px(x, y, 1, TILE, '#ba9257');
-    r.px(x + 15, y, 1, TILE, '#b0884c');
-    if (hash(tx * 5, ty * 3) > 0.7) {
-      r.px(x + 3 + Math.floor(hash(tx, ty) * 9), y + 5, 2, 1, '#e0c088');
-      r.px(x + 8, y + 9 + Math.floor(hash(ty, tx) * 4), 2, 1, '#e0c088');
-    }
+  function isWall(def, tx, ty) {
+    var c = def.map[ty] ? def.map[ty].charAt(tx) : '#';
+    return c === 'W' || c === '#' || c === '';
   }
 
-  // Sandsteinwand mit Blockfugen und hieroglyphenartigen Parabel-Linien
-  function sandWall(r, tx, ty) {
+  // Sandsteinplatten im 2x2-Raster (grosse Platten), Kornsprenkel
+  function sandFloor(r, tx, ty, art) {
     var x = tx * TILE, y = ty * TILE;
-    r.px(x, y, TILE, TILE, '#c09656');
-    r.px(x, y, TILE, 1, '#d8b47a');
-    r.px(x, y + 15, TILE, 1, '#a07840');
-    // Blockfugen im Versatz
-    var j = (ty % 2) ? 5 : 11;
-    r.px(x + j, y, 1, 8, '#a87e44');
-    r.px(x + ((ty % 2) ? 12 : 4), y + 8, 1, 8, '#a87e44');
-    r.px(x, y + 7, TILE, 1, '#a87e44');
-    // eingeritzte Parabel-Ornamente (nur auf manchen Bloecken)
-    var seed = hash(tx * 7 + 3, ty * 11 + 5);
-    if (seed > 0.55) {
-      var oy = 2 + Math.floor(hash(tx, ty * 3) * 5);
-      for (var o = -4; o <= 4; o++) {
-        var dy = Math.round(o * o / 6);
-        if (dy < 6) r.px(x + 8 + o, y + oy + dy, 1, 1, '#7a5a2e');
+    var base = art === 'grab' ? '#b8915a' : (art === 'thron' ? '#c49a5c' : '#d2ae72');
+    var plate = (Math.floor(tx / 2) + Math.floor(ty / 2)) % 2;
+    r.px(x, y, TILE, TILE, plate ? base : mix(base, '#000000', 0.06));
+    if (tx % 2 === 0) r.px(x, y, 1, TILE, mix(base, '#000000', 0.2));
+    if (ty % 2 === 0) r.px(x, y, TILE, 1, mix(base, '#000000', 0.2));
+    for (var i = 0; i < 4; i++) {
+      r.px(x + Math.floor(hash(tx * 9 + i, ty * 3) * 15), y + Math.floor(hash(tx + i, ty * 7) * 15), 1, 1,
+        i % 2 ? mix(base, '#ffffff', 0.2) : mix(base, '#000000', 0.15));
+    }
+    if (hash(tx * 3, ty * 5) > 0.88) r.px(x + 4, y + 9, 6, 1, mix(base, '#000000', 0.25));   // Riss
+  }
+
+  // Sandverwehungen an den Waenden (weiche helle Haufen auf dem Boden)
+  function verwehungen(r, def) {
+    var ctx = r.getCtx();
+    for (var ty = 0; ty < 14; ty++) {
+      for (var tx = 0; tx < 16; tx++) {
+        if (isWall(def, tx, ty) || def.map[ty].charAt(tx) !== '.') continue;
+        var nah = isWall(def, tx - 1, ty) || isWall(def, tx + 1, ty) || isWall(def, tx, ty - 1) || isWall(def, tx, ty + 1);
+        if (!nah || hash(tx * 13, ty * 7) < 0.45) continue;
+        ctx.globalAlpha = 0.55;
+        r.ellipse(tx * TILE + 8 + (isWall(def, tx - 1, ty) ? -4 : (isWall(def, tx + 1, ty) ? 4 : 0)),
+          ty * TILE + 8 + (isWall(def, tx, ty - 1) ? -4 : (isWall(def, tx, ty + 1) ? 4 : 0)), 8, 5, '#e8cc90');
+        ctx.globalAlpha = 1;
       }
     }
   }
 
-  // Saeule mit Kapitell und Kanneluren (blockiert)
-  function column(r, tx, ty) {
+  // Schatten der Waende auf den Boden
+  function wallShadows(r, def) {
+    var ctx = r.getCtx();
+    ctx.globalAlpha = 0.22;
+    for (var ty = 0; ty < 14; ty++) {
+      for (var tx = 0; tx < 16; tx++) {
+        if (isWall(def, tx, ty)) continue;
+        if (isWall(def, tx, ty - 1)) r.px(tx * TILE, ty * TILE, TILE, 4, '#3c2c14');
+        if (isWall(def, tx - 1, ty)) r.px(tx * TILE, ty * TILE, 2, TILE, '#3c2c14');
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // Sandsteinwand aus grossen Quadern; die obere Wand traegt einen
+  // bemalten Fries (Baender in Blau, Rot und Gold mit Parabelboegen)
+  function sandWall(r, tx, ty, def) {
+    var x = tx * TILE, y = ty * TILE;
+    var base = def.art === 'grab' ? '#a8814a' : '#c09656';
+    r.px(x, y, TILE, TILE, base);
+    r.px(x, y, TILE, 1, mix(base, '#ffffff', 0.25));
+    r.px(x, y + 15, TILE, 1, mix(base, '#000000', 0.3));
+    r.px(x + ((tx + ty) % 2 ? 4 : 12), y, 1, TILE, mix(base, '#000000', 0.18));
+    if (ty === 1 && !isWall(def, tx, 2)) {
+      // Fries: drei Farbbaender, im mittleren ein Parabelbogen
+      r.px(x, y + 8, TILE, 2, '#2e6aa8');
+      r.px(x, y + 10, TILE, 3, '#e8c04a');
+      r.px(x, y + 13, TILE, 2, '#b8443a');
+      for (var o = -4; o <= 4; o++) r.px(x + 8 + o, y + 10 + Math.round(o * o / 8), 1, 1, '#6a4a24');
+    } else if (hash(tx * 7 + 3, ty * 11 + 5) > 0.6) {
+      var oy = 3 + Math.floor(hash(tx, ty * 3) * 5);
+      for (var p = -4; p <= 4; p++) {
+        var dy = Math.round(p * p / 6);
+        if (dy < 6) r.px(x + 8 + p, y + oy + dy, 1, 1, '#7a5a2e');
+      }
+    }
+  }
+
+  // Saeule mit Lotuskapitell (blockiert); in der Grabkammer eine Waechterstatue
+  function column(r, tx, ty, art) {
     var x = tx * TILE, y = ty * TILE;
     r.ellipse(x + 8, y + 15, 6, 2, 'rgba(60,40,10,0.35)');
-    r.px(x + 6, y, 4, 15, '#b8945a');
-    r.px(x + 7, y, 1, 15, '#d8b880');
-    r.px(x + 9, y, 1, 15, '#987038');
-    r.px(x + 4, y, 8, 2, '#d0aa70');
-    r.px(x + 4, y, 8, 1, '#e8c88e');
+    if (art === 'grab') {
+      r.px(x + 4, y + 12, 8, 3, '#8a6434');            // Sockel
+      r.px(x + 5, y + 4, 6, 9, '#b8945a');             // Koerper
+      r.px(x + 5, y + 4, 2, 9, '#d0aa70');
+      r.px(x + 4, y, 8, 5, '#2e6aa8');                 // Kopftuch blau-gold
+      r.px(x + 4, y + 1, 8, 1, '#e8c04a');
+      r.px(x + 4, y + 3, 8, 1, '#e8c04a');
+      r.px(x + 6, y + 2, 4, 3, '#b8945a');             // Gesicht
+      return;
+    }
+    r.px(x + 5, y + 2, 6, 13, '#b8945a');
+    r.px(x + 6, y + 2, 1, 13, '#d8b880');
+    r.px(x + 9, y + 2, 1, 13, '#987038');
+    r.px(x + 7, y + 2, 1, 13, '#c8a468');
+    r.px(x + 3, y, 10, 3, '#d0aa70');                  // Lotuskapitell
+    r.px(x + 3, y, 2, 1, '#5aa070');
+    r.px(x + 11, y, 2, 1, '#5aa070');
+    r.px(x + 7, y, 2, 1, '#5aa070');
     r.px(x + 4, y + 13, 8, 2, '#d0aa70');
   }
 
-  // Steinschutt und verstaürzte Bloecke (blockieren)
-  function rubble(r, tx, ty) {
+  // Steinschutt (blockiert); in der Grabkammer Tonkruege
+  function rubble(r, tx, ty, art) {
     var x = tx * TILE, y = ty * TILE;
     r.ellipse(x + 8, y + 14, 7, 2, 'rgba(60,40,10,0.35)');
+    if (art === 'grab') {
+      [[5, 8, '#b8643a'], [11, 9, '#a85a34'], [8, 11, '#c8743e']].forEach(function (k) {
+        r.ellipse(x + k[0], y + k[1], 3, 4, k[2]);
+        r.px(x + k[0] - 1, y + k[1] - 5, 3, 2, k[2]);
+        r.px(x + k[0] - 2, y + k[1] - 1, 4, 1, '#e8c04a');
+      });
+      return;
+    }
     r.px(x + 2, y + 7, 9, 7, '#a8834e');
     r.px(x + 3, y + 8, 7, 5, '#c0985c');
     r.px(x + 9, y + 5, 6, 8, '#987038');
     r.px(x + 10, y + 6, 4, 6, '#b08a50');
     r.px(x + 4, y + 9, 4, 1, '#8a6434');
+  }
+
+  // Feuerschale (Kartenzeichen 'F', blockiert; Flamme im Laufbild)
+  function feuerschale(r, tx, ty) {
+    var x = tx * TILE, y = ty * TILE;
+    r.ellipse(x + 8, y + 15, 6, 2, 'rgba(60,40,10,0.35)');
+    r.px(x + 7, y + 8, 2, 7, '#8a6434');
+    r.px(x + 4, y + 13, 8, 2, '#8a6434');
+    r.px(x + 3, y + 5, 10, 4, '#c8a040');
+    r.px(x + 3, y + 5, 10, 1, '#e8c860');
+  }
+  function feuer(r, t, def) {
+    var ctx = r.getCtx();
+    for (var ty = 0; ty < 14; ty++) {
+      for (var tx = 0; tx < 16; tx++) {
+        if (def.map[ty].charAt(tx) !== 'F') continue;
+        var x = tx * TILE, y = ty * TILE, f = Math.floor(t / 100 + tx) % 3;
+        r.px(x + 5, y + 1 - f, 6, 4 + f, '#f2a83a');
+        r.px(x + 6, y - f, 4, 3, '#f8e088');
+        ctx.globalAlpha = 0.12;
+        r.ellipse(x + 8, y + 6, 18, 12, '#f2a83a');
+        ctx.globalAlpha = 1;
+      }
+    }
+  }
+
+  // Lichtstrahlen aus Deckenoeffnungen mit tanzendem Staub
+  function lichtstrahlen(r, t, xs) {
+    var ctx = r.getCtx();
+    xs.forEach(function (sx, i) {
+      ctx.globalAlpha = 0.09 + 0.02 * Math.sin(t / 1100 + i);
+      for (var k = 0; k < 150; k += 2) r.px(sx + k / 3, 32 + k, 20, 2, '#fff0c0');
+      ctx.globalAlpha = 0.6;
+      for (var d = 0; d < 5; d++) {
+        var ph = (t / 4000 + d / 5 + i * 0.3) % 1;
+        r.px(Math.round(sx + 6 + d * 3 + ph * 20 + Math.sin(t / 700 + d) * 3), Math.round(40 + ph * 140), 1, 1, '#fff8e0');
+      }
+    });
+    ctx.globalAlpha = 1;
+  }
+
+  // Thronsaal: Podest mit Stufen unter dem Waechter, roter Laeufer zum Ausgang
+  function thronPodest(r) {
+    // Podest mit drei Stufen
+    for (var k = 0; k < 3; k++) {
+      var w = 96 - k * 16, h = 52 - k * 12;
+      var x = 112 - w / 2, y = 88 - h + k * 4;
+      r.px(x, y, w, h, mix('#c8a468', '#e0c088', k / 2));
+      r.px(x, y + h - 2, w, 2, '#8a6434');
+      r.px(x, y, w, 1, '#f0d8a0');
+      // Laeufer von der Tuer (Spalte 12) nach oben, quer zur Mitte und
+    // hinauf bis an die unterste Stufe des Podests
+    var rot = '#8a2a2a', gold = '#e8c04a';
+    r.px(12 * TILE + 2, 7 * TILE, 12, 5 * TILE, rot);         // senkrecht an der Tuer
+    r.px(106, 7 * TILE, 12 * TILE + 14 - 106, 12, rot);       // quer
+    r.px(106, 88, 12, 7 * TILE + 12 - 88, rot);               // hinauf zum Podest
+    r.px(106, 88, 1, 7 * TILE + 12 - 88, gold);
+    r.px(117, 88, 1, 7 * TILE - 88, gold);
+    r.px(117, 7 * TILE, 12 * TILE + 13 - 117, 1, gold);
+    r.px(106, 7 * TILE + 11, 12 * TILE + 2 - 106, 1, gold);
+    r.px(12 * TILE + 2, 7 * TILE + 11, 1, 5 * TILE - 11, gold);
+    r.px(12 * TILE + 13, 7 * TILE, 1, 5 * TILE, gold);
+  }
   }
 
   // Oeffnung im Sandstein (Uebergang): dunkler Gang mit Sturz
@@ -150,17 +276,24 @@
 
   function bakeSand(r, def) {
     r.px(0, 0, 256, 224, '#1c1410');
-    for (var ty = 0; ty < 14; ty++) {
-      for (var tx = 0; tx < 16; tx++) {
-        var c = def.map[ty].charAt(tx);
+    var ty, tx, c;
+    for (ty = 0; ty < 14; ty++) {
+      for (tx = 0; tx < 16; tx++) {
+        c = def.map[ty].charAt(tx);
         if (c === '#') continue;
-        if (c === 'W') {
-          sandWall(r, tx, ty);
-          continue;
-        }
-        sandFloor(r, tx, ty);
-        if (c === 'S') column(r, tx, ty);
-        else if (c === 'x') rubble(r, tx, ty);
+        if (c === 'W') { sandWall(r, tx, ty, def); continue; }
+        sandFloor(r, tx, ty, def.art);
+      }
+    }
+    if (def.art === 'thron') thronPodest(r);
+    wallShadows(r, def);
+    verwehungen(r, def);
+    for (ty = 0; ty < 14; ty++) {
+      for (tx = 0; tx < 16; tx++) {
+        c = def.map[ty].charAt(tx);
+        if (c === 'S') column(r, tx, ty, def.art);
+        else if (c === 'x') rubble(r, tx, ty, def.art);
+        else if (c === 'F') feuerschale(r, tx, ty);
         else if (c === 'M') sandOpening(r, tx, ty, ty < 7);
       }
     }
@@ -173,7 +306,9 @@
   // ---Die vier Raeume --------------------------------------------------------
 
   // Eingang: Fackeln, Saeulen, Alte Wandinschrift (Mumienkaefer in enemies.js)
+  // Thema: Saeulenhalle mit Lotussaeulen und Lichtstrahlen
   var EINGANG = {
+    art: 'halle',
     map: [
       '################',
       '#WWWWWWWMWWWWWW#',
@@ -211,7 +346,9 @@
   };
 
   // Mittelraum: Quelle als Rastquelle auf halber Strecke, Steinerne Waage
+  // Thema: Grabkammer mit Waechterstatuen und Tonkruegen
   var MITTE = {
+    art: 'grab',
     map: [
       '################',
       '#WWWWWWWMWWWWWW#',
@@ -282,7 +419,9 @@
   }
 
   // Plattenraum: x-Achse mit sieben Druckplatten (platten.js)
+  // Thema: Fries-Raum, aus Deckenritzen rieselt Sand
   var PLATTEN = {
+    art: 'fries',
     map: [
       '################',
       '#WWWWWWWWWWWMWW#',
@@ -326,13 +465,15 @@
   };
 
   // Sanduhrraum: der Boss folgt in boss.js ('sboss')
+  // Thema: Thronsaal mit Podest, Feuerschalen und rotem Laeufer
   var BOSSRAUM = {
+    art: 'thron',
     map: [
       '################',
       '#WWWWWWWWWWWWWW#',
       '#W............W#',
       '#W............W#',
-      '#W............W#',
+      '#W.F........F.W#',
       '#W............W#',
       '#W............W#',
       '#W............W#',
@@ -356,9 +497,25 @@
     R.anim = function (r, t) { flames(r, t, R.torches || []); };
   });
 
+  // Saeulenhalle und Grabkammer: Lichtstrahlen aus der Decke
+  EINGANG.anim = function (r, t) { flames(r, t, EINGANG.torches); lichtstrahlen(r, t, [36, 148]); };
+  MITTE.anim = function (r, t) { flames(r, t, MITTE.torches); lichtstrahlen(r, t, [84]); };
+
+  // Rieselnder Sand aus Deckenritzen (Plattenraum)
+  function rieselSand(r, t) {
+    [[10 * TILE + 6, 2 * TILE], [3 * TILE + 4, 9 * TILE + 4]].forEach(function (q, i) {
+      for (var k = 0; k < 6; k++) {
+        var ph = ((t / 500) + k / 6 + i * 0.5) % 1;
+        r.px(q[0] + (k % 2), q[1] + Math.round(ph * 20), 1, 2, '#e8cc90');
+      }
+      r.ellipse(q[0], q[1] + 22, 4, 2, '#e0c080');
+    });
+  }
+
   // Plattenraum: Platten im Laufbild, Gitter bis das Raeetsel geloest ist
   PLATTEN.anim = function (r, t) {
     flames(r, t, PLATTEN.torches);
+    rieselSand(r, t);
     Platten.drawPlates(r, t);
     if (!Platten.isSolved()) bars(r);
   };
@@ -367,6 +524,7 @@
   // ist verschwunden, nur eine kleine goldene Sanduhr bleibt)
   BOSSRAUM.anim = function (r, t) {
     flames(r, t, BOSSRAUM.torches);
+    feuer(r, t, BOSSRAUM);
     if (typeof Boss === 'undefined' || !Boss.of('sboss') || !Boss.of('sboss').isDefeated()) return;
     var ctx = r.getCtx();
     ctx.globalAlpha = 0.12 + 0.05 * (Math.floor(t / 260) % 2);
