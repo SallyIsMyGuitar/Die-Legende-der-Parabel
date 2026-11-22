@@ -422,7 +422,7 @@
     art: 'halle', rohr: '#5a6a7a',
     map: [
       '################',
-      '#WWWWWWWMWWWWWW#',
+      '#WWWWWWWWWWWWWW#',   // keine Oeffnung nach oben (Ende des Dungeons)
       '#W............W#',
       '#W............W#',
       '#W............W#',

@@ -496,7 +496,7 @@
     art: 'laterne',
     map: [
       '################',
-      '#WWWWWWWMWWWWWW#',
+      '#WWWWWWWWWWWWWW#',   // keine Oeffnung nach oben (Ende des Dungeons)
       '#WW..........WW#',
       '#W............W#',
       '#W............W#',

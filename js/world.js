@@ -1169,6 +1169,60 @@ var World = (function () {
     }
   }
 
+  // Kaktus (Wueste, Kartenzeichen 'K', blockiert)
+  function drawCactus(r, tx, ty) {
+    var x = tx * TILE, y = ty * TILE;
+    r.ellipse(x + 8, y + 15, 5, 2, 'rgba(60,40,10,0.35)');
+    // Hauptstamm
+    r.px(x + 6, y + 2, 4, 13, '#3f7a2e');
+    r.px(x + 6, y + 2, 1, 13, '#5f9e48');
+    r.px(x + 9, y + 2, 1, 13, '#2c5c1e');
+    // linker Arm
+    r.px(x + 2, y + 7, 4, 2, '#3f7a2e');
+    r.px(x + 2, y + 3, 2, 5, '#3f7a2e');
+    r.px(x + 2, y + 3, 1, 5, '#5f9e48');
+    // rechter Arm
+    r.px(x + 10, y + 9, 4, 2, '#3f7a2e');
+    r.px(x + 12, y + 5, 2, 5, '#3f7a2e');
+    r.px(x + 12, y + 5, 1, 5, '#5f9e48');
+    // kleine Blüte oben
+    r.px(x + 7, y, 2, 2, '#e86a8a');
+    r.px(x + 7, y, 1, 1, '#f8a0b8');
+  }
+
+  // Trockener Busch (Wueste, Kartenzeichen 'B', blockiert)
+  function drawDryBush(r, tx, ty) {
+    var x = tx * TILE, y = ty * TILE;
+    r.ellipse(x + 8, y + 14, 6, 2, 'rgba(60,40,10,0.3)');
+    r.ellipse(x + 8, y + 9, 6, 5, '#7a5c32');
+    r.ellipse(x + 7, y + 8, 4, 3, '#9a7a46');
+    // duerre Zweige
+    r.px(x + 2, y + 6, 1, 4, '#5e4626');
+    r.px(x + 13, y + 7, 1, 3, '#5e4626');
+    r.px(x + 6, y + 3, 1, 3, '#5e4626');
+    r.px(x + 10, y + 4, 1, 2, '#5e4626');
+    r.px(x + 4, y + 12, 1, 3, '#5e4626');
+    r.px(x + 11, y + 13, 1, 2, '#5e4626');
+  }
+
+  // Offenes Schultor (Kartenzeichen 'O', begehbar): Fluegel seitlich aufgeschlagen
+  function drawSchoolGateOpen(r, gx, gy) {
+    var x = gx * TILE, y = gy * TILE, w = 2 * TILE, i;
+    r.px(x - 2, y - 2, 4, 18, '#3a3434');
+    r.px(x + w - 2, y - 2, 4, 18, '#3a3434');
+    r.px(x - 2, y - 2, 4, 1, '#6a6262');
+    r.px(x + w - 2, y - 2, 4, 1, '#6a6262');
+    // aufgeschlagene Fluegel links und rechts
+    for (i = 0; i < 5; i++) {
+      r.px(x + 1 + i, y + 2, 1, 13, '#3a3a44');
+      r.px(x + w - 2 - i, y + 2, 1, 13, '#3a3a44');
+    }
+    r.px(x + 1, y + 2, 5, 1, '#2e2e36');
+    r.px(x + w - 6, y + 2, 5, 1, '#2e2e36');
+    r.px(x + 1, y + 14, 5, 1, '#2e2e36');
+    r.px(x + w - 6, y + 14, 5, 1, '#2e2e36');
+  }
+
   // Kleine Holztruhe (freiwilliges R\u00e4tsel, Belohnung: das Schwert)
   function drawChest(r, tx, ty) {
     var x = tx * TILE, y = ty * TILE;
@@ -1470,6 +1524,8 @@ var World = (function () {
         else if (tt === 'i') obj(cy, function () { drawSign(Render, x, y); });
         else if (tt === 'C') obj(cy, function () { drawChest(Render, x, y); });
         else if (tt === 'V') obj(cy, function () { drawRock(Render, x, y); });
+        else if (tt === 'K') obj(cy, function () { drawCactus(Render, x, y); });   // Kaktus (Wueste)
+        else if (tt === 'B') obj(cy, function () { drawDryBush(Render, x, y); });  // trockener Busch (Wueste)
         else if (tt === 'U') obj(cy, function () { drawBin(Render, x, y); });
       }
       // intactOnly (Schulhof): vor dem Finale zeichnet allein die Ruine ('R')
@@ -1490,6 +1546,9 @@ var World = (function () {
           });
         } else if (tt === 'G' && tileAt(cx - 1, cy) !== 'G') {
           obj(cy, function () { Buildings.gate(Render, fx, fy); });
+        } else if (tt === 'O' && tileAt(cx - 1, cy) !== 'O') {
+          // geoeffnetes Schultor: Fluegel seitlich aufgeschlagen
+          obj(cy, function () { drawSchoolGateOpen(Render, fx, fy); });
         }
       }
       st.def.buildings.forEach(function (b) {

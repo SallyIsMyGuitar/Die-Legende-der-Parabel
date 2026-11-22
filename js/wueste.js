@@ -56,10 +56,10 @@
   // Steppe: erster Wuesten-Bildschirm (leicht, Karawanenfuehrerin folgt)
   World.addScreen('steppe', {
     map: [
-      'PPPPPPPPPPPPPPPV',
-      'PPKPPPVPPPPKPPPV',
+      'VKBVKVBVKVBVKVBV',
+      'PPKPPPVPPPPKPPPK',
       'PPPPPPPPPBPPPPPV',
-      'PVPPPPPPPPPPPVPP',
+      'PVPPPPPPPPPPPVPK',
       'PPPPPBPPPPPPPPPV',
       'PPPPPPPPPPPPPPPP',
       'PPKPPPPVPPPPPPPP',
@@ -69,7 +69,7 @@
       'PPPPPPPPPPPPPPPP',
       'PPKPPPPPPBVPPPPP',
       'PPPPPBPPKPPPPPPV',
-      'PPPPPPPVPPPPKPPV'
+      'VBVKVBVKVBVKVBKV'
     ],
     buildings: [],
     npcs: [
@@ -92,7 +92,7 @@
   // Duenen: zweiter Bildschirm (mittel, Sterndeuter folgt)
   World.addScreen('duenen', {
     map: [
-      'PPPPPPPPPPPPPPPP',
+      'VKBVKVBVKVBVKVBV',
       'PPPVPPPKPPPPPPPP',
       'PPPPPPPPPPPPPPPP',
       'PPKPPPPPVPPPBPPP',
@@ -105,7 +105,7 @@
       'PPPPPPPPPPPPPPPP',
       'PPKPPPPVPPPPPPPP',
       'PPPPPPPPPPBPPPPP',
-      'PPPPVPPPPPPPPPPP'
+      'VBVKVBVKVBVKVBKV'
     ],
     buildings: [],
     npcs: [
@@ -129,20 +129,20 @@
   // Sandtempel-Eingang und eine Raeetsel-Truhe (Brunnenhueterin folgt).
   World.addScreen('oase', {
     map: [
-      'PPPPPPPPPPPPPPPP',
-      'PPVPPPPPPPPPVPPP',
-      'PPPPPPPPPPPPPPPP',
-      'PPPPPPPEEPPPPPPP',
-      'PPP~~~~~PiqPPPPP',
-      'PP~~~~~~PiPPPPPP',
-      'PP~~~~~~PKPPPPPP',
-      'PPP~~~~PPPPPPPPP',
-      'PPPP~~PPPVPPBPPP',
-      'PPPPPPPPPPPPPPPP',
-      'PPVPPBPPPPKPPCPP',
-      'PPPPPPPPPPPPPPPP',
-      'PKPPPPVPPPPPPPPP',
-      'PPPPPPPPPPPPPPPP'
+      'VKBVKXXXXXXVKVBV',
+      'KPVPPXXXXXXPVPPP',
+      'VPPPPXXXXXXPPPPP',
+      'KPPPPPPEEPPPPPPP',
+      'VPP~~~~~PiqPPPPP',
+      'KP~~~~~~PiPPPPPP',
+      'VP~~~~~~PKPPPPPP',
+      'KPP~~~~PPPPPPPPP',
+      'VPPP~~PPPVPPBPPP',
+      'KPPPPPPPPPPPPPPP',
+      'VPVPPBPPPPKPPCPP',
+      'KPPPPPPPPPPPPPPP',
+      'VKPPPPVPPPPPPPPP',
+      'VBVKVBVKVBVKVBKV'
     ],
     buildings: [],
     bakeExtra: function (r) { bakeTemple(r); },

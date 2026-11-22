@@ -307,6 +307,12 @@ Nach der Durchsicht des gesamten Spiels wurden am 13 Funden behoben (Details im 
 - **Geänderte Texte:** Mama Seite 2/3 und Stufen nach Wappen 2, 4 und Finale; Schild am Schultor (Seite 2 zählt die Siegel); Höhlen-Wächter Sieg Seite 3 („Er hat sich in eurer Schule verschanzt und das Tor mit vier Siegeln verschlossen …“); Turm-, Kraftwerk- und Sandtempel-Wächter nennen das gebrochene Siegel (Sandtempel: „Mit mir bricht das letzte Siegel. Das Schultor im Dorf steht offen …“); Hausmeister Seite 2 und Finale; Nachbarin und Verkäufer nach dem Finale (Schule steht wieder, Schulglocke klingt); befreite Lehrerin „Übung“; Herr Dietl Frage 2 Antwort „In der zerstörten Schule“. Herr Späth unverändert.
 - **Zeitlinie nach dem Finale:** Alle Finale-Texte gehen davon aus, dass die Schule nach dem Abspann wieder steht.
 
+## Fehlerbehebung nach dem Spieltest (freigegeben)
+
+- **Grafik:** Kakteen (`K`), trockene Büsche (`B`) und das geöffnete Schultor (`O`, Flügel seitlich aufgeschlagen) werden jetzt gezeichnet (`drawCactus`, `drawDryBush`, `drawSchoolGateOpen` in `world.js`; die Funktionen gab es, sie wurden aber nie aufgerufen).
+- **Wüste:** Steppe, Dünen und Oase haben oben und unten eine sichtbare Randreihe aus Felsen, Kakteen und Büschen; die Oase zusätzlich links. Die Steppe ist nach Osten nur auf Höhe der Dorflücke (Reihen 5–11) offen. Die Fläche der Tempelfassade in der Oase (Spalten 5–10, Reihen 0–2) blockiert jetzt (`X`), vorher konnte man über das Tempeldach laufen.
+- **Boss-Räume:** Laternenzimmer (`lboss`) und Turbinenhalle (`wboss`) haben oben keine Öffnung mehr, die ins Leere führte.
+
 ## Getroffene Entscheidungen zu Meilenstein 6 (gebaut, Texte vorläufig)
 
 **Schritt 1 – Abspann (gebaut, Texte vorläufig):**
