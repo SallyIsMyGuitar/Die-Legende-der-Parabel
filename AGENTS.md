@@ -81,7 +81,7 @@ Ein Mathe-Übungsspiel als Top-Down-Abenteuer im Stil eines modernen 2D-Zelda (O
 
 - **Bewegen:** Pfeiltasten oder WASD; auf dem iPad halbtransparentes Steuerkreuz links unten.
 - **A = Enter oder Leertaste**, auf dem iPad rote runde Taste (links unten in der Tastengruppe rechts). A spricht Figuren an, blättert im Dialog weiter und bestätigt.
-- **B = Esc oder Rücktaste**, auf dem iPad blaue runde Taste (rechts oben in der Tastengruppe). B bricht ab bzw. schließt. Die Rücktaste löscht in Aufgaben zusätzlich eine Ziffer.
+- **B = Esc oder Rücktaste**, auf dem iPad blaue runde Taste (rechts oben in der Tastengruppe). B bricht ab bzw. schließt (Merkbuch, Testseite, Truhen-Rätsel, Rückfragen) – aber nie ein Gespräch. Die Rücktaste löscht in Aufgaben zusätzlich eine Ziffer.
 - **M = Merkbuch, E = Schwert**; auf dem iPad eigene runde Tasten „Buch“ und „Schwert“ über A/B (zusätzlich lassen sich die HUD-Plätze antippen).
 - **Tastenbelegung sichtbar:** Am PC tragen Buch- und Schwert-Platz im HUD die Schilder „M“ und „E“, darunter steht rechts die aktuelle Aktion („Enter: Reden“, „Esc: Schließen“ …). Auf dem iPad steht die aktuelle Aktion unter den Tasten A und B.
 - **Steuerkreuz (iPad):** Ecken = schräg laufen. Während Aufgabe, Dialog, Merkbuch, Testseite und Titelbild ist es ausgeblendet.
@@ -89,7 +89,7 @@ Ein Mathe-Übungsspiel als Top-Down-Abenteuer im Stil eines modernen 2D-Zelda (O
 
 ## Spielwelt und Ablauf
 
-- Spielstart im Elternhaus, direkt vor der Mutter, die am Herd kocht.
+- Spielstart im Elternhaus, direkt vor der Mutter, die am Herd kocht. Bei einem neuen Spiel (ohne Spielstand oder nach „Neues Spiel“) beginnt das Gespräch mit Mama automatisch (`startMama` in `main.js`).
 - **Startdorf** (bisher zwei Bildschirme):
   - *Start:* Elternhaus (rotes Dach), kleiner Teich, verwilderte und gesperrte Schule mit Zaun, verschlossenem Tor (Kette, Schloss, Schild „GESPERRT“). Nach dem Sieg über Dungeon 4 öffnet sich das Tor; die Schultür führt direkt in Dungeon 5 (drei Räume, Endboss). Danach wird die Schule im Abspann wiederaufgebaut. Dazu Hausmeister (ab offenem Tor), Rastquelle und Kind am Teich.
   - *Ost:* Dorfplatz mit Brunnen, Haus der Nachbarin (blaues Dach), Haus des Freundes (grünes Dach), Schreibwarenladen (Hefte, Stifte, Bücher).
@@ -97,7 +97,7 @@ Ein Mathe-Übungsspiel als Top-Down-Abenteuer im Stil eines modernen 2D-Zelda (O
 - **Häuser sind betretbar:** Tür berühren (nach oben gegen die Tür laufen) → Tür schwingt auf, Figur geht hinein, Abblende. Hinaus über die Fußmatte; die Figur tritt aus der Tür, die Tür schließt sich. Alle Innenräume haben denselben Grundriss.
 - **Innenräume:** Elternhaus (Küche, Essplatz, Mutter), Nachbarin (Wohnzimmer mit Kamin, sitzt im Schaukelstuhl), Freund (Kinderzimmer mit Parabel-Poster), Laden (Verkäufer hinter der Theke). Der Laden bleibt rein dekorativ, es gibt kein Kaufsystem.
 - Zusammenhängende Oberwelt mit Bildschirmwechsel wie im NES-Zelda: Am Rand schiebt sich der Bildschirm seitlich weiter, kein freies Scrollen. Etwa 12 bis 15 Bildschirme insgesamt. Wiesen, Wüsten, Höhlen, kleine Häuser zum Betreten.
-- **Gespräche:** Steht man vor einer Figur (oder einem Schild) und schaut sie an, erscheint eine Sprechblase. A startet das Gespräch. Textbox unten mit Namensschild, Text läuft Buchstabe für Buchstabe ein, mehrere Seiten mit blinkendem Pfeil. A = weiter bzw. Text sofort ganz zeigen, B = abbrechen. Während des Gesprächs ist die Figur gesperrt.
+- **Gespräche:** Steht man vor einer Figur (oder einem Schild) und schaut sie an, erscheint eine Sprechblase. A startet das Gespräch. Textbox unten mit Namensschild, Text läuft Buchstabe für Buchstabe ein, mehrere Seiten mit blinkendem Pfeil. A = weiter bzw. Text sofort ganz zeigen. Gespräche lassen sich nicht abbrechen, sie werden immer mit A bis zum Ende durchgeklickt (B ohne Wirkung, keine B-Beschriftung). Während des Gesprächs ist die Figur gesperrt.
 - **Freigegebene Dialogtexte** (nur nach Go ändern):
   - *Mama:* „Ach, du bist wach! Seit die Schule zerstört wurde, ist es im Dorf so still …“ / „In der Ruine leuchten seltsame gerade Linien. Man sagt, die Lehrerinnen und Lehrer werden dort drin gefangen gehalten.“ / „Das Schultor ist mit vier Siegeln verschlossen. Es heißt, vier Wächter draußen im Land tragen sie. Pass auf dich auf!“
   - *Nachbarin:* „Früher hat man die Schulglocke bis hierher gehört.“ / „Ich habe da so ein Gefühl, dass gerade du die Schule wieder aufbauen kannst.“

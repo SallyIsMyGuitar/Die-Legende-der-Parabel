@@ -1,5 +1,6 @@
 // dialog.js: Textbox für Gespräche mit Dorfbewohnern
-// A (Enter) = weiter bzw. Text sofort ganz anzeigen, B (Rücktaste) = abbrechen.
+// A (Enter) = weiter bzw. Text sofort ganz anzeigen. Gespräche lassen sich
+// nicht abbrechen: Sie werden immer mit A bis zum Ende durchgeklickt.
 var Dialog = (function () {
   'use strict';
 
@@ -42,7 +43,6 @@ var Dialog = (function () {
     time += dt;
     var len = pageLength(page);
     if (shown < len) shown = Math.min(len, shown + SPEED * dt);
-    if (input.pressed('b')) { close(); return; }
     if (input.pressed('a')) {
       if (shown < len) {
         shown = len;

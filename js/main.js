@@ -674,6 +674,13 @@
   World.setScreen(World.START.screen);
   Player.setPosition(World.START.x, World.START.y, World.START.facing);
 
+  // Neues Spiel: Die Figur steht im Elternhaus vor Mama, das Gespräch mit
+  // ihr beginnt von selbst (wie beim Ansprechen mit A)
+  function startMama() {
+    var t = World.talkTarget(Player.getX(), Player.getY(), Player.getFacing());
+    if (t) Dialog.open(t.name, textsFor(t));
+  }
+
   // --- Titelbild: Neues Spiel oder Weiterspielen ---------------------------
   // phase 'menu' | 'confirm' (Spielstand wirklich löschen?) | null = Spiel läuft
   var saved = Save.read();
@@ -683,6 +690,7 @@
     if (title.phase === 'menu') {
       if (Input.pressed('a')) {
         if (saved) applyState(saved);
+        else startMama();  // neues Spiel ohne Spielstand: Mama spricht sofort
         title = null;
       } else if (saved && Input.pressed('b')) {
         title.phase = 'confirm';
@@ -692,6 +700,7 @@
         Save.clear();      // neu beginnen: Start im Elternhaus
         saved = null;
         title = null;
+        startMama();       // Gespräch mit Mama startet automatisch
       } else if (Input.pressed('b')) {
         title.phase = 'menu';
       }
@@ -1068,7 +1077,7 @@
       return { a: Merkbuch.atStand() ? 'Code zeigen' : 'Schließen', b: 'Schließen', dpad: false };
     if (TaskUi.isActive()) return { a: 'Prüfen', b: TaskUi.isAbortable() ? 'Abbrechen' : '', dpad: false };
     if (TestPage.isActive()) return { a: TestPage.isExamples() ? 'Neue Zahlen' : 'Öffnen', b: TestPage.isExamples() ? 'Zurück' : 'Schließen', dpad: false };
-    if (Dialog.isActive()) return { a: 'Weiter', b: 'Schließen', dpad: false };
+    if (Dialog.isActive()) return { a: 'Weiter', b: '', dpad: false };   // kein Abbruch mit B
     return { a: actionWord(target), b: '', dpad: true };
   }
 
