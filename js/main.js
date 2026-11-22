@@ -51,7 +51,7 @@
       bosses: bossState(),                                          // besiegt je Boss-Raum
       raetsel: Raetsel.isSolved(),
       spiegel: Spiegel.isSolved(),
-      gezeiten: Gezeiten.isSolved(),
+      schaltwarte: Schaltwarte.isSolved(),
       platten: Platten.isSolved(),
       leuchtturm: World.isLighthouseLit(),
       sandsturm: World.isSandstormOpen(),
@@ -89,7 +89,8 @@
     if (bossesSt.dboss) World.openRockGate('ost');
     if (st.raetsel) Raetsel.setSolved();
     if (st.spiegel) Spiegel.setSolved();
-    if (st.gezeiten) Gezeiten.setSolved();
+    // aeltere Staende: geloestes Brunnen-Raetsel zaehlt als geloeste Schaltwarte
+    if (st.schaltwarte || st.gezeiten) Schaltwarte.setSolved();
     if (st.platten) Platten.setSolved();
     if (st.leuchtturm) World.setLighthouseLit(true);
     if (bossesSt.lboss) World.setWaterGateOpen(true);
@@ -138,7 +139,7 @@
     if (l.wappen && wappens < l.wappen) return false;
     if (l.solved && !Raetsel.isSolved()) return false;
     if (l.spiegel && !Spiegel.isSolved()) return false;
-    if (l.gezeiten && !Gezeiten.isSolved()) return false;
+    if (l.schaltwarte && !Schaltwarte.isSolved()) return false;
     if (l.platten && !Platten.isSolved()) return false;
     if (l.school && !World.isSchoolGateOpen()) return false;
     if (l.finale && !finaleDone) return false;   // Endboss Graf Gerade besiegt
@@ -171,8 +172,8 @@
                   seingang: 'smitte', smitte: 'splatten',
                   klassenzimmer: 'physiksaal', physiksaal: 'turnhalle', turnhalle: 'aula' };   // Öffnung nach vorn
 
-  // --- Rätsel vor dem Boss: Fackeln (Höhle), Spiegel (Turm), Brunnen (Wasser) --
-  // (Logik in raetsel.js, spiegel.js bzw. gezeiten.js)
+  // --- Rätsel vor dem Boss: Fackeln (Höhle), Spiegel (Turm) ------------------
+  // (Logik in raetsel.js bzw. spiegel.js; Schaltwarte des Kraftwerks siehe unten)
   function lightTorch(t) {
     var screen = World.getScreen();
     var R, wrongText, solvedText;
@@ -180,10 +181,6 @@
       R = Spiegel;
       wrongText = 'Das Licht bricht sich – alle Spiegel verdunkeln sich.';
       solvedText = 'Alle fünf Spiegel stehen im Licht. Mit lautem Ruck hebt sich das Gitter.';
-    } else if (screen === 'wraetsel') {
-      R = Gezeiten;
-      wrongText = 'Das Wasser gischt zurück – alle Brunnen versiegen.';
-      solvedText = 'Alle fünf Brunnen sprudeln im Takt der Gezeiten. Mit lautem Ruck hebt sich das Gitter.';
     } else {
       R = Raetsel;
       wrongText = 'Die Flamme zischt – alle Fackeln erlöschen.';
@@ -196,6 +193,17 @@
     } else if (res === 'solved') {
       saveGame();
       Dialog.open('', [solvedText]);
+    }
+  }
+
+  // Schaltwarte (Kraftwerk): Startschalter prueft die eingestellte Parabel
+  function startTurbine() {
+    var res = Schaltwarte.starte();
+    if (res === 'solved') {
+      saveGame();
+      Dialog.open('', ['Wasser strömt durch das Druckrohr, die Turbine läuft an. Mit lautem Ruck hebt sich das Gitter.']);
+    } else if (res === 'wrong') {
+      Dialog.open('', ['Die Turbine stottert und bleibt stehen. Die Parabel ' + Schaltwarte.term() + ' trifft nicht alle drei Anschlüsse.']);
     }
   }
 
@@ -1038,8 +1046,10 @@
     if (t.action === 'rest') return 'Trinken';
     if (t.action === 'chest') return 'Öffnen';
     if (t.action === 'torch') return 'Entzünden';
+    if (t.action === 'hebel') return 'Schalten';
+    if (t.action === 'start') return 'Starten';
     if (t.action === 'testpage' || t.action === 'repeat' || t.action === 'abspann') return 'Lesen';
-    if (/Schild|Steintafel|Inschrift/.test(t.name)) return 'Lesen';
+    if (/Schild|Tafel|Inschrift/.test(t.name)) return 'Lesen';
     return 'Reden';
   }
 
@@ -1194,6 +1204,10 @@
             openChest();       // Rätsel-Truhe mit dem Schwert
           } else if (target.action === 'torch') {
             lightTorch(target.torch);   // Fackel-Rätsel vor dem Boss
+          } else if (target.action === 'hebel') {
+            Schaltwarte.schalte(target.hebel);   // Schaltwarte: Hebel weiterschalten
+          } else if (target.action === 'start') {
+            startTurbine();                      // Schaltwarte: Startschalter
           } else if (target.action === 'repeat') {
             // Steintafel: vor dem Finale schlaeft sie, danach Rueckfrage
             if (!finaleDone) {
@@ -1250,10 +1264,10 @@
             // Gitter zum Boss bleibt zu, bis alle Spiegel im Licht stehen
             Player.setPosition(Player.getX(), 2 * 16 + 4, 'down');
             Dialog.open('Gitter', ['Ein schweres Gitter versperrt den Weg. Lenke zuerst das Licht auf die richtigen Spiegel.']);
-          } else if (here === 'wraetsel' && w.to.room === 'wboss' && !Gezeiten.isSolved()) {
-            // Gitter zum Boss bleibt zu, bis alle Brunnen im Gezeitentakt sprudeln
+          } else if (here === 'wraetsel' && w.to.room === 'wboss' && !Schaltwarte.isSolved()) {
+            // Gitter zur Turbinenhalle bleibt zu, bis die Turbine laeuft
             Player.setPosition(Player.getX(), 2 * 16 + 4, 'down');
-            Dialog.open('Gitter', ['Ein schweres Gitter versperrt den Weg. Rege zuerst die richtigen Brunnen an.']);
+            Dialog.open('Gitter', ['Ein schweres Gitter versperrt den Weg. Bringe zuerst in der Schaltwarte die Turbine zum Laufen.']);
           } else if (here === 'splatten' && w.to.room === 'sboss' && !Platten.isSolved()) {
             // Gitter zum Boss bleibt zu, bis beide Nullstellen-Platten gedrueckt sind
             Player.setPosition(Player.getX(), 2 * 16 + 4, 'down');

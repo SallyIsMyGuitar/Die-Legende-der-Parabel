@@ -1,162 +1,263 @@
-// wasser.js: Das versunkene Wasserreich - Dungeon 3 (Allgemeine Form)
-// Vier Raeume, strikt linear: Eingang (Netzweber erklaert das Umformen in
-// die Scheitelform), Pumpenkammer mit Quelle (Rastquelle auf halber
-// Strecke) und Alter Bildtafel, Raetselraum (Gezeiten-Raetsel, folgt in
-// einem spaeteren Schritt), Vorraum zum Boss (folgt ebenfalls).
+// wasser.js: Das Wasserkraftwerk - Dungeon 3 (Allgemeine Form)
+// Vier Raeume, strikt linear: Vorhalle (Maschinistin erklaert das Umformen
+// in die Scheitelform), Pumpenkammer mit Quelle (Rastquelle auf halber
+// Strecke), Alter Schalttafel und Messtafel, Schaltwarte (Raetsel in
+// schaltwarte.js) und Turbinenhalle (Boss: das Turbinenrad, boss.js).
 // Aufbau wie Hoehle und Turm: 16 x 14 Kacheln, angemeldet per
 // Interior.register(), Uebergaenge ueber mats.
-// Zeichen: '#' ausserhalb, 'W' Grottenwand, '.' Boden, 'M' Wasserlauf
-//          (Uebergang), 'x' Muschelhaufen (blockiert), 'Q' Quelle
+// Zeichen: '#' ausserhalb, 'W' Betonwand, '.' Boden, 'M' Schott (Uebergang),
+//          'x' Maschine/Kiste (blockiert, je Raum anders gezeichnet),
+//          'Q' Quelle, Schaltwarte: 'd' Bildschirm, 'h' Hebel,
+//          's' Startschalter, 'p' Druckrohr, 'k' Tafel (alle blockieren)
+// Jeder Raum hat ein eigenes Thema (Boden, Deko, Licht), damit sich die
+// Raeume deutlich unterscheiden.
 (function () {
   'use strict';
 
   var TILE = 16;
   var hash = Render.hash;
+  var mix = Render.mix;
 
-  // --- Wasserreich-Optik -------------------------------------------------------
+  // --- Kraftwerk-Optik -----------------------------------------------------
 
-  // Blaeulicher Steinboden mit Glitzer
-  function seaFloor(r, tx, ty) {
-    var x = tx * TILE, y = ty * TILE;
-    r.px(x, y, TILE, TILE, '#28425a');
-    for (var i = 0; i < 8; i++) {
-      var gx = x + Math.floor(hash(tx * 13 + i, ty * 7 + i) * 16);
-      var gy = y + Math.floor(hash(tx + i * 5, ty * 3 + i) * 16);
-      var h = hash(tx * 7 + i, ty * 11 - i);
-      r.px(gx, gy, 1 + Math.floor(h * 2), 1, h > 0.75 ? '#3e5e7a' : '#1e3246');
-    }
-    if (hash(tx * 3, ty * 5) > 0.8) {
-      r.px(x + 4 + Math.floor(hash(tx, ty) * 7), y + 6, 4, 1, '#35506a');
-    }
-  }
-
-  // Grottenwand: blaue Quader mit Muscheln und Anemonen
-  function seaWall(r, tx, ty) {
-    var x = tx * TILE, y = ty * TILE;
-    r.px(x, y, TILE, TILE, '#3a5a74');
-    r.px(x, y, TILE, 1, '#4c7090');
-    r.px(x, y + 15, TILE, 1, '#28445c');
-    r.px(x, y, 1, TILE, '#446480');
-    r.px(x + 15, y, 1, TILE, '#2e4c66');
-    var j1 = (ty % 2) ? 4 : 10, j2 = (ty % 2) ? 12 : 6;
-    r.px(x + j1, y, 1, 8, '#2e4c66');
-    r.px(x + j2, y + 8, 1, 8, '#2e4c66');
-    r.px(x, y + 7, TILE, 1, '#2e4c66');
-    if (hash(tx * 5, ty * 3) > 0.6) {
-      r.px(x + 3 + Math.floor(hash(tx, ty) * 6), y + 3, 3, 2, '#7ac0c8');   // Anemone
-      r.px(x + 8 + Math.floor(hash(ty, tx) * 5), y + 10, 2, 2, '#6ab0b8');
-    }
-    r.px(x + 2, y + 2, 2, 1, '#8ac4cc');
-    r.px(x + 11, y + 11, 2, 1, '#8ac4cc');
-  }
-
-  // Korallen- und Muschelhaufen (blockieren)
-  function coralPile(r, tx, ty) {
-    var x = tx * TILE, y = ty * TILE;
-    r.ellipse(x + 8, y + 14, 7, 2, 'rgba(10,25,40,0.5)');
-    r.px(x + 3, y + 8, 10, 6, '#7a5a6a');
-    r.px(x + 4, y + 9, 8, 5, '#9a7a8a');
-    r.px(x + 5, y + 4, 2, 5, '#8a6a7a');     // Korallenzweig
-    r.px(x + 9, y + 5, 2, 4, '#8a6a7a');
-    r.px(x + 6, y + 11, 4, 3, '#e8e0d0');   // Muschel
-    r.px(x + 7, y + 11, 2, 1, '#c8b8a8');
-  }
-
-  // Wasserlauf (Uebergang): dunkler Kanal mit Schaumkante
-  function seaOpening(r, tx, ty, top) {
-    var x = tx * TILE, y = ty * TILE;
-    r.px(x, y, TILE, TILE, '#0c1826');
-    r.px(x + 1, y + (top ? 12 : 1), 14, 3, '#3e5e7a');
-    r.px(x + 1, y + (top ? 12 : 1), 14, 1, '#7ac0c8');
-    for (var i = 2; i < 14; i += 4) {
-      r.px(x + i, y + (top ? 11 : 4), 2, 1, '#8ac4cc');
+  // Boeden je Raum: Beton mit Laufweg, Riffelblech, Schaltwarten-Fliesen,
+  // Stahlgitter der Turbinenhalle
+  function floor(r, tx, ty, art) {
+    var x = tx * TILE, y = ty * TILE, i;
+    if (art === 'beton') {
+      r.px(x, y, TILE, TILE, '#6e7278');
+      for (i = 0; i < 6; i++) {
+        r.px(x + Math.floor(hash(tx * 9 + i, ty * 5) * 15), y + Math.floor(hash(tx + i, ty * 11) * 15), 1, 1,
+          i % 2 ? '#7c8086' : '#62666c');
+      }
+      r.px(x, y + 15, TILE, 1, '#5e6268');
+      r.px(x + 15, y, 1, TILE, '#5e6268');
+      // gelbe Laufweg-Markierung in den Spalten 7 und 9 (Weg zum Schott)
+      if (tx === 7) r.px(x + 12, y, 2, TILE, '#c8a030');
+      if (tx === 9) r.px(x + 2, y, 2, TILE, '#c8a030');
+    } else if (art === 'blech') {
+      // Riffelblech: diagonale Rauten
+      r.px(x, y, TILE, TILE, '#5a6470');
+      for (var dy = 0; dy < TILE; dy += 4) {
+        for (var dx = (dy / 4) % 2 ? 2 : 0; dx < TILE; dx += 4) {
+          r.px(x + dx, y + dy, 2, 1, '#76808c');
+          r.px(x + dx + 1, y + dy + 1, 1, 1, '#48505a');
+        }
+      }
+      r.px(x, y, TILE, 1, '#48505a');
+      r.px(x, y, 1, TILE, '#48505a');
+    } else if (art === 'warte') {
+      // Schaltwarte: dunkelgruene Kunststofffliesen
+      var even = (tx + ty) % 2 === 0;
+      r.px(x, y, TILE, TILE, even ? '#3e5248' : '#384a42');
+      r.px(x, y, TILE, 1, '#2c3a34');
+      r.px(x, y, 1, TILE, '#2c3a34');
+      r.px(x + 2, y + 2, 3, 1, '#4a6056');
+    } else {
+      // Turbinenhalle: Stahlgitter ueber dunklem Grund
+      r.px(x, y, TILE, TILE, '#22282e');
+      for (i = 0; i < TILE; i += 4) {
+        r.px(x + i, y, 1, TILE, '#4a525c');
+        r.px(x, y + i, TILE, 1, '#4a525c');
+      }
+      r.px(x, y, TILE, 1, '#6a7480');
     }
   }
 
-  // Alte Bildtafel an der Wand der Pumpenkammer (Kachel 6,1)
-  function bildtafel(r) {
+  // Betonwand mit Fugen, Schrauben und einem Rohr oben entlang
+  function wall(r, tx, ty, art) {
+    var x = tx * TILE, y = ty * TILE;
+    var base = art === 'warte' ? '#7a8478' : (art === 'halle' ? '#5e646c' : '#868a90');
+    r.px(x, y, TILE, TILE, base);
+    r.px(x, y, TILE, 1, mix(base, '#ffffff', 0.25));
+    r.px(x, y + 15, TILE, 1, mix(base, '#000000', 0.35));
+    r.px(x + 15, y, 1, TILE, mix(base, '#000000', 0.25));
+    r.px(x + 2, y + 2, 1, 1, '#4a4e56');      // Schrauben
+    r.px(x + 13, y + 2, 1, 1, '#4a4e56');
+    r.px(x + 2, y + 13, 1, 1, '#4a4e56');
+    r.px(x + 13, y + 13, 1, 1, '#4a4e56');
+    if (hash(tx * 7, ty * 3) > 0.7) r.px(x + 4, y + 6, 5, 1, mix(base, '#000000', 0.15));   // Fleck
+  }
+
+  // Schott (Uebergang): Stahlrahmen mit Warnstreifen, dunkler Durchgang
+  function schott(r, tx, ty, top) {
+    var x = tx * TILE, y = ty * TILE;
+    r.px(x, y, TILE, TILE, '#0e1218');
+    r.px(x, y, 2, TILE, '#3a4048');
+    r.px(x + 14, y, 2, TILE, '#3a4048');
+    for (var i = 0; i < TILE; i += 4) {
+      r.px(x, y + i, 2, 2, '#f0c030');
+      r.px(x + 14, y + i + 2, 2, 2, '#f0c030');
+    }
+    r.px(x + 2, y + (top ? 13 : 0), 12, 3, '#4a525c');   // Schwelle
+  }
+
+  // Rohrleitung oben an der Wand (Reihe 1) quer durch den Raum, mit
+  // Ventilrad; laesst die Oeffnung in Spalte 8 frei
+  function wandRohr(r, farbe) {
+    var y = 1 * TILE + 9;
+    [[2 * TILE, 8 * TILE - 2], [9 * TILE + 2, 14 * TILE]].forEach(function (s) {
+      r.px(s[0], y, s[1] - s[0], 5, farbe);
+      r.px(s[0], y, s[1] - s[0], 1, mix(farbe, '#ffffff', 0.35));
+      r.px(s[0], y + 4, s[1] - s[0], 1, mix(farbe, '#000000', 0.4));
+      for (var x = s[0] + 10; x < s[1] - 4; x += 22) r.px(x, y - 1, 2, 7, '#3a4048');   // Halter
+    });
+  }
+
+  function ventilrad(r, x, y) {
+    r.ellipse(x, y, 4, 4, '#a8302a');
+    r.ellipse(x, y, 2, 2, '#5a6470');
+    r.px(x - 4, y, 9, 1, '#a8302a');
+    r.px(x, y - 4, 1, 9, '#a8302a');
+  }
+
+  // Warnstreifen am Fuss der oberen Wand
+  function warnKante(r) {
+    for (var x = 2 * TILE; x < 14 * TILE; x += 8) {
+      if (x >= 8 * TILE - 4 && x < 9 * TILE + 4) continue;
+      r.px(x, 2 * TILE, 4, 2, '#f0c030');
+      r.px(x + 4, 2 * TILE, 4, 2, '#2a2a30');
+    }
+  }
+
+  // Maschinen und Kisten ('x'), je Raum anders
+  function maschine(r, tx, ty, art) {
+    var x = tx * TILE, y = ty * TILE;
+    r.ellipse(x + 8, y + 15, 7, 2, 'rgba(10,14,20,0.5)');
+    if (art === 'beton') {
+      // Kabeltrommel oder Werkzeugkiste
+      if ((tx + ty) % 2) {
+        r.ellipse(x + 8, y + 8, 7, 7, '#7a5232');
+        r.ellipse(x + 8, y + 8, 5, 5, '#2a2a30');
+        r.ellipse(x + 8, y + 8, 2, 2, '#7a5232');
+        r.px(x + 3, y + 7, 10, 1, '#e8443a');
+      } else {
+        r.px(x + 2, y + 5, 12, 9, '#c84a32');
+        r.px(x + 2, y + 5, 12, 2, '#e86a4a');
+        r.px(x + 6, y + 3, 4, 2, '#3a3a40');
+        r.px(x + 7, y + 9, 2, 2, '#f0d060');
+      }
+    } else {
+      // Pumpe: blaues Gehaeuse mit Motor und Anschlussrohr
+      r.px(x + 1, y + 4, 14, 10, '#2e5a9a');
+      r.px(x + 1, y + 4, 14, 2, '#4a7ac0');
+      r.ellipse(x + 6, y + 9, 3, 3, '#1e3e70');
+      r.px(x + 10, y + 6, 4, 7, '#3a4250');
+      for (var i = 0; i < 6; i += 2) r.px(x + 10, y + 7 + i, 4, 1, '#5a6270');   // Kuehlrippen
+      r.px(x + 6, y + 1, 3, 4, '#5a6a7a');   // Anschlussrohr nach oben
+    }
+  }
+
+  // Schalttafel mit Anzeigen (Merksatz Scheitel aus allgemeiner Form, 6,1)
+  function schalttafel(r) {
     var x = 6 * TILE, y = 1 * TILE;
-    r.px(x + 1, y + 2, 14, 12, '#3a4a5a');
-    r.px(x + 2, y + 3, 12, 10, '#8aa8b8');
-    r.px(x + 2, y + 3, 12, 1, '#b0ccd8');
-    // eingravierte Zeilen und ein kleiner Scheitel-Punkt
-    r.px(x + 4, y + 6, 8, 1, '#3a4a5a');
-    r.px(x + 4, y + 8, 6, 1, '#3a4a5a');
-    r.px(x + 7, y + 10, 2, 2, '#f0c040');   // markierter Scheitel
-    r.px(x + 5, y + 5, 2, 1, '#3a4a5a');
-    r.px(x + 10, y + 5, 2, 1, '#3a4a5a');
+    r.px(x + 1, y + 1, 14, 14, '#3a4250');
+    r.px(x + 2, y + 2, 12, 12, '#d8dcd0');
+    r.ellipse(x + 5, y + 6, 2, 2, '#ffffff');      // Rundinstrument
+    r.px(x + 5, y + 5, 1, 2, '#2a2e36');
+    r.px(x + 9, y + 4, 4, 1, '#3a4250');          // Schrift
+    r.px(x + 9, y + 6, 3, 1, '#3a4250');
+    r.px(x + 4, y + 10, 2, 2, '#5ae08a');         // Kontrolllampen
+    r.px(x + 8, y + 10, 2, 2, '#f0c030');
+    r.px(x + 11, y + 10, 2, 2, '#e8443a');
   }
 
-  // Muscheltafel in der Wand der Pumpenkammer: drei markierte Punkte
-  // (Merksatz: Parabel durch drei Punkte aufstellen)
-  function muscheltafel(r) {
-    var x = 3 * TILE, y = 1 * TILE;   // linke Wand (rechts oben liegt das HUD)
-    r.px(x + 1, y + 2, 14, 12, '#4a3a5a');
-    r.px(x + 2, y + 3, 12, 10, '#c8b0c8');
-    r.px(x + 2, y + 3, 12, 1, '#e4d0e0');
-    // drei Punkte auf einem kleinen Bogen
-    r.px(x + 4, y + 6, 2, 2, '#f0c040');
-    r.px(x + 7, y + 10, 2, 2, '#f0c040');
-    r.px(x + 10, y + 6, 2, 2, '#f0c040');
-    r.px(x + 5, y + 8, 1, 1, '#4a3a5a');
-    r.px(x + 6, y + 9, 1, 1, '#4a3a5a');
-    r.px(x + 9, y + 9, 1, 1, '#4a3a5a');
-    r.px(x + 10, y + 8, 1, 1, '#4a3a5a');
+  // Messtafel mit drei Punkten auf einem Bogen (Merksatz drei Punkte, 3,1)
+  function messtafel(r) {
+    var x = 3 * TILE, y = 1 * TILE;
+    r.px(x + 1, y + 1, 14, 14, '#3a4250');
+    r.px(x + 2, y + 2, 12, 12, '#0e1a14');
+    r.px(x + 3, y + 10, 10, 1, '#2a5a3a');        // Achse
+    r.px(x + 4, y + 5, 2, 2, '#f8e070');
+    r.px(x + 7, y + 9, 2, 2, '#f8e070');
+    r.px(x + 10, y + 5, 2, 2, '#f8e070');
+    r.px(x + 5, y + 7, 1, 1, '#5ae08a');
+    r.px(x + 6, y + 8, 1, 1, '#5ae08a');
+    r.px(x + 9, y + 8, 1, 1, '#5ae08a');
+    r.px(x + 10, y + 7, 1, 1, '#5ae08a');
   }
 
-  // Blaue Vignette, ueber der Spielfigur (Unterwasser-Licht)
-  function vignette(r) {
+  // Tafel auf dem Boden ('k'): Anleitung neben dem Leitstand
+  function bodenTafel(r, tx, ty) {
+    var x = tx * TILE, y = ty * TILE;
+    r.ellipse(x + 8, y + 14, 7, 2, 'rgba(10,14,20,0.5)');
+    r.px(x + 2, y + 3, 12, 11, '#3a4250');
+    r.px(x + 3, y + 4, 10, 9, '#e4e2d4');
+    r.px(x + 5, y + 7, 6, 1, '#3a4250');
+    r.px(x + 5, y + 9, 5, 1, '#3a4250');
+  }
+
+  // Turbinenschacht im Boden der Turbinenhalle (unter dem Boss)
+  function turbinenSchacht(r) {
+    var cx = 112, cy = 86;
+    r.ellipse(cx, cy, 34, 14, '#3a4048');
+    r.ellipse(cx, cy, 31, 12, '#0e141a');
+    r.ellipse(cx, cy + 2, 26, 9, '#123448');
+    for (var i = 0; i < 8; i++) r.px(cx - 30 + i * 8, cy - 1, 4, 2, '#f0c030');   // Warnring
+  }
+
+  // Deckenlampen: helle Kegel auf dem Boden (Laufbild, leicht flackernd)
+  function lampen(r, t, xs, flacker) {
+    var ctx = r.getCtx();
+    xs.forEach(function (lx, i) {
+      var an = !(flacker === i && Math.floor(t / 90) % 17 === 0);
+      if (!an) return;
+      ctx.globalAlpha = 0.07;
+      r.ellipse(lx, 112, 30, 70, '#fff4d0');
+      ctx.globalAlpha = 1;
+    });
+  }
+
+  // Dampfwolke an einem Ventil
+  function dampf(r, t, x, y) {
     var ctx = r.getCtx();
     for (var i = 0; i < 3; i++) {
-      ctx.globalAlpha = 0.2 - i * 0.05;
-      var m = 8 + i * 8;
-      r.px(m, m, 256 - 2 * m, 8, '#0a1826');
-      r.px(m, 224 - m - 8, 256 - 2 * m, 8, '#0a1826');
-      r.px(m, m, 8, 224 - 2 * m, '#0a1826');
-      r.px(256 - m - 8, m, 8, 224 - 2 * m, '#0a1826');
+      var p = ((t / 1200) + i / 3) % 1;
+      ctx.globalAlpha = 0.35 * (1 - p);
+      r.ellipse(x + Math.round(Math.sin(p * 6 + i) * 3), y - p * 18, 2 + p * 4, 2 + p * 3, '#e8eef2');
     }
     ctx.globalAlpha = 1;
   }
 
-  // Aufsteigende Luftblasen (Laufbild ueber dem Raum)
-  function bubbles(r, t, seedTx) {
+  // Dunkle Vignette ueber der Spielfigur (Hallenlicht)
+  function vignette(r) {
     var ctx = r.getCtx();
-    for (var i = 0; i < 6; i++) {
-      var ph = (t / 1400 * 0.6 + i / 6 + (seedTx || 0) * 0.13) % 1;
-      var bx = 20 + i * 38 + Math.round(Math.sin(t / 400 + i) * 6);
-      var by = 210 - ph * 200;
-      if (by < 40) continue;
-      ctx.globalAlpha = 0.25 * (1 - ph);
-      r.ellipse(bx, by, 2, 2, '#b8e0f0');
-      r.px(bx, by - 2, 1, 1, '#e0f4fc');
-      ctx.globalAlpha = 1;
+    for (var i = 0; i < 3; i++) {
+      ctx.globalAlpha = 0.18 - i * 0.05;
+      var m = 8 + i * 8;
+      r.px(m, m, 256 - 2 * m, 8, '#0a0e14');
+      r.px(m, 224 - m - 8, 256 - 2 * m, 8, '#0a0e14');
+      r.px(m, m, 8, 224 - 2 * m, '#0a0e14');
+      r.px(256 - m - 8, m, 8, 224 - 2 * m, '#0a0e14');
     }
+    ctx.globalAlpha = 1;
   }
 
   // --- Raumbilder aus der Karte vorberechnen ---------------------------------
 
-  function bakeSea(r, def) {
-    r.px(0, 0, 256, 224, '#0c1826');
+  function bakeRoom(r, def) {
+    r.px(0, 0, 256, 224, '#0a0e14');
     for (var ty = 0; ty < 14; ty++) {
       for (var tx = 0; tx < 16; tx++) {
         var c = def.map[ty].charAt(tx);
         if (c === '#') continue;
-        if (c === 'W') {
-          seaWall(r, tx, ty);
-          continue;
-        }
-        seaFloor(r, tx, ty);
-        if (c === 'x') coralPile(r, tx, ty);
-        else if (c === 'M') seaOpening(r, tx, ty, ty < 7);
+        if (c === 'W') { wall(r, tx, ty, def.art); continue; }
+        floor(r, tx, ty, def.art);
+        if (c === 'x') maschine(r, tx, ty, def.art);
+        else if (c === 'M') schott(r, tx, ty, ty < 7);
+        else if (c === 'k') bodenTafel(r, tx, ty);
       }
     }
+    wandRohr(r, def.rohr);
+    warnKante(r);
     if (def.bakeExtra) def.bakeExtra(r);
   }
 
   // --- Die vier Raeume --------------------------------------------------------
 
-  // Hafenkaverne: vom Wassertor nach oben in die Pumpenkammer
+  // Vorhalle: Beton mit gelbem Laufweg, Kabeltrommeln und Werkzeugkisten
   var EINGANG = {
+    art: 'beton', rohr: '#5a8a5a',
     map: [
       '################',
       '#WWWWWWWMWWWWWW#',
@@ -177,6 +278,13 @@
       '8,1': { room: 'wmitte', x: 8 * TILE, y: 11 * TILE, facing: 'up' },
       '8,12': { screen: 'lagune', x: 7.5 * TILE, y: 6 * TILE, facing: 'down' }
     },
+    bakeExtra: function (r) {
+      ventilrad(r, 12 * TILE + 8, 1 * TILE + 11);
+      // Hinweisschild "Zutritt nur fuer Personal" als Piktogramm
+      r.px(11 * TILE + 2, 1 * TILE + 1, 10, 7, '#2e5a9a');
+      r.px(11 * TILE + 4, 1 * TILE + 3, 6, 1, '#ffffff');
+      r.px(11 * TILE + 4, 1 * TILE + 5, 4, 1, '#ffffff');
+    },
     // Erklaer-NPC: Merksatz zum Umformen in die Scheitelform
     npc: {
       x: 3 * TILE, y: 2 * TILE,
@@ -194,8 +302,10 @@
     }
   };
 
-  // Pumpenkammer: Quelle als Rastquelle, Alte Bildtafel
+  // Pumpenkammer: Riffelblech, blaue Pumpen, Quelle als Rastquelle,
+  // Alte Schalttafel und Messtafel an der Wand
   var PUMPE = {
+    art: 'blech', rohr: '#2e6aa8',
     map: [
       '################',
       '#WWWWWWWMWWWWWW#',
@@ -217,8 +327,9 @@
       '8,12': { room: 'weingang', x: 8 * TILE, y: 2 * TILE, facing: 'down' }
     },
     bakeExtra: function (r) {
-      bildtafel(r);
-      muscheltafel(r);
+      schalttafel(r);
+      messtafel(r);
+      ventilrad(r, 12 * TILE + 8, 1 * TILE + 11);
       Buildings.well(r, 9, 5);   // Quelle sieht aus wie der Dorfbrunnen
     },
     objects: [
@@ -257,75 +368,58 @@
     ]
   };
 
-  // Kleine Steintafel auf dem Boden (Kartenzeichen 'k'), wie in Hoehle und Turm
-  function floorTablet(r, tx, ty) {
-    var x = tx * TILE, y = ty * TILE;
-    r.ellipse(x + 8, y + 14, 7, 2, 'rgba(10,25,40,0.5)');
-    r.px(x + 2, y + 3, 12, 11, '#3e5e7a');
-    r.px(x + 3, y + 4, 10, 9, '#8ac4cc');
-    r.px(x + 3, y + 4, 10, 1, '#b0dcc8');
-    r.px(x + 5, y + 7, 6, 1, '#28445c');
-    r.px(x + 5, y + 9, 5, 1, '#28445c');
-  }
-
-  // Gitter vor der Oeffnung zum Boss (bis das Gezeiten-Raetsel geloest ist)
+  // Gitter vor der Oeffnung zur Turbinenhalle (bis die Schaltwarte geloest ist)
   function bars(r) {
     var x = 8 * TILE, y = 1 * TILE;
-    r.px(x, y + 2, TILE, 1, '#8ac4cc');
+    r.px(x, y + 2, TILE, 1, '#b8c0c8');
     for (var i = 1; i < 16; i += 3) {
-      r.px(x + i, y + 2, 2, 14, '#3e6a8a');
-      r.px(x + i, y + 2, 1, 14, '#8ac4cc');
+      r.px(x + i, y + 2, 2, 14, '#5a6470');
+      r.px(x + i, y + 2, 1, 14, '#9aa4b0');
     }
   }
 
-  // Raetselraum: Gezeitenbrunnen auf der Parabel anregen (gezeiten.js)
+  // Schaltwarte: Leitstand mit Bildschirm, drei Hebel, Startschalter,
+  // Druckrohr an der rechten Wand (schaltwarte.js)
   var RAETSEL = {
-    map: Gezeiten.stampMap([
+    art: 'warte', rohr: '#7a5a3a',
+    map: [
       '################',
       '#WWWWWWWMWWWWWW#',
-      '#W............W#',
-      '#W............W#',
-      '#W............W#',
-      '#W............W#',
-      '#W............W#',
-      '#W............W#',
-      '#W............W#',
-      '#W............W#',
-      '#W............W#',
+      '#Wdddddd.....pW#',
+      '#Wdddddd.....pW#',
+      '#Wdddddd.....pW#',
+      '#Wdddddd.....pW#',
+      '#Wdddddd.....pW#',
+      '#Wdddddd.....pW#',
+      '#W...........pW#',
+      '#W.h.h.h..s..pW#',
+      '#W...........pW#',
       '#W........k...W#',
       '#WWWWWWWMWWWWWW#',
       '################'
-    ]),
+    ],
     mats: {
       '8,1': { room: 'wboss', x: 8 * TILE, y: 11 * TILE, facing: 'up' },
       '8,12': { room: 'wmitte', x: 8 * TILE, y: 2 * TILE, facing: 'down' }
     },
-    bakeExtra: function (r) {
-      Gezeiten.bakeGrid(r);
-      for (var ty = 0; ty < 14; ty++) {
-        for (var tx = 0; tx < 16; tx++) {
-          var c = RAETSEL.map[ty].charAt(tx);
-          if (c === 'g') Gezeiten.bakeStand(r, tx, ty);
-          else if (c === 'k') floorTablet(r, tx, ty);
-        }
-      }
-    },
-    objects: Gezeiten.objects().concat([
+    bakeExtra: function (r) { Schaltwarte.bake(r); },
+    objects: Schaltwarte.objects().concat([
       {
         tiles: [[10, 11]],
         x: 10 * TILE, y: 11 * TILE,
-        name: 'Steintafel',
+        name: 'Tafel',
         texts: [
-          'Rege die Brunnen an, die auf der Parabel ' + Gezeiten.FORMEL + ' liegen. Dann \u00f6ffnet sich das Gitter.',
-          'Unten stehen die x-Werte, links die y-Werte. In jeder Spalte sprudelt genau ein Brunnen richtig.'
+          'Bringe die Turbine zum Laufen: Stelle mit den Hebeln a, b und c die Parabel y = ax² + bx + c ein, die durch alle drei Anschlüsse P1, P2 und P3 geht.',
+          'P1 liegt auf der y-Achse – denk an die Messtafel. Dann drücke den Startschalter.'
         ],
-        later: { gezeiten: true, replace: true, texts: ['Alle Brunnen auf der Parabel ' + Gezeiten.FORMEL + ' sprudeln. Das Gitter ist offen.'] }
+        later: { schaltwarte: true, replace: true, texts: ['Die Parabel ' + Schaltwarte.FORMEL + ' trifft alle drei Anschlüsse. Die Turbine läuft, das Gitter ist offen.'] }
       }
     ])
   };
 
-  // Vorraum zum Boss: der Boss folgt in einem spaeteren Schritt
+  // Turbinenhalle: Stahlgitter, Turbinenschacht im Boden, Boss darueber
   var BOSSRAUM = {
+    art: 'halle', rohr: '#5a6a7a',
     map: [
       '################',
       '#WWWWWWWMWWWWWW#',
@@ -344,36 +438,47 @@
     ],
     mats: {
       '8,12': { room: 'wraetsel', x: 8 * TILE, y: 2 * TILE, facing: 'down' }
+    },
+    bakeExtra: function (r) {
+      turbinenSchacht(r);
+      ventilrad(r, 3 * TILE + 8, 1 * TILE + 11);
+      ventilrad(r, 12 * TILE + 8, 1 * TILE + 11);
     }
   };
 
-  // Raumdefinitionen fertigstellen (Bake, Blasen, Vignette)
-  [EINGANG, PUMPE, RAETSEL, BOSSRAUM].forEach(function (R, i) {
-    R.bakeFull = function (r) { bakeSea(r, R); };
-    R.anim = function (r, t) { bubbles(r, t, i); };
+  // Raumdefinitionen fertigstellen (Bake, Licht, Vignette)
+  [EINGANG, PUMPE, RAETSEL, BOSSRAUM].forEach(function (R) {
+    R.bakeFull = function (r) { bakeRoom(r, R); };
     R.overlay = vignette;
   });
 
-  // Raetselraum: Blasen und Brunnen im Laufbild, Gitter bis geloest
-  RAETSEL.anim = function (r, t) {
-    bubbles(r, t, 2);
-    Gezeiten.drawWater(r, t);
-    if (!Gezeiten.isSolved()) bars(r);
+  // Vorhalle: drei Deckenlampen, eine flackert
+  EINGANG.anim = function (r, t) { lampen(r, t, [64, 128, 192], 2); };
+
+  // Pumpenkammer: Lampen und Dampf am Ventil
+  PUMPE.anim = function (r, t) {
+    lampen(r, t, [80, 176], -1);
+    dampf(r, t, 12 * TILE + 8, 1 * TILE + 8);
   };
 
-  // Vorraum zum Boss: nach dem Sieg liegt die Perle leuchtend in der
-  // Bildtafel-Nische (der Waechter selbst ist verschwunden)
+  // Schaltwarte: Bildschirm, Hebel, Druckrohr live; Gitter bis geloest
+  RAETSEL.anim = function (r, t) {
+    Schaltwarte.draw(r, t);
+    Schaltwarte.drawRohr(r, t);
+    if (!Schaltwarte.isSolved()) bars(r);
+  };
+
+  // Turbinenhalle: Wasser im Schacht; nach dem Sieg schaeumt es kraeftig
   BOSSRAUM.anim = function (r, t) {
-    bubbles(r, t, 3);
-    if (typeof Boss === 'undefined' || !Boss.of('wboss') || !Boss.of('wboss').isDefeated()) return;
     var ctx = r.getCtx();
-    ctx.globalAlpha = 0.15 + 0.05 * (Math.floor(t / 260) % 2);
-    r.ellipse(112, 74, 22, 26, '#8ad8e8');
+    var frei = typeof Boss !== 'undefined' && Boss.of('wboss') && Boss.of('wboss').isDefeated();
+    for (var i = 0; i < (frei ? 14 : 5); i++) {
+      var a = (t / (frei ? 300 : 1400) + i / (frei ? 14 : 5)) * Math.PI * 2;
+      ctx.globalAlpha = frei ? 0.7 : 0.4;
+      r.px(112 + Math.round(Math.cos(a) * 22), 88 + Math.round(Math.sin(a) * 7), 2, 1, '#bfe6f8');
+    }
     ctx.globalAlpha = 1;
-    // leuchtende Perle auf einem Muschelpodest
-    r.px(106, 78, 12, 6, '#9a8aaa');
-    r.ellipse(112, 76, 4, 3, '#f4f0f4');
-    r.ellipse(111, 75, 1, 1, '#ffffff');
+    lampen(r, t, [48, 208], -1);
   };
 
   Interior.register('weingang', EINGANG);

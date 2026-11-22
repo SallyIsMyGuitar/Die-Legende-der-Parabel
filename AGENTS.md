@@ -53,9 +53,9 @@ Ein Mathe-Übungsspiel als Top-Down-Abenteuer im Stil eines modernen 2D-Zelda (O
   - `dungeon.js`: Höhle der Parabeln (vier Räume, Höhlen-Optik, Quelle)
   - `raetsel.js`: Fackel-Rätsel vor dem Boss (Zustand, Prüfung, Zeichnen)
   - `spiegel.js`: Spiegel-Rätsel vor dem Boss des Leuchtturms (Zustand, Prüfung, Zeichnen)
-  - `gezeiten.js`: Gezeiten-Rätsel vor dem Boss des Wasserreichs (Zustand, Prüfung, Zeichnen)
+  - `schaltwarte.js`: Rätsel „Schaltwarte“ vor dem Boss des Wasserkraftwerks (Hebel a, b, c, Startschalter, Bildschirm, Druckrohr)
   - `turm.js`: Leuchtturm-Dungeon (Dungeon 2, vier Räume, Turm-Optik, Quelle)
-  - `wasser.js`: Wasserkraftwerk (Dungeon 3, vier Räume, Quelle)
+  - `wasser.js`: Wasserkraftwerk (Dungeon 3, vier Räume in Kraftwerk-Optik, Quelle)
   - `wueste.js`: Steppe, Dünen und Oase (Weg zu Dungeon 4) mit Sandtempel-Fassade
   - `platten.js`: Platten-Rätsel vor dem Boss des Sandtempels (Druckplatten auf der x-Achse)
   - `sandtempel.js`: Sandtempel (Dungeon 4, vier Räume, Sandstein-Optik, Quelle)
@@ -289,7 +289,9 @@ Nach der Durchsicht des gesamten Spiels wurden am 13 Funden behoben (Details im 
 - **Gegner:** Funkengeist („Ein Funkengeist knistert:“, Vorhalle) und Rohrgeist („Ein Rohrgeist gluckert:“, Pumpenkammer), neue Sprites in `enemies.js`.
 - **Boss:** „Wächter des Kraftwerks“, ein Turbinenrad mit sechs gebogenen Schaufeln (ruckelt im Bann, dreht beim Sieg frei und versprüht Wasser). Intro Seite 1 und Sieg Seiten 1, 2, 4 neu (Wortlaut in `main.js`), Aufgaben unverändert.
 - **Außenansicht (gebaut, Bildschirm `lagune`):** Stausee (Reihen 0–2), Staumauer (Reihe 3), Krafthaus aus Backstein mit Schild WASSERKRAFTWERK (Spalten 5–10, Tor `E` 7/5–8/5), zwei Druckrohre (Spalten 4 und 11), Auslassrohr in den Kanal (Spalten 13–14), Strommast (2/4–2/5). Neues Kartenzeichen `X` (blockiert, gezeichnet in `drawKraftwerk`). Vor dem Turm-Sieg: Rolltor mit Siegel, dunkle Fenster, kein Wasser am Auslass; danach Tor offen, Fenster leuchten, Wasser schäumt, Warnlampe blinkt (`kraftwerkAnim`). Austritt aus dem Kraftwerk bei 7,5/6.
-- **Geplant (freigegeben):** Innenräume in Kraftwerk-Optik (Vorhalle, Pumpenkammer, Schaltwarte, Turbinenhalle), Rätsel „Schaltwarte“ mit Hebeln a, b, c und Startschalter (Parabel durch P1(0|−1), P2(1|−2), P3(3|2) → y = x² − 2x − 1; a ∈ {−2; −1; 1; 2}, b und c von −3 bis 3; falsch: Turbine stottert, kein Herzverlust; gespeichert als `schaltwarte`, alte Stände mit `gezeiten` gelten als gelöst). Danach je ein eigenes Innenraum-Konzept für Höhle, Turm, Sandtempel und Schule.
+- **Innenräume (gebaut, `wasser.js`):** eigenes Thema je Raum – Vorhalle (Beton mit gelbem Laufweg, Kabeltrommeln, Werkzeugkisten, flackernde Deckenlampe), Pumpenkammer (Riffelblech, blaue Pumpen, Dampf am Ventil, Schalttafel mit Instrumenten, Messtafel als Bildschirm), Schaltwarte (grüne Fliesen, Leitstand), Turbinenhalle (Stahlgitter, Turbinenschacht unter dem Boss, nach dem Sieg schäumt das Wasser). Gemeinsam: Betonwände mit Schrauben, Rohrleitung mit Ventilrad oben, Warnstreifen, Schotts mit gelb-schwarzem Rahmen, dunkle Vignette.
+- **Rätsel „Schaltwarte“ (gebaut, `schaltwarte.js`, ersetzt das Brunnen-Rätsel `gezeiten.js`):** Bildschirm (Kacheln 2–7/2–7, x = −2 … 4, y = −3 … 4) mit den Anschlüssen P1(0|−1), P2(1|−2), P3(3|2); ein Anschluss leuchtet, sobald die Parabel ihn trifft. Hebel a, b, c (3/9, 5/9, 7/9; A schaltet weiter: a ∈ {−2; −1; 1; 2}, b und c von −3 bis 3; Start a = −1, b = c = 0), Startschalter 10/9. Richtig nur y = x² − 2x − 1: Wasser im Druckrohr, Gitter offen. Falsch: „Die Turbine stottert …“, Rohr ruckelt, kein Herzverlust. Tafel 10/11 (Texte vorläufig). Gespeichert als `schaltwarte`; alte Stände mit `gezeiten` gelten als gelöst. Neue Aktionen `hebel`/`start` (Tastenhinweis „Schalten“/„Starten“).
+- **Nächster Schritt:** je ein eigenes Innenraum-Konzept für Höhle, Turm, Sandtempel und Schule.
 
 ## Getroffene Entscheidungen zu Meilenstein 6 (gebaut, Texte vorläufig)
 
@@ -312,7 +314,7 @@ Nach der Durchsicht des gesamten Spiels wurden am 13 Funden behoben (Details im 
 **Schritt 3 – Wiederholungsmodus (gebaut):**
 
 - Nach dem Finale (`finaleDone`) startet jede **Steintafel** (Schild mit Aktion `repeat`) an den Dungeon-Eingängen eine Wiederholung: `ruine` (10/5), `kueste` (11/12), `lagune` (10/6), `oase` (9/5), `start` (9/10, Schulhof vor der Schule). Vor dem Finale liest man nur den Schlaf-Text. Rückfrage im Spiel (kleines Dialogfeld): **A = Ja** startet, **B = Nein** bricht ab.
-- Zurückgesetzt werden nur die Gegner des Dungeons (`Enemies.clearScreens`, Räume je Dungeon inklusive der Endräume), Versuchszähler auf 0; der Bann wird dadurch automatisch wieder aktiv (Öffnung nach vorn gesperrt, Rückweg bleibt offen). Bodenrätsel (Fackeln/Spiegel/Gezeiten/Platten) und Bosse bleiben gelöst bzw. besiegt, Wappen und erster Durchlauf bleiben erhalten. Bestätigungstext nennt den Durchlauf („Durchlauf 2…“).
+- Zurückgesetzt werden nur die Gegner des Dungeons (`Enemies.clearScreens`, Räume je Dungeon inklusive der Endräume), Versuchszähler auf 0; der Bann wird dadurch automatisch wieder aktiv (Öffnung nach vorn gesperrt, Rückweg bleibt offen). Bodenrätsel (Fackeln/Spiegel/Schaltwarte/Platten) und Bosse bleiben gelöst bzw. besiegt, Wappen und erster Durchlauf bleiben erhalten. Bestätigungstext nennt den Durchlauf („Durchlauf 2…“).
 - Neue Zahlen: `Enemies.advanceRepeat(room)` erhöht den Wiederholungszähler je Raum, der in `seedOf` einfließt (`+ n · 100000`); gespeichert wird die Map als Feld `repeats`. Boss-Aufgaben bleiben fest (Bosse werden nicht erneut bekämpft).
 - Nach dem Finale bleibt die Welt frei begehbar (Tore/Wege offen, wie nach Boss-Siegen ohnehin).
 
