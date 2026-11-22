@@ -427,19 +427,19 @@ var Interior = (function () {
         name: 'Mama',
         texts: [
           'Ach, du bist wach! Seit die Schule zerstört wurde, ist es im Dorf so still …',
-          'Man sagt, die Lehrerinnen und Lehrer werden im Schloss gefangen gehalten.',
-          'Nur wer alle Dungeons löst, kann das Schloss befreien. Pass auf dich auf!'
+          'In der Ruine leuchten seltsame gerade Linien. Man sagt, die Lehrerinnen und Lehrer werden dort drin gefangen gehalten.',
+          'Das Schultor ist mit vier Siegeln verschlossen. Es heißt, vier Wächter draußen im Land tragen sie. Pass auf dich auf!'
         ],
         // Zusatzseite nach dem ersten Wappen (freigegeben)
         // Weitere Stufen je Wappen und nach dem Finale (Texte vorläufig, Nutzer passt sie an)
         later: [
           { wappen: 1, texts: ['Graf Gerade? Von dem habe ich noch nie gehört … Aber du hast den ersten Wächter befreit! Ich bin so stolz auf dich.'] },
-          { wappen: 2, texts: ['Ich habe gesehen, dass der Leuchtturm wieder leuchtet! Dieser Graf Gerade ist also wirklich da draußen … Pass gut auf dich auf.'] },
+          { wappen: 2, texts: ['Ich habe gesehen, dass der Leuchtturm wieder leuchtet! Dieser Graf Gerade sitzt also wirklich in unserer Schule … Pass gut auf dich auf.'] },
           { wappen: 3, texts: ['Im Dorf erzählt man, das Kraftwerk im Osten läuft wieder. Warst du das etwa auch?'] },
-          { wappen: 4, texts: ['Das Schultor steht offen? Und das Schloss war die ganze Zeit unsere Schule … Sei vorsichtig da drin!'] },
+          { wappen: 4, texts: ['Alle vier Siegel sind gebrochen und das Schultor steht offen! Sei vorsichtig da drin!'] },
           { finale: true, replace: true, texts: [
             'Du hast es geschafft! Die Lehrerinnen und Lehrer sind frei – das ganze Dorf spricht von nichts anderem.',
-            'Graf Gerade ist fort, und bald wird die Schule wieder aufgebaut. Ich bin so stolz auf dich!'
+            'Graf Gerade ist fort, und unsere Schule steht wieder. Ich bin so stolz auf dich!'
           ] }
         ]
       },

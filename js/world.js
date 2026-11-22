@@ -47,13 +47,18 @@ var World = (function () {
       // sortRow 9: Die Fassade endet in Reihe 9, Figuren im Hof stehen davor.
       school: { x: 9, y: 6, w: 6, h: 5, door: 2, doorFrame: true, sortRow: 9 },
       dungeon: 'klassenzimmer',
-      anim: function (r, t) { grafLines(r, t); },
+      anim: function (r, t) { grafLines(r, t); siegel(r); },
       signs: [
         {
           tiles: [[11, 11], [12, 11]], x: 12 * 16, y: 11 * 16,
           name: 'Schild',
-          texts: ['GESPERRT. Die Schule bleibt geschlossen, bis die Lehrkräfte zurück sind.'],
+          // Seite 2 zaehlt die Siegel am Tor herunter (je befreitem Waechter eines)
+          texts: ['GESPERRT. Die Schule bleibt geschlossen, bis die Lehrkräfte zurück sind.',
+            'Am Tor hängen vier Siegel aus starren, geraden Linien.'],
           later: [
+            { boss: 'dboss', replace: true, texts: ['GESPERRT. Die Schule bleibt geschlossen, bis die Lehrkräfte zurück sind.', 'Am Tor hängen noch drei Siegel.'] },
+            { boss: 'lboss', replace: true, texts: ['GESPERRT. Die Schule bleibt geschlossen, bis die Lehrkräfte zurück sind.', 'Am Tor hängen noch zwei Siegel.'] },
+            { boss: 'wboss', replace: true, texts: ['GESPERRT. Die Schule bleibt geschlossen, bis die Lehrkräfte zurück sind.', 'Am Tor hängt nur noch ein Siegel.'] },
             { school: true, replace: true, texts: ['Das Tor steht offen. Der Eingang der zerstörten Schule ist frei.'] },
             { finale: true, replace: true, texts: ['Die Schule ist wieder aufgebaut. Die Lehrkräfte sind zurück.'] }
           ]
@@ -1285,6 +1290,20 @@ var World = (function () {
       r.px(x + 18, 4 * TILE + 40, 1, 30, '#b8c8f8');
     }
     ctx.globalAlpha = 1;
+  }
+
+  // Vier Siegel am Schultor (je Waechter eines); jeder Boss-Sieg bricht eines
+  var SIEGEL_BOSSE = ['dboss', 'lboss', 'wboss', 'sboss'];
+  function siegel(r) {
+    if (schoolGateOpen || typeof Boss === 'undefined') return;
+    var x0 = 11 * TILE + 3, y0 = 11 * TILE;
+    SIEGEL_BOSSE.forEach(function (b, i) {
+      if (Boss.of(b) && Boss.of(b).isDefeated()) return;
+      var x = x0 + i * 7;
+      r.px(x, y0, 5, 5, '#8a6a1a');
+      r.px(x + 1, y0 + 1, 3, 3, '#f0c040');
+      r.px(x + 2, y0 + 1, 1, 3, '#8a6a1a');   // gerade Rune
+    });
   }
 
   function schoolIsIntact(st) {

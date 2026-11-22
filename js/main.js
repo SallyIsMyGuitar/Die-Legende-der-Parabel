@@ -286,7 +286,7 @@
       victory: [
         'Der Bann zerbricht in tausend gerade Splitter. Der Wächter atmet auf, und das Tor öffnet sich.',
         'Danke! Graf Gerade hat mich verzaubert. Er hasst alles, was sich krümmt – und Parabeln am allermeisten.',
-        'Darum ließ er eure Schule zerstören: Dort lernt man, wie Parabeln funktionieren. Er hat noch weitere Wächter … und hält die Lehrkräfte an einem Ort gefangen, den man im Dorf das Schloss nennt.',
+        'Darum ließ er eure Schule zerstören: Dort lernt man, wie Parabeln funktionieren. Er hat sich in eurer Schule verschanzt und das Tor mit vier Siegeln verschlossen. Jeder seiner Wächter trug eines. Meines ist gebrochen.',
         'Du erhältst das erste Wappen: das Wappen der Normalparabel. Kehre ins Dorf zurück und erzähle, was du erfahren hast.'
       ],
       // nach dem Sieg: der Felsen am Suedausgang loest sich auf
@@ -303,7 +303,7 @@
         'Mit einem heißen Aufblitzen kehrt das Licht in den Spiegel zurück. Der Bann über dem Turm zerbricht.',
         'Ich war die Laterne des Turms, verzaubert vom Grafen. Er fürchtet nichts mehr als einen leuchtenden Scheitelpunkt.',
         'Hast du das Wasserkraftwerk im Osten gesehen? Sein Tor trägt das Siegel des Grafen. Erst wenn du es bannst, zeigt sich der nächste Wächter.',
-        'Du erhältst das Wappen der Scheitelform. Das Licht des Turms sehnt sich nach dem Tag, an dem die Schule wieder steht.'
+        'Du erhältst das Wappen der Scheitelform. Das zweite Siegel am Schultor ist gebrochen.'
       ],
       // nach dem Sieg: der Leuchtturm draussen leuchtet wieder und
       // das Wassertor zur Lagune (Dungeon 3) oeffnet sich
@@ -320,7 +320,7 @@
         'Die Turbinen setzen sich in Bewegung, das Wasser rauscht wieder. Der Bann über dem Kraftwerk zerbricht.',
         'Ich bin das Turbinenrad des Kraftwerks, verzaubert vom Grafen. Meine Schaufeln sind gebogen wie Parabeln – das konnte er nicht dulden.',
         'Hast du vom Sandsturm im Westen gehört? Er trägt sein Siegel. Erst wenn du ihn bannst, öffnet sich der Weg zum letzten Wächter.',
-        'Du erhältst das Wappen der allgemeinen Form. Das Kraftwerk liefert wieder Strom – bald brennt auch in eurer Schule wieder Licht.'
+        'Du erhältst das Wappen der allgemeinen Form. Das dritte Siegel ist gebrochen – nur eines hält das Schultor noch.'
       ],
       // nach dem Sieg: Der Sandsturm im Westen loest sich auf
       // (Dungeon 4: Weg ueber Steppe, Duenen und Oase zum Sandtempel)
@@ -336,7 +336,7 @@
       victory: [
         'Der Bann zerbricht, und der Sand rieselt willenlos in sanften Bögen.',
         'Ich bin die Sanduhr des Tempels, verzaubert vom Grafen. Er glaubte, selbst die Zeit müsse gradlinig verfallen.',
-        'Das Schloss, von dem im Dorf geflüstert wird, ist die zerstörte Schule im Norden: Dort hat Graf Gerade sich verschanzt und hält die Lehrerinnen und Lehrer gefangen. Das Schultor öffnet sich nun.',
+        'Mit mir bricht das letzte Siegel. Das Schultor im Dorf steht offen – dort wartet Graf Gerade mit den Lehrerinnen und Lehrern.',
         'Du erhältst das Wappen der Nullstellen. Der Sand weht dir den Weg frei.'
       ],
       // nach dem Sieg: Das Schultor im Dorf oeffnet sich (Dungeon 5: Finale)
@@ -397,7 +397,7 @@
       x: 14 * 16, y: 10 * 16, baseFacing: 'down',
       sprites: function () { return People.tuemerin(); },
       talk: { name: 'Lehrerin', texts: [
-        'Der Bann ist zerbrochen. Uebung macht den Meister!',
+        'Der Bann ist zerbrochen. Übung macht den Meister!',
         'Die Steintafel neben dem Eingang startet eine Wiederholung.'
       ] }
     });

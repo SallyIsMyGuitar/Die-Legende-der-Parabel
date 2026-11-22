@@ -217,7 +217,7 @@
           { wappen: 2, texts: ['Vom Fenster aus sehe ich den Leuchtturm wieder strahlen. Mein Gefühl hat mich nicht getäuscht!'] },
           { wappen: 3, texts: ['Schon drei Wächter befreit? Ich hätte nie gedacht, dass Parabeln so viel bewirken können.'] },
           { wappen: 4, texts: ['Das Schultor ist offen! Vielleicht höre ich die Schulglocke bald wieder.'] },
-          { finale: true, texts: ['Die Lehrkräfte sind frei! Jetzt fehlt nur noch die Schulglocke – und die läutet bestimmt bald wieder.'] }
+          { finale: true, texts: ['Die Lehrkräfte sind frei! Und hörst du? Die Schulglocke klingt wieder bis hierher.'] }
         ]
       },
       // Schaukeln im Schaukelstuhl
@@ -567,7 +567,7 @@
           { wappen: 4, texts: ['Das Schultor steht offen? Dann räume ich schon mal neue Hefte ins Regal.'] },
           { finale: true, replace: true, texts: [
             'Willkommen! Die Lehrerinnen und Lehrer sind frei – bald brauchen alle neue Hefte, Stifte und Bücher.',
-            'Sobald die Schule wieder aufgebaut ist, gibt es Hefte zum halben Preis. Versprochen! Kaufen geht aber noch nicht.'
+            'Die Schule steht wieder – also gibt es Hefte zum halben Preis. Versprochen! Kaufen geht aber noch nicht.'
           ] }
         ]
       },

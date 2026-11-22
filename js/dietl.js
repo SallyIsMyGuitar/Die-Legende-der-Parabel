@@ -49,7 +49,7 @@ var Dietl = (function () {
       a: ['Sie wurde zerstört.', 'Sie hat Ferien.', 'Sie wurde verkauft.'],
       h: 'Mama hat es dir gleich am Anfang erzählt.' },
     { f: 'Wo werden die Lehrerinnen und Lehrer laut Mama gefangen gehalten?',
-      a: ['Im Schloss', 'Im Leuchtturm', 'Im Laden'],
+      a: ['In der zerstörten Schule', 'Im Leuchtturm', 'Im Laden'],
       h: 'Frag Mama im Elternhaus.' },
     { f: 'Womit zog der Graf durch den Wald des Försters?',
       a: ['Mit einem Heer aus Linealen', 'Mit einer Herde Drachen', 'Mit einem Heer aus Zirkeln'],
