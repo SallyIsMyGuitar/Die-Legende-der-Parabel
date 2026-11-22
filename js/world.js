@@ -15,7 +15,7 @@ var World = (function () {
   var ROWS = 14;
   var W = COLS * TILE;
   var H = ROWS * TILE;
-  var BLOCKING = 'THDFGSW~REiCqVLKBZU';
+  var BLOCKING = 'THDFGSW~REiCqVLKBZUX';
   var lighthouseLit = false;   // Leuchtturm leuchtet wieder (Sieg ueber Dungeon 2)
   var waterGateOpen = false;  // Wassertor der Lagune offen (Sieg ueber Dungeon 2)
   var sandstormOpen = false;  // Sandsturm im Westen aufgeloest (Sieg ueber Dungeon 3)
@@ -309,23 +309,27 @@ var World = (function () {
     // \u00f6ffnet sich erst mit dem Sieg \u00fcber den W\u00e4chter des Turms.
     lagune: {
       map: [
+        '~~~~~~~~~~~~~~~~',   // Stausee
         '~~~~~~~~~~~~~~~~',
         '~~~~~~~~~~~~~~~~',
-        '~~~~~~~~~~~~~~~~',
-        '~~~~~~~~~~~~~~~~',
-        '~~~~TTEETT~~~~~~',
-        '~~~~T....T~~~~~~',
-        '~~~T......i.T~~~',
-        '~~....i.......~~',
-        '................',
-        '...............~',
-        '...............~',
+        'XXXXXXXXXXXXXXXX',   // Staumauer
+        'T.X.XXXXXXXX.~~T',   // Strommast, Druckrohre, Krafthaus, Becken
+        'T.X.XXXEEXXXX~~T',   // Tor 'E', Auslassrohr in den Kanal
+        'T.........i..~~T',
+        'T.....i......~~T',
+        '.............~~T',
+        '.............~~~',
+        '.............~~~',
         '...............T',
         'T..............T',
         'TTTTTTTTTTTTTTTT'
       ],
       buildings: [],
-      seagate: true,
+      // Wasserkraftwerk: Staumauer, Krafthaus und Mast werden gebacken,
+      // Tor, Fenster, Auslass und Warnlampe laufen je nach Zustand mit
+      kraftwerk: true,
+      bakeExtra: function (r) { drawKraftwerk(r); },
+      anim: function (r, t) { kraftwerkAnim(r, t); },
       signs: [
         {
           tiles: [[6, 7]], x: 6 * TILE, y: 7 * TILE,
@@ -1025,91 +1029,138 @@ var World = (function () {
     }
   }
 
-  // Wassertor der Lagune (Dungeon 3): linke Haelfte zeichnet beide
-  // 'E'-Kacheln gemeinsam. Zu: Waende aus Wasser mit dem Siegel des Grafen.
-  // Offen (nach dem Sieg ueber den Waechter des Turms): dunkler Durchgang.
-  // Kaktus (Wueste, Kartenzeichen 'K', blockiert)
-  function drawCactus(r, tx, ty) {
-    var x = tx * TILE, y = ty * TILE;
-    r.ellipse(x + 8, y + 15, 5, 2, 'rgba(60,40,10,0.35)');
-    // Hauptstamm
-    r.px(x + 6, y + 2, 4, 13, '#3f7a2e');
-    r.px(x + 6, y + 2, 1, 13, '#5f9e48');
-    r.px(x + 9, y + 2, 1, 13, '#2c5c1e');
-    // linker Arm
-    r.px(x + 2, y + 7, 4, 2, '#3f7a2e');
-    r.px(x + 2, y + 3, 2, 5, '#3f7a2e');
-    r.px(x + 2, y + 3, 1, 5, '#5f9e48');
-    // rechter Arm
-    r.px(x + 10, y + 9, 4, 2, '#3f7a2e');
-    r.px(x + 12, y + 5, 2, 5, '#3f7a2e');
-    r.px(x + 12, y + 5, 1, 5, '#5f9e48');
-    // kleine Blüte oben
-    r.px(x + 7, y, 2, 2, '#e86a8a');
-    r.px(x + 7, y, 1, 1, '#f8a0b8');
-  }
+  // --- Wasserkraftwerk (Dungeon 3, Bildschirm 'lagune') --------------------
+  // Kartenzeichen 'X' blockiert nur; gezeichnet wird alles hier. Staumauer
+  // (Reihe 3), Krafthaus (Spalten 5-10, Reihen 4-5, Dach ragt nach oben),
+  // zwei Druckrohre (Spalten 4 und 11), Auslassrohr (Reihe 5, Spalten 11-12)
+  // in den Kanal, Strommast (Spalte 2).
+  var KW = { x0: 5 * TILE, x1: 11 * TILE, roof: 40, base: 6 * TILE };
+  var mix = Render.mix;
 
-  // Trockener Busch (Wueste, Kartenzeichen 'B', blockiert)
-  function drawDryBush(r, tx, ty) {
-    var x = tx * TILE, y = ty * TILE;
-    r.ellipse(x + 8, y + 14, 6, 2, 'rgba(60,40,10,0.3)');
-    r.ellipse(x + 8, y + 9, 6, 5, '#7a5c32');
-    r.ellipse(x + 7, y + 8, 4, 3, '#9a7a46');
-    // duerre Zweige
-    r.px(x + 2, y + 6, 1, 4, '#5e4626');
-    r.px(x + 13, y + 7, 1, 3, '#5e4626');
-    r.px(x + 6, y + 3, 1, 3, '#5e4626');
-    r.px(x + 10, y + 4, 1, 2, '#5e4626');
-    r.px(x + 4, y + 12, 1, 3, '#5e4626');
-    r.px(x + 11, y + 13, 1, 2, '#5e4626');
-  }
-
-  // Offenes Schultor (Kartenzeichen 'O', begehbar): Fluegel seitlich aufgeschlagen
-  function drawSchoolGateOpen(r, gx, gy) {
-    var x = gx * TILE, y = gy * TILE, w = 2 * TILE, i;
-    r.px(x - 2, y - 2, 4, 18, '#3a3434');
-    r.px(x + w - 2, y - 2, 4, 18, '#3a3434');
-    r.px(x - 2, y - 2, 4, 1, '#6a6262');
-    r.px(x + w - 2, y - 2, 4, 1, '#6a6262');
-    // aufgeschlagene Fluegel links und rechts
-    for (i = 0; i < 5; i++) {
-      r.px(x + 1 + i, y + 2, 1, 13, '#3a3a44');
-      r.px(x + w - 2 - i, y + 2, 1, 13, '#3a3a44');
+  function drawKraftwerk(r) {
+    var i, y;
+    // Staumauer aus Beton mit Fugen und Schaumkante zum Stausee
+    for (y = 3 * TILE - 2; y < 4 * TILE; y++) {
+      var f = (y - 3 * TILE + 2) / 18;
+      r.px(0, y, W, 1, f < 0.15 ? '#c4c8cc' : mix('#9aa0a6', '#6a7078', f));
     }
-    r.px(x + 1, y + 2, 5, 1, '#2e2e36');
-    r.px(x + w - 6, y + 2, 5, 1, '#2e2e36');
-    r.px(x + 1, y + 14, 5, 1, '#2e2e36');
-    r.px(x + w - 6, y + 14, 5, 1, '#2e2e36');
+    r.px(0, 3 * TILE - 3, W, 1, '#e8f4f8');
+    for (i = 0; i < W; i += 32) r.px(i, 3 * TILE, 1, TILE, '#5a6068');
+    r.px(0, 4 * TILE - 2, W, 2, '#4a5058');
+
+    // Strommast (Gittermast) mit Leitungen nach links aus dem Bild
+    var mx = 2 * TILE + 8;
+    r.px(mx - 6, 6 * TILE - 2, 12, 2, '#5a5a62');
+    for (y = 36; y < 6 * TILE - 2; y++) {
+      var half = Math.round(2 + (y - 36) / 60 * 4);
+      r.px(mx - half, y, 1, 1, '#4a4e58');
+      r.px(mx + half, y, 1, 1, '#4a4e58');
+      if (y % 6 === 0) r.px(mx - half, y, half * 2 + 1, 1, '#6a707a');
+    }
+    r.px(mx - 9, 40, 19, 2, '#4a4e58');   // Traverse
+    r.px(mx - 9, 42, 1, 3, '#d8d8d0');    // Isolatoren
+    r.px(mx + 9, 42, 1, 3, '#d8d8d0');
+    for (i = 0; i <= mx - 9; i += 2) {    // durchhaengende Leitungen
+      var sag = Math.round(Math.sin(i / (mx - 9) * Math.PI) * 4);
+      r.px(i, 45 + sag, 2, 1, '#2a2e36');
+    }
+
+    // Druckrohre: links und rechts von der Mauer herab ins Krafthaus
+    [4, 11].forEach(function (col) {
+      var px = col * TILE + 3;
+      r.px(px, 3 * TILE - 2, 10, 4 * TILE - 3 * TILE + 2 + (col === 4 ? 26 : 22), '#5a6a7a');
+      r.px(px + 1, 3 * TILE - 2, 3, 40, '#8a9aac');
+      r.px(px + 8, 3 * TILE - 2, 2, 40, '#3e4a58');
+      for (y = 3 * TILE + 4; y < 6 * TILE - 6; y += 10) r.px(px - 1, y, 12, 2, '#3e4a58');   // Flansche
+    });
+    // Auslassrohr nach rechts in den Kanal
+    r.px(11 * TILE + 3, 5 * TILE + 3, 30, 9, '#5a6a7a');
+    r.px(11 * TILE + 3, 5 * TILE + 4, 30, 2, '#8a9aac');
+    r.px(13 * TILE + 1, 5 * TILE + 1, 3, 13, '#3e4a58');   // Rohrmuendung
+
+    // Krafthaus: Backsteinfassade mit Betonrahmen, Flachdach
+    var x0 = KW.x0, x1 = KW.x1, top = KW.roof, base = KW.base;
+    r.ellipse((x0 + x1) / 2, base, 52, 4, 'rgba(20,30,40,0.35)');
+    r.px(x0 - 2, top, x1 - x0 + 4, base - top, '#2a2e36');
+    for (y = top + 8; y < base - 1; y++) {
+      r.px(x0, y, x1 - x0, 1, (y % 6 === 0) ? '#7a3e2a' : mix('#b2603e', '#8e4a30', (y - top) / (base - top)));
+    }
+    for (y = top + 8; y < base - 1; y += 6) {
+      for (i = x0 + ((y / 6) % 2 ? 0 : 6); i < x1; i += 12) r.px(i, y, 1, 6, '#7a3e2a');
+    }
+    r.px(x0 - 2, top, x1 - x0 + 4, 8, '#8a9098');              // Betonsims
+    r.px(x0 - 2, top, x1 - x0 + 4, 2, '#b8bcc2');
+    r.px(x0 - 2, top + 8, x1 - x0 + 4, 1, '#4a4e58');
+    r.px(x0, top + 8, 3, base - top - 8, '#9aa0a6');           // Eckpfeiler
+    r.px(x1 - 3, top + 8, 3, base - top - 8, '#9aa0a6');
+    // Schild WASSERKRAFTWERK im Sims
+    // (Dialogschrift, weil die kleine Schrift kein W und K kennt)
+    var label = 'WASSERKRAFTWERK', tw = Font.width(label);
+    var cx = Math.round((x0 + x1) / 2);
+    r.px(cx - Math.round(tw / 2) - 2, top - 1, tw + 4, 10, '#f4f0e2');
+    Font.draw(r.getCtx(), label, cx - Math.round(tw / 2), top + 1, '#2a3a5a');
+    // Torrahmen (das Tor selbst zeichnet drawKraftwerkTor)
+    r.px(7 * TILE - 3, 5 * TILE - 6, 2 * TILE + 6, TILE + 6, '#6a7078');
+    r.px(7 * TILE - 3, 5 * TILE - 6, 2 * TILE + 6, 2, '#a4aab2');
+    // Fensterrahmen der Turbinenhalle (Glas zeichnet kraftwerkAnim)
+    KW_WIN.forEach(function (w) { r.px(w - 1, top + 13, 12, 22, '#4a4e58'); });
+    // Warnstreifen am Sockel
+    for (i = x0; i < x1; i += 6) {
+      r.px(i, base - 4, 3, 3, '#f0c030');
+      r.px(i + 3, base - 4, 3, 3, '#2a2a30');
+    }
+  }
+  var KW_WIN = [5 * TILE + 6, 6 * TILE + 4, 9 * TILE + 2, 10 * TILE];
+
+  // Laufende Teile: Fensterlicht, Auslass, Warnlampe am Mast
+  function kraftwerkAnim(r, t) {
+    var ctx = r.getCtx(), on = waterGateOpen, top = KW.roof;
+    KW_WIN.forEach(function (w, i) {
+      if (on) {
+        r.px(w, top + 14, 10, 20, (Math.floor(t / 900 + i) % 5) ? '#f4dc84' : '#f8e8a8');
+        r.px(w + 1, top + 15, 2, 18, '#fff4c8');
+      } else {
+        r.px(w, top + 14, 10, 20, '#1e2a36');
+        r.px(w + 1, top + 15, 2, 6, '#3a4a5a');
+      }
+      r.px(w + 4, top + 14, 1, 20, '#4a4e58');   // Sprosse
+    });
+    if (on) {
+      // Wasser schaeumt aus dem Auslass in den Kanal
+      var mx = 13 * TILE + 3;
+      for (var k = 0; k < 8; k++) {
+        var ph = ((t / 90 + k * 3) % 12);
+        r.px(mx + Math.round(ph * 0.9), 5 * TILE + 5 + Math.round(ph * 0.6), 2, 2, k % 2 ? '#ffffff' : '#bfe6f8');
+      }
+      ctx.globalAlpha = 0.5;
+      r.ellipse(mx + 10, 5 * TILE + 13, 8, 3, '#e8f6fc');
+      ctx.globalAlpha = 1;
+      // Warnlampe an der Mastspitze blinkt
+      if (Math.floor(t / 600) % 2) r.px(2 * TILE + 7, 34, 3, 3, '#ff4a3a');
+    }
   }
 
-  function drawWasserTor(r, tx, ty) {
+  // Tor des Krafthauses: zu = Rolltor mit dem Siegel des Grafen,
+  // offen = dunkler Durchgang mit Licht aus der Halle
+  function drawKraftwerkTor(r, tx, ty) {
     if (tileAt(tx - 1, ty) === 'E') return;   // rechte Haelfte wird mitgezeichnet
     var x = tx * TILE, y = ty * TILE;
     if (!waterGateOpen) {
-      // wallende Wasserwand mit Runen-Siegel
-      r.px(x, y, 32, TILE, '#1e4a6a');
-      for (var i = 0; i < 32; i += 4) {
-        r.px(x + i, y + 2, 2, 12, '#2c6a8a');
-        r.px(x + i + 1, y + 3, 1, 11, '#5aaac8');
-      }
-      r.px(x, y, 32, 1, '#8ac8e0');
-      r.px(x, y + 15, 32, 1, '#123a54');
-      // Schaumkronen
-      r.px(x + 2, y, 3, 1, '#d8f0f8');
-      r.px(x + 13, y + 1, 4, 1, '#d8f0f8');
-      r.px(x + 26, y + 4, 3, 1, '#d8f0f8');
-      // Siegel: eckige Runen
-      r.px(x + 13, y + 5, 6, 1, '#f0c040');
-      r.px(x + 13, y + 9, 6, 1, '#f0c040');
-      r.px(x + 14, y + 6, 1, 3, '#f0c040');
-      r.px(x + 17, y + 6, 1, 3, '#f0c040');
+      r.px(x, y, 32, TILE, '#6a727c');
+      for (var i = 1; i < TILE; i += 3) r.px(x, y + i, 32, 1, '#4e5660');
+      r.px(x, y, 32, 1, '#9aa2ac');
+      // Siegel: eckige Runen in Gold
+      r.px(x + 12, y + 4, 8, 1, '#f0c040');
+      r.px(x + 12, y + 10, 8, 1, '#f0c040');
+      r.px(x + 12, y + 4, 1, 7, '#f0c040');
+      r.px(x + 19, y + 4, 1, 7, '#f0c040');
+      r.px(x + 15, y + 6, 2, 3, '#f0c040');
     } else {
-      // geoeffneter Durchgang, Restwasser am Rand
-      r.px(x, y, 32, TILE, '#0e1826');
-      r.px(x, y, 2, TILE, '#2c6a8a');
-      r.px(x + 30, y, 2, TILE, '#2c6a8a');
-      r.px(x, y, 32, 1, '#5aaac8');
-      r.px(x + 2, y + 13, 28, 1, '#1e3a52');
+      r.px(x, y, 32, TILE, '#141a22');
+      r.px(x + 2, y + 2, 28, TILE - 2, '#202a36');
+      r.px(x, y, 32, 3, '#7a828c');                // hochgezogenes Rolltor
+      r.px(x, y + 1, 32, 1, '#4e5660');
+      r.px(x + 4, y + 12, 24, 4, '#3a3a2a');        // Lichtschein am Boden
     }
   }
 
@@ -1392,7 +1443,7 @@ var World = (function () {
         else if (tt === 'E') obj(cy, function () {
           // Leuchtturm-Tür sieht anders aus als der Höhleneingang,
           // das Wassertor der Lagune ist zu, bis das Siegel bricht
-          if (st.def.seagate) drawWasserTor(Render, x, y);
+          if (st.def.kraftwerk) drawKraftwerkTor(Render, x, y);
           else if (st.def.lighthouse) { /* Tuer zeichnet drawLighthouse mit */ }
           else if (st.def.school && !st.def.school.intactOnly) { /* Tuer zeichnet die Schule mit */ }
           else drawRuinDoor(Render, x, y);

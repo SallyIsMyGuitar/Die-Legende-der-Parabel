@@ -175,7 +175,7 @@
     ],
     mats: {
       '8,1': { room: 'wmitte', x: 8 * TILE, y: 11 * TILE, facing: 'up' },
-      '8,12': { screen: 'lagune', x: 6 * TILE + 2, y: 5 * TILE, facing: 'down' }
+      '8,12': { screen: 'lagune', x: 7.5 * TILE, y: 6 * TILE, facing: 'down' }
     },
     // Erklaer-NPC: Merksatz zum Umformen in die Scheitelform
     npc: {
