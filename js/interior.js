@@ -30,6 +30,8 @@ var Interior = (function () {
   function isBlocked(room, tx, ty) {
     var c = cell(room, tx, ty);
     if (guestAt(room, tx, ty)) return true;   // weitere Figuren blockieren ihre Kachel
+    // bewegliche Hindernisse des Raums (z. B. der Linsenstein im Leuchtturm)
+    if (rooms[room].blockedAt && rooms[room].blockedAt(tx, ty)) return true;
     return c !== '.' && c !== 'M';
   }
 

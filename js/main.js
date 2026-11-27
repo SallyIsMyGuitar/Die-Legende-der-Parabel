@@ -51,6 +51,7 @@
       bosses: bossState(),                                          // besiegt je Boss-Raum
       raetsel: Raetsel.isSolved(),
       spiegel: Spiegel.isSolved(),
+      linse: Linse.isSolved(),
       schaltwarte: Schaltwarte.isSolved(),
       platten: Platten.isSolved(),
       leuchtturm: World.isLighthouseLit(),
@@ -89,6 +90,7 @@
     if (bossesSt.dboss) World.openRockGate('ost');
     if (st.raetsel) Raetsel.setSolved();
     if (st.spiegel) Spiegel.setSolved();
+    if (st.linse) Linse.setSolved();   // aeltere Staende: Linsenkammer noch ungeloest
     // aeltere Staende: geloestes Brunnen-Raetsel zaehlt als geloeste Schaltwarte
     if (st.schaltwarte || st.gezeiten) Schaltwarte.setSolved();
     if (st.platten) Platten.setSolved();
@@ -139,6 +141,7 @@
     if (l.wappen && wappens < l.wappen) return false;
     if (l.solved && !Raetsel.isSolved()) return false;
     if (l.spiegel && !Spiegel.isSolved()) return false;
+    if (l.linse && !Linse.isSolved()) return false;
     if (l.schaltwarte && !Schaltwarte.isSolved()) return false;
     if (l.platten && !Platten.isSolved()) return false;
     if (l.school && !World.isSchoolGateOpen()) return false;
@@ -167,7 +170,7 @@
                weingang: 'warp', wmitte: 'warp', seingang: 'warp', smitte: 'warp',
                klassenzimmer: 'warp', physiksaal: 'warp', turnhalle: 'warp' };
   var FORWARD = { dhalle: 'dmittel', dmittel: 'draetsel',
-                  leingang: 'lmitte', lmitte: 'lraetsel',
+                  leingang: 'lmitte', lmitte: 'llinse',
                   weingang: 'wmitte', wmitte: 'wraetsel',
                   seingang: 'smitte', smitte: 'splatten',
                   klassenzimmer: 'physiksaal', physiksaal: 'turnhalle', turnhalle: 'aula' };   // Öffnung nach vorn
@@ -272,6 +275,19 @@
       Dialog.open('', ['Beide Platten der Nullstellen sind gedrückt. Mit lautem Ruck hebt sich das Gitter zum Wächter.']);
     }
     // 'pressed' und 'already': Platte bleibt gedrueckt, kein Text
+  }
+
+  // --- Schiebe-Raetsel in der Linsenkammer (Leuchtturm, linse.js) -------
+  function pushStone(dt, screen) {
+    if (screen !== Linse.ROOM || Linse.isSolved()) return;
+    var res = Linse.update(dt, Player.getX(), Player.getY(), Player.getFacing(), Input,
+      function (tx, ty) { return World.isBlocked(tx, ty); });
+    if (res === 'solved') {
+      saveGame();
+      Dialog.open('', ['Der Linsenstein rastet im Scheitel S(−2|−1) ein. Das Licht folgt jetzt der Parabel ' + Linse.FORMEL + '. Mit lautem Ruck hebt sich das Gitter.']);
+    } else if (res === 'reset') {
+      Dialog.open('', ['Klack! Die Druckplatte senkt sich, und der Linsenstein gleitet an seinen Platz im Ursprung zurück.']);
+    }
   }
 
   var BOSSES = {
@@ -462,7 +478,7 @@
   // bleiben, wie sie sind, und der erste Durchlauf samt Wappen bleibt erhalten.
   var DUNGEONS = {
     hoehle: { name: 'H\u00f6hle der Parabeln', rooms: ['dhalle', 'dmittel', 'draetsel', 'dboss'] },
-    turm: { name: 'Leuchtturm', rooms: ['leingang', 'lmitte', 'lraetsel', 'lboss'] },
+    turm: { name: 'Leuchtturm', rooms: ['leingang', 'lmitte', 'llinse', 'lraetsel', 'lboss'] },
     wasser: { name: 'Wasserkraftwerk', rooms: ['weingang', 'wmitte', 'wraetsel', 'wboss'] },
     sand: { name: 'Sandtempel', rooms: ['seingang', 'smitte', 'splatten', 'sboss'] },
     schule: { name: 'Schule', rooms: ['klassenzimmer', 'physiksaal', 'turnhalle', 'aula'] }
@@ -913,6 +929,8 @@
       { dur: 0.25, tick: function (p) { fade = p; } },
       { dur: 0, end: function () {
         World.setScreen(w.to.screen || w.to.room);
+        // Linsenkammer: der Stein liegt beim Betreten wieder am Start
+        if (w.to.room === Linse.ROOM) Linse.reset();
         Player.setPosition(w.to.x, w.to.y, w.to.facing || 'up');
       } },
       { dur: 0.25, tick: function (p) { fade = 1 - p; } }
@@ -1183,6 +1201,8 @@
       Player.update(World, Input, dt);
       // Platten-Raeetsel: Betreten einer Druckplatte drueckt sie
       stepOnPlate(World.getScreen());
+      // Linsenkammer: gegen den Linsenstein laufen schiebt ihn
+      pushStone(dt, World.getScreen());
       // Gegner bewegen und Beruehrung pruefen (startet den Kampf)
       // (solange die Figur nach einem Fehler blinkt, startet kein Kampf)
       Enemies.update(World, dt, Player.getX(), Player.getY(),
@@ -1269,6 +1289,10 @@
             // Gitter zum Boss bleibt zu, bis alle Fackeln richtig brennen
             Player.setPosition(Player.getX(), 2 * 16 + 4, 'down');
             Dialog.open('Gitter', ['Ein schweres Gitter versperrt den Weg. Entzünde zuerst die richtigen Fackeln.']);
+          } else if (here === Linse.ROOM && w.to.room === 'lraetsel' && !Linse.isSolved()) {
+            // Gitter zum Spiegelraum bleibt zu, bis der Linsenstein im Scheitel ruht
+            Player.setPosition(Player.getX(), 2 * 16 + 4, 'down');
+            Dialog.open('Gitter', ['Ein schweres Gitter versperrt den Weg. Schiebe zuerst den Linsenstein auf den Scheitel der Parabel ' + Linse.FORMEL + '.']);
           } else if (here === 'lraetsel' && w.to.room === 'lboss' && !Spiegel.isSolved()) {
             // Gitter zum Boss bleibt zu, bis alle Spiegel im Licht stehen
             Player.setPosition(Player.getX(), 2 * 16 + 4, 'down');

@@ -53,8 +53,9 @@ Ein Mathe-Übungsspiel als Top-Down-Abenteuer im Stil eines modernen 2D-Zelda (O
   - `dungeon.js`: Höhle der Parabeln (vier Räume, Höhlen-Optik, Quelle)
   - `raetsel.js`: Fackel-Rätsel vor dem Boss (Zustand, Prüfung, Zeichnen)
   - `spiegel.js`: Spiegel-Rätsel vor dem Boss des Leuchtturms (Zustand, Prüfung, Zeichnen)
+  - `linse.js`: Schiebe-Rätsel „Linsenkammer“ im Leuchtturm (Linsenstein, Lichtparabel, Druckplatte)
   - `schaltwarte.js`: Rätsel „Schaltwarte“ vor dem Boss des Wasserkraftwerks (Hebel a, b, c, Startschalter, Bildschirm, Druckrohr)
-  - `turm.js`: Leuchtturm-Dungeon (Dungeon 2, vier Räume, Turm-Optik, Quelle)
+  - `turm.js`: Leuchtturm-Dungeon (Dungeon 2, fünf Räume, Turm-Optik, Quelle)
   - `wasser.js`: Wasserkraftwerk (Dungeon 3, vier Räume in Kraftwerk-Optik, Quelle)
   - `wueste.js`: Steppe, Dünen und Oase (Weg zu Dungeon 4) mit Sandtempel-Fassade
   - `platten.js`: Platten-Rätsel vor dem Boss des Sandtempels (Druckplatten auf der x-Achse)
@@ -345,3 +346,10 @@ Nach der Durchsicht des gesamten Spiels wurden am 13 Funden behoben (Details im 
 - Weitere Feinschliff-Punkte nur nach Absprache.
 
 **Offen:** Test der Schritte 2–4 durch den Nutzer (iPad: Tafeln antippen, A/B der Rückfrage, Panel kopieren/einfügen). Texte von Abspann, Lehrkräften, Tafeln und Stele-Dialogen sind vorläufig und werden erst nach Go final.
+
+## Linsenkammer im Leuchtturm (gebaut, Texte vorläufig)
+
+- **Lage:** neuer Raum `llinse` zwischen Maschinenraum (`lmitte`) und Spiegelraum (`lraetsel`); Ablauf jetzt `leingang → lmitte → llinse → lraetsel → lboss`. Der Bann des Maschinenraums sperrt jetzt die Öffnung zur Linsenkammer. Raum in `turm.js` (`art: 'linse'`, nächtlich mit Messing und Glas), Logik in `linse.js`.
+- **Rätsel (spielmechanisch):** Koordinatensystem im Boden (x = −4 … 3, y = −3 … 2). Der Linsenstein liegt beim Betreten im Ursprung; sein Licht zeichnet live die Parabel y = (x − xs)² + ys mit dem Stein als Scheitel. Die Steintafel nennt y = (x + 2)² − 1, Ziel ist S(−2|−1). Schieben wie im klassischen Zelda: 0,3 s gegen den Stein laufen, er rutscht eine Kachel, Ziehen geht nicht. Zwei Linsenstative (−2|0) und (−1|−1) erzwingen einen Umweg. Druckplatte links unten (3/11) setzt den Stein zurück. Die Kacheln vor den Durchgängen sind für den Stein gesperrt. Kein Herzverlust, keine Fehlerstatistik.
+- **Merksatz:** Messingschild (5/1) „Verschobene Normalparabel“ (`verschiebungTurm`).
+- **Speichern:** Feld `linse`; ältere Spielstände gelten als ungelöst. Ungelöst liegt der Stein beim Betreten wieder am Start. Neue `later`-Bedingung `linse`. Raumhaken `def.blockedAt` in `interior.js` für bewegliche Hindernisse.

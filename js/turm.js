@@ -1,11 +1,12 @@
 // turm.js: Der Leuchtturm - Dungeon 2 (Scheitelform)
-// Vier Raeume, strikt linear: Eingang (Tuermerin erklaert die Scheitelform),
-// Maschinenraum mit Quelle (Rastquelle auf halber Strecke), Spiegelraum
-// (Raetsel, folgt in einem spaeteren Schritt), Laternenzimmer (Boss, folgt
-// ebenfalls). Aufbau wie die Hoehle: 16 x 14 Kacheln, angemeldet per
+// Fuenf Raeume, strikt linear: Eingang (Tuermerin erklaert die Scheitelform),
+// Maschinenraum mit Quelle (Rastquelle auf halber Strecke), Linsenkammer
+// (Schiebe-Raetsel, Logik in linse.js), Spiegelraum (Raetsel, spiegel.js),
+// Laternenzimmer (Boss). Aufbau wie die Hoehle: 16 x 14 Kacheln, angemeldet per
 // Interior.register(), Uebergaenge ueber mats.
 // Zeichen: '#' ausserhalb, 'W' Turmwand, '.' Boden, 'M' Tuermeingang,
-//          'x' Kisten (blockieren), 'Q' Quelle (blockiert, wie Hoehle)
+//          'x' Kisten (blockieren), 'Q' Quelle (blockiert, wie Hoehle),
+//          'p' Linsenstativ (blockiert, Linsenkammer)
 (function () {
   'use strict';
 
@@ -16,11 +17,15 @@
   // Runder Turm: Ecken als Rundung, Holzdielen, Fenster mit Meerblick und
   // Lichtflecken. Jeder Raum hat ein eigenes Thema (def.art):
   // 'eingang' Seemanns-Eingang, 'maschine' Maschinenraum mit Zahnraedern,
+  // 'linse' Linsenkammer (naechtlich, Messing und Glas),
   // 'nacht' Spiegelraum unter dem Sternenhimmel, 'laterne' Laternenzimmer.
   var mix = Render.mix;
+  // Naechtliche Raeume: gedaempfte Waende, Sterne in den Fenstern, keine Lichtflecken
+  function dunkel(art) { return art === 'nacht' || art === 'linse'; }
   var DIELE = {
     eingang: ['#b0804c', '#9a6c3e', '#7a5430'],
     maschine: ['#8e7a62', '#7a6852', '#5e5040'],
+    linse: ['#4a4252', '#3e3848', '#2c2836'],
     nacht: ['#3a4058', '#323750', '#262a3e'],
     laterne: ['#4a5260', '#3a414e', '#2a303a']
   };
@@ -56,7 +61,7 @@
   // Turmwand: weisser Putz mit rotem Band; Ecken werden rund gezeichnet
   function towerWall(r, tx, ty, def) {
     var x = tx * TILE, y = ty * TILE;
-    var nacht = def.art === 'nacht';
+    var nacht = dunkel(def.art);
     var putz = nacht ? '#a8a6b8' : '#ece7da';
     r.px(x, y, TILE, TILE, putz);
     r.px(x, y, TILE, 1, mix(putz, '#ffffff', 0.4));
@@ -79,11 +84,11 @@
     towerFloor(r, tx, ty, def.art);
     // Mittelpunkt des Viertelkreises in der Ecke, die zur Wand zeigt
     var cx = fx > 0 ? x : x + TILE, cy = fy > 0 ? y : y + TILE;
-    var putz = def.art === 'nacht' ? '#a8a6b8' : '#ece7da';
+    var putz = dunkel(def.art) ? '#a8a6b8' : '#ece7da';
     for (var py = 0; py < TILE; py++) {
       for (var px = 0; px < TILE; px++) {
         var d = Math.sqrt(Math.pow(x + px + 0.5 - cx, 2) + Math.pow(y + py + 0.5 - cy, 2));
-        if (d < 14) r.px(x + px, y + py, 1, 1, d > 12.5 ? '#a89e90' : (d > 9 ? (def.art === 'nacht' ? '#8a3a40' : '#d8443c') : putz));
+        if (d < 14) r.px(x + px, y + py, 1, 1, d > 12.5 ? '#a89e90' : (d > 9 ? (dunkel(def.art) ? '#8a3a40' : '#d8443c') : putz));
       }
     }
     return true;
@@ -151,7 +156,7 @@
 
   // Lichtflecken der Fenster auf dem Boden (tags), leicht schimmernd
   function lichtflecken(r, t, def) {
-    if (def.art === 'nacht' || !def.windows) return;
+    if (dunkel(def.art) || !def.windows) return;
     var ctx = r.getCtx();
     def.windows.forEach(function (w, i) {
       ctx.globalAlpha = 0.1 + 0.02 * Math.sin(t / 800 + i);
@@ -311,7 +316,7 @@
     }
     var i;
     if (def.windows) {
-      for (i = 0; i < def.windows.length; i++) seaWindow(r, def.windows[i][0], def.windows[i][1], def.art === 'nacht');
+      for (i = 0; i < def.windows.length; i++) seaWindow(r, def.windows[i][0], def.windows[i][1], dunkel(def.art));
     }
     if (def.lamps) {
       for (i = 0; i < def.lamps.length; i++) wallLamp(r, def.lamps[i][0], def.lamps[i][1]);
@@ -385,7 +390,7 @@
       '################'
     ],
     mats: {
-      '8,1': { room: 'lraetsel', x: 8 * TILE, y: 11 * TILE, facing: 'up' },
+      '8,1': { room: 'llinse', x: 8 * TILE, y: 11 * TILE, facing: 'up' },
       '8,12': { room: 'leingang', x: 8 * TILE, y: 2 * TILE, facing: 'down' }
     },
     windows: [[3, 1], [12, 1]],
@@ -462,7 +467,7 @@
     ]),
     mats: {
       '8,1': { room: 'lboss', x: 8 * TILE, y: 11 * TILE, facing: 'up' },
-      '8,12': { room: 'lmitte', x: 8 * TILE, y: 2 * TILE, facing: 'down' }
+      '8,12': { room: 'llinse', x: 8 * TILE, y: 2 * TILE, facing: 'down' }
     },
     windows: [[3, 1], [12, 1]],
     lamps: [[5, 1], [10, 1], [5, 12], [10, 12]],
@@ -488,6 +493,100 @@
         later: { spiegel: true, replace: true, texts: ['Alle Spiegel auf der Parabel ' + Spiegel.FORMEL + ' stehen im Licht. Das Gitter ist offen.'] }
       }
     ])
+  };
+
+  // Linsenkammer: Messingschild mit Merksatz an der Wand (Kachel 5,1)
+  function messingschild(r) {
+    var x = 5 * TILE, y = 1 * TILE;
+    r.px(x + 1, y + 2, 14, 10, '#7a5a20');
+    r.px(x + 2, y + 3, 12, 8, '#c8a040');
+    r.px(x + 2, y + 3, 12, 1, '#e8c060');
+    // eingravierte Parabel mit verschobenem Scheitel
+    r.px(x + 4, y + 5, 1, 1, '#6a4a18');
+    r.px(x + 5, y + 7, 1, 1, '#6a4a18');
+    r.px(x + 6, y + 8, 2, 1, '#6a4a18');
+    r.px(x + 8, y + 7, 1, 1, '#6a4a18');
+    r.px(x + 9, y + 5, 1, 1, '#6a4a18');
+    r.px(x + 11, y + 4, 1, 6, '#8a6a28');   // kleine y-Achse
+  }
+
+  // Linsenkammer: Regal mit Glaslinsen an der Wand (Kachel 10,1)
+  function linsenregal(r) {
+    var x = 10 * TILE, y = 1 * TILE;
+    r.px(x + 1, y + 12, 14, 2, '#6e4a2c');
+    r.px(x + 1, y + 6, 14, 1, '#6e4a2c');
+    [[4, 3, 3], [10, 3, 2], [4, 9, 2], [10, 9, 3]].forEach(function (l) {
+      r.ellipse(x + l[0], y + l[1], l[2], l[2], '#b8903a');
+      r.ellipse(x + l[0], y + l[1], l[2] - 1, l[2] - 1, '#8ab4d8');
+    });
+  }
+
+  // Linsenkammer: Schiebe-Raetsel zwischen Maschinenraum und Spiegelraum
+  // (Logik in linse.js). Der Linsenstein muss auf den Scheitel der Parabel
+  // der Steintafel; zwei Linsenstative ('p') erzwingen einen Umweg.
+  // Thema: naechtliche Linsenkammer mit Messing und Glas
+  var LINSE = {
+    art: 'linse',
+    map: [
+      '################',
+      '#WWWWWWWMWWWWWW#',
+      '#WW..........WW#',
+      '#W............W#',
+      '#W............W#',
+      '#W...p........W#',
+      '#W....p.......W#',
+      '#W............W#',
+      '#W............W#',
+      '#W............W#',
+      '#W............W#',
+      '#WW.........kWW#',
+      '#WWWWWWWMWWWWWW#',
+      '################'
+    ],
+    mats: {
+      '8,1': { room: 'lraetsel', x: 8 * TILE, y: 11 * TILE, facing: 'up' },
+      '8,12': { room: 'lmitte', x: 8 * TILE, y: 2 * TILE, facing: 'down' }
+    },
+    windows: [[3, 1], [12, 1]],
+    lamps: [[5, 12], [10, 12]],
+    // der Linsenstein blockiert seine Kachel
+    blockedAt: function (tx, ty) { return Linse.blockedAt(tx, ty); },
+    bakeExtra: function (r) {
+      Linse.bakeGrid(r);
+      Linse.bakePlate(r);
+      for (var ty = 0; ty < 14; ty++) {
+        for (var tx = 0; tx < 16; tx++) {
+          var c = LINSE.map[ty].charAt(tx);
+          if (c === 'p') Linse.bakeStativ(r, tx, ty);
+          else if (c === 'k') floorTablet(r, tx, ty);
+        }
+      }
+      messingschild(r);
+      linsenregal(r);
+    },
+    objects: [
+      {
+        // Erklaer-Objekt: Merksatz zur Verschiebung der Normalparabel
+        tiles: [[5, 1]],
+        x: 5 * TILE, y: 1 * TILE,
+        name: 'Messingschild',
+        texts: [
+          'Auf dem Messingschild steht: Die Parabel y = (x − xs)² + ys ist die Normalparabel y = x², verschoben um xs in x-Richtung und um ys in y-Richtung.',
+          'Ihr Scheitel S(xs|ys) wandert mit. Ist xs positiv, geht es nach rechts, ist ys positiv, nach oben.'
+        ],
+        merk: { id: 'verschiebungTurm', name: 'Verschobene Normalparabel', text: 'y = (x − xs)² + ys ist die Normalparabel, verschoben um xs in x-Richtung und um ys in y-Richtung. Scheitel S(xs|ys).' }
+      },
+      {
+        tiles: [[12, 11]],
+        x: 12 * TILE, y: 11 * TILE,
+        name: 'Steintafel',
+        texts: [
+          'Schiebe den Linsenstein auf den Scheitel der Parabel ' + Linse.FORMEL + '. Sein Licht zeichnet eine Parabel, deren Scheitel immer der Stein ist.',
+          'Lauf kurz gegen den Stein, dann rutscht er ein Feld weiter. Ziehen geht nicht. Steckt er fest, bringt ihn die Druckplatte links unten zurück.'
+        ],
+        later: { linse: true, replace: true, texts: ['Der Linsenstein ruht im Scheitel der Parabel ' + Linse.FORMEL + '. Das Gitter ist offen.'] }
+      }
+    ]
   };
 
   // Laternenzimmer: der Boss folgt in einem spaeteren Schritt
@@ -518,7 +617,7 @@
   };
 
   // Raumdefinitionen fertigstellen (Bake und Vignette)
-  [EINGANG, MASCHINEN, SPIEGEL, LATERNE].forEach(function (R) {
+  [EINGANG, MASCHINEN, LINSE, SPIEGEL, LATERNE].forEach(function (R) {
     R.bakeFull = function (r) { bakeTower(r, R); };
     R.overlay = vignette;
   });
@@ -549,6 +648,14 @@
     if (!Spiegel.isSolved()) bars(r);
   };
 
+  // Linsenkammer: Sterne, Lichtparabel und Stein im Laufbild, Gitter bis
+  // der Stein im Scheitel ruht
+  LINSE.anim = function (r, t) {
+    sterne(r, t, LINSE);
+    Linse.draw(r, t);
+    if (!Linse.isSolved()) bars(r);
+  };
+
   // Eingang: Lichtflecken der Fenster; Maschinenraum: Zahnraeder drehen sich
   EINGANG.anim = function (r, t) { lichtflecken(r, t, EINGANG); };
   MASCHINEN.anim = function (r, t) {
@@ -559,6 +666,7 @@
 
   Interior.register('leingang', EINGANG);
   Interior.register('lmitte', MASCHINEN);
+  Interior.register('llinse', LINSE);
   Interior.register('lraetsel', SPIEGEL);
   Interior.register('lboss', LATERNE);
 })();
