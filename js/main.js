@@ -53,6 +53,7 @@
       spiegel: Spiegel.isSolved(),
       linse: Linse.isSolved(),
       schaltwarte: Schaltwarte.isSolved(),
+      schaltwarte1: Schaltwarte.isStage1(),   // Turbine 1 laeuft
       platten: Platten.isSolved(),
       leuchtturm: World.isLighthouseLit(),
       sandsturm: World.isSandstormOpen(),
@@ -93,6 +94,7 @@
     if (st.linse) Linse.setSolved();   // aeltere Staende: Linsenkammer noch ungeloest
     // aeltere Staende: geloestes Brunnen-Raetsel zaehlt als geloeste Schaltwarte
     if (st.schaltwarte || st.gezeiten) Schaltwarte.setSolved();
+    else if (st.schaltwarte1) Schaltwarte.setStage1();   // nur Turbine 1 laeuft
     if (st.platten) Platten.setSolved();
     if (st.leuchtturm) World.setLighthouseLit(true);
     if (bossesSt.lboss) World.setWaterGateOpen(true);
@@ -143,6 +145,7 @@
     if (l.spiegel && !Spiegel.isSolved()) return false;
     if (l.linse && !Linse.isSolved()) return false;
     if (l.schaltwarte && !Schaltwarte.isSolved()) return false;
+    if (l.schaltwarte1 && !Schaltwarte.isStage1()) return false;
     if (l.platten && !Platten.isSolved()) return false;
     if (l.school && !World.isSchoolGateOpen()) return false;
     if (l.finale && !finaleDone) return false;   // Endboss Graf Gerade besiegt
@@ -200,13 +203,25 @@
   }
 
   // Schaltwarte (Kraftwerk): Startschalter prueft die eingestellte Parabel
+  // (Turbine 1: drei Anschluesse, Turbine 2: Scheitel und a; kein Herzverlust)
   function startTurbine() {
     var res = Schaltwarte.starte();
-    if (res === 'solved') {
+    if (res === 'unread') {
+      Dialog.open('', ['Der Bildschirm kennt die Anschlüsse noch nicht. Lies zuerst alle drei Manometer am Druckrohr ab.']);
+    } else if (res === 'stage1') {
       saveGame();
-      Dialog.open('', ['Wasser strömt durch das Druckrohr, die Turbine läuft an. Mit lautem Ruck hebt sich das Gitter.']);
-    } else if (res === 'wrong') {
-      Dialog.open('', ['Die Turbine stottert und bleibt stehen. Die Parabel ' + Schaltwarte.term() + ' trifft nicht alle drei Anschlüsse.']);
+      Dialog.open('', ['Die Parabel ' + Schaltwarte.term() + ' trifft alle drei Anschlüsse. Turbine 1 läuft an!',
+        'Auf dem Bildschirm erscheint die Vorgabe für Turbine 2: Scheitel S(−1|−1) und a = 2.']);
+    } else if (res === 'solved') {
+      saveGame();
+      Dialog.open('', ['Wasser strömt durch das Druckrohr, Turbine 2 läuft an. Mit lautem Ruck hebt sich das Gitter.']);
+    } else if (res === 'wrong' || res === 'reset') {
+      var was = Schaltwarte.stufe() === 1 ? 'trifft nicht alle drei Anschlüsse' : 'hat nicht den Scheitel S(−1|−1) und a = 2';
+      var t = ['Die Turbine stottert und bleibt stehen. Die Parabel ' + Schaltwarte.term() + ' ' + was + '.'];
+      if (res === 'reset') {
+        t = ['Die Turbine stottert und bleibt stehen. Nach dem dritten Fehlstart fällt der Druck ab – alle Hebel springen zurück.'];
+      }
+      Dialog.open('', t);
     }
   }
 
@@ -1075,6 +1090,7 @@
     if (t.action === 'torch') return 'Entzünden';
     if (t.action === 'hebel') return 'Schalten';
     if (t.action === 'start') return 'Starten';
+    if (t.action === 'mano') return 'Ablesen';
     if (t.action === 'testpage' || t.action === 'repeat' || t.action === 'abspann') return 'Lesen';
     if (/Schild|Tafel|Inschrift/.test(t.name)) return 'Lesen';
     return 'Reden';
@@ -1237,6 +1253,8 @@
             Schaltwarte.schalte(target.hebel);   // Schaltwarte: Hebel weiterschalten
           } else if (target.action === 'start') {
             startTurbine();                      // Schaltwarte: Startschalter
+          } else if (target.action === 'mano') {
+            Dialog.open(target.name, [Schaltwarte.lies(target.mano)]);   // Schaltwarte: Manometer ablesen
           } else if (target.action === 'repeat') {
             // Steintafel: vor dem Finale schlaeft sie, danach Rueckfrage
             if (!finaleDone) {
@@ -1300,7 +1318,7 @@
           } else if (here === 'wraetsel' && w.to.room === 'wboss' && !Schaltwarte.isSolved()) {
             // Gitter zur Turbinenhalle bleibt zu, bis die Turbine laeuft
             Player.setPosition(Player.getX(), 2 * 16 + 4, 'down');
-            Dialog.open('Gitter', ['Ein schweres Gitter versperrt den Weg. Bringe zuerst in der Schaltwarte die Turbine zum Laufen.']);
+            Dialog.open('Gitter', ['Ein schweres Gitter versperrt den Weg. Bringe zuerst in der Schaltwarte beide Turbinen zum Laufen.']);
           } else if (here === 'splatten' && w.to.room === 'sboss' && !Platten.isSolved()) {
             // Gitter zum Boss bleibt zu, bis beide Nullstellen-Platten gedrueckt sind
             Player.setPosition(Player.getX(), 2 * 16 + 4, 'down');

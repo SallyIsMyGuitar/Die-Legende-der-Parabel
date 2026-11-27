@@ -61,7 +61,7 @@ var Interior = (function () {
         if (objs[o].tiles[j][0] === tx && objs[o].tiles[j][1] === ty) {
           return {
             name: objs[o].name, texts: objs[o].texts, action: objs[o].action,
-            spawn: objs[o].spawn, merk: objs[o].merk, later: objs[o].later, torch: objs[o].torch, hebel: objs[o].hebel,
+            spawn: objs[o].spawn, merk: objs[o].merk, later: objs[o].later, torch: objs[o].torch, hebel: objs[o].hebel, mano: objs[o].mano,
             hintX: objs[o].x, hintY: objs[o].y
           };
         }

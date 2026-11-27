@@ -8,7 +8,8 @@
 // Zeichen: '#' ausserhalb, 'W' Betonwand, '.' Boden, 'M' Schott (Uebergang),
 //          'x' Maschine/Kiste (blockiert, je Raum anders gezeichnet),
 //          'Q' Quelle, Schaltwarte: 'd' Bildschirm, 'h' Hebel,
-//          's' Startschalter, 'p' Druckrohr, 'k' Tafel (alle blockieren)
+//          's' Startschalter, 'p' Druckrohr, 'g' Manometer, 'k' Tafel
+//          (alle blockieren)
 // Jeder Raum hat ein eigenes Thema (Boden, Deko, Licht), damit sich die
 // Raeume deutlich unterscheiden.
 (function () {
@@ -379,18 +380,18 @@
   }
 
   // Schaltwarte: Leitstand mit Bildschirm, drei Hebel, Startschalter,
-  // Druckrohr an der rechten Wand (schaltwarte.js)
+  // Druckrohr an der rechten Wand mit drei Manometern (schaltwarte.js)
   var RAETSEL = {
     art: 'warte', rohr: '#7a5a3a',
     map: [
       '################',
       '#WWWWWWWMWWWWWW#',
       '#Wdddddd.....pW#',
+      '#Wdddddd....gpW#',
       '#Wdddddd.....pW#',
+      '#Wdddddd....gpW#',
       '#Wdddddd.....pW#',
-      '#Wdddddd.....pW#',
-      '#Wdddddd.....pW#',
-      '#Wdddddd.....pW#',
+      '#Wdddddd....gpW#',
       '#W...........pW#',
       '#W.h.h.h..s..pW#',
       '#W...........pW#',
@@ -409,10 +410,20 @@
         x: 10 * TILE, y: 11 * TILE,
         name: 'Tafel',
         texts: [
-          'Bringe die Turbine zum Laufen: Stelle mit den Hebeln a, b und c die Parabel y = ax² + bx + c ein, die durch alle drei Anschlüsse P1, P2 und P3 geht.',
-          'P1 liegt auf der y-Achse – denk an die Messtafel. Dann drücke den Startschalter.'
+          'Bringe beide Turbinen zum Laufen. Turbine 1: Lies an den drei Manometern am Druckrohr die Anschlüsse P1, P2 und P3 ab.',
+          'Stelle dann mit den Hebeln a, b und c die Parabel y = ax² + bx + c ein, die durch alle drei Anschlüsse geht. P1 liegt auf der y-Achse – denk an die Messtafel.',
+          'Der Bildschirm zeigt die Parabel erst beim Testlauf mit dem Startschalter. Nach drei Fehlstarts fällt der Druck ab und alle Hebel springen zurück.'
         ],
-        later: { schaltwarte: true, replace: true, texts: ['Die Parabel ' + Schaltwarte.FORMEL + ' trifft alle drei Anschlüsse. Die Turbine läuft, das Gitter ist offen.'] }
+        // Es gilt die letzte erfuellte Stufe (Turbine 1 laeuft / beide laufen)
+        later: [
+          { schaltwarte1: true, replace: true, texts: [
+            'Turbine 1 läuft mit ' + Schaltwarte.FORMEL1 + '. Turbine 2 braucht eine Parabel mit dem Scheitel S(−1|−1) und a = 2.',
+            'Stelle sie mit den Hebeln in der allgemeinen Form y = ax² + bx + c ein. Tipp: Erst die Scheitelform aufschreiben, dann ausmultiplizieren.'
+          ] },
+          { schaltwarte: true, replace: true, texts: [
+            'Beide Turbinen laufen: ' + Schaltwarte.FORMEL1 + ' und ' + Schaltwarte.FORMEL2 + '. Das Gitter ist offen.'
+          ] }
+        ]
       }
     ])
   };
